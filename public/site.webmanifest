@@ -1,0 +1,18 @@
+{
+  "name": "YBGP - Your Business Growth Partner",
+  "short_name": "YBGP",
+  "description": "Business consultant and growth partner helping entrepreneurs and businesses in Noida and Delhi NCR build strategy, operations, and digital growth.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F7F7",
+  "theme_color": "#0E2B22",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

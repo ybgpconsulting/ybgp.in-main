@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #0E2B22;
+    --gold: #C89B2B;
+    --text: #1E1E1E;
+    --bg-light: #F7F7F7;
+    --border: #E9E9E9;
+  }
+
+  html {
+    font-size: 17px;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    background-color: #F7F7F7;
+    color: #1E1E1E;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Poppins', sans-serif;
+  }
+
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+}
+
+.bento-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E9E9E9;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover {
+  border-color: #C89B2B;
+}
+
+/* Custom Utilities */
+.bg-forest-dark {
+  background-color: #0E2B22;
+}
+
+.text-forest-dark {
+  color: #0E2B22;
+}
+
+.bg-gold {
+  background-color: #C89B2B;
+}
+
+.text-gold {
+  color: #C89B2B;
+}
+
+.border-gold {
+  border-color: #C89B2B;
+}
+
+.border-custom {
+  border-color: #E9E9E9;
+}
+
+/* Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F7F7F7;
+}
+::-webkit-scrollbar-thumb {
+  background: #C89B2B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0E2B22;
+}
+

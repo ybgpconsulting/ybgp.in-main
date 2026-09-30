@@ -1,0 +1,25 @@
+Options -MultiViews
+DirectoryIndex index.html
+
+RewriteEngine On
+
+# Keep the public site on its canonical HTTPS www host.
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} !^www\.ybgp\.in$ [NC]
+RewriteRule ^ https://www.ybgp.in%{REQUEST_URI} [R=301,L,NE]
+
+# Consolidate retired consultant-location URLs into the primary Noida page.
+RewriteRule ^(?:business-consultant-in-noida|business-consultant-delhi|business-consultant-gurugram|business-consultant-ghaziabad)/?$ /business-consultant-noida/ [R=301,L,NE]
+
+# Let Apache serve real files and directories unchanged.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Serve the SPA shell for the published clean routes.
+RewriteRule ^$ index.html [L]
+RewriteRule ^(?:business-consultant-noida|startup-consultant-delhi-ncr|website-development-company-gurugram|digital-marketing-agency-ghaziabad|business-strategy-consulting|business-planning|business-registration-compliance|website-app-development|branding-digital-marketing|business-growth-scaling|business-website|work|about|services|process|contact|why-choose-us)/?$ index.html [L]
+
+# Preserve a real 404 response for unknown paths while using the custom document.
+ErrorDocument 404 /404.html
+RewriteRule ^ - [R=404,L]
