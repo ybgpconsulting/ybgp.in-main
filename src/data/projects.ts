@@ -83,7 +83,7 @@ export const PROJECTS: Project[] = [
     name: 'Cortek Enterprises',
     category: 'Business Management Platform / Web Application',
     description: 'A custom business management platform presented as a web application. The supplied live project URL is currently returning a 404 response.',
-    url: 'https://cortek-enterprises-production.up.railway.app/',
+    url: 'https://cortek-enterprises.ybgp-consulting.workers.dev/',
     tags: ['Web application', 'Business management'],
     preview: 'unavailable',
     isApplication: true
