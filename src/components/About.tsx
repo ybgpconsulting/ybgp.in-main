@@ -13,7 +13,7 @@ export const About: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-8 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E2B22] font-heading tracking-tight"
+          className="mb-8 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0E2B22] font-heading tracking-[-0.035em]"
         >
           {SITE_DATA.about.title}
         </motion.h2>
@@ -82,7 +82,7 @@ export const About: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.08 * idx }}
-                className="rounded-[22px] border border-[#EDEDED] bg-[#F9F9F9] p-5 sm:p-6"
+                className="rounded-[22px] border border-white bg-[#F9F9F9]/90 p-5 shadow-[0_10px_26px_rgba(14,43,34,0.04)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_15px_30px_rgba(14,43,34,0.08)] sm:p-6"
               >
                 <h4 className="text-base sm:text-lg font-bold text-[#0E2B22] font-heading">
                   {item.question}

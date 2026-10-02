@@ -13,7 +13,7 @@ export const Services: React.FC = () => {
   };
 
   return (
-    <section id="services" aria-labelledby="services-heading" className="py-20 md:py-28 bg-[#FBFBFB] border-t border-[#F0F0F0]">
+    <section id="services" aria-labelledby="services-heading" className="py-20 md:py-28 bg-[#FBFBFB]/80 border-t border-[#F0F0F0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.h2
@@ -22,7 +22,7 @@ export const Services: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-6 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E2B22] font-heading tracking-tight"
+          className="mb-6 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0E2B22] font-heading tracking-[-0.035em]"
         >
           {SITE_DATA.services.title}
         </motion.h2>
@@ -49,11 +49,11 @@ export const Services: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 * idx }}
-                className="bg-white p-8 rounded-[24px] border border-[#EBEBEB] shadow-sm hover:shadow-md hover:border-[#C89B2B]/40 transition-all duration-300 flex flex-col justify-between group"
+                className="premium-card bg-white/90 p-8 rounded-[24px] border border-white hover:border-[#C89B2B]/40 transition-all duration-300 hover:-translate-y-1.5 flex flex-col justify-between group"
               >
                 <div>
                   {/* Icon Badge */}
-                  <div className="w-12 h-12 rounded-[14px] bg-[#0E2B22] text-white flex items-center justify-center mb-6 shadow-sm group-hover:scale-105 transition-transform duration-200">
+                  <div className="w-12 h-12 rounded-[14px] bg-[#0E2B22] text-white flex items-center justify-center mb-6 shadow-[0_8px_16px_rgba(14,43,34,0.18)] group-hover:scale-105 transition-transform duration-200">
                     <Icon className="w-6 h-6" />
                   </div>
 

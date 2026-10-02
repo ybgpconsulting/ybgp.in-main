@@ -4,8 +4,9 @@ import { SITE_DATA } from '../data/siteData';
 
 export const WhyChooseUs: React.FC = () => {
   return (
-    <section id="why-choose-us" aria-labelledby="why-choose-us-heading" className="py-20 md:py-28 bg-[#0E2B22] text-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="why-choose-us" aria-labelledby="why-choose-us-heading" className="relative py-20 md:py-28 bg-[#0E2B22] text-white overflow-hidden">
+      <div aria-hidden="true" className="absolute -left-36 top-0 h-96 w-96 rounded-full bg-[#C89B2B]/10 blur-3xl" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <motion.h2
           id="why-choose-us-heading"
@@ -13,7 +14,7 @@ export const WhyChooseUs: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-8 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white font-heading tracking-tight"
+          className="mb-10 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white font-heading tracking-[-0.035em]"
         >
           {SITE_DATA.whyChooseUs.title}
         </motion.h2>
@@ -29,7 +30,7 @@ export const WhyChooseUs: React.FC = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.1 * idx }}
-                className="bg-[#143A2F]/80 hover:bg-[#143A2F] border border-white/10 hover:border-[#C89B2B]/50 p-8 rounded-[20px] transition-all duration-300 shadow-lg group flex flex-col justify-between"
+                className="bg-white/[0.07] hover:bg-white/[0.11] border border-white/10 hover:border-[#C89B2B]/50 p-8 rounded-[24px] transition-all duration-300 hover:-translate-y-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.14)] group flex flex-col justify-between"
               >
                 <div>
                   {/* Icon Badge */}

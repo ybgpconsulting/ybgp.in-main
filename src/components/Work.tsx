@@ -56,7 +56,7 @@ const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project,
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
     >
       <motion.div
-        className={`relative rounded-lg border border-[#D8DCD8] bg-white p-2 shadow-[0_18px_48px_rgba(14,43,34,0.12)] transition-shadow duration-500 group-hover:shadow-[0_26px_58px_rgba(14,43,34,0.17)] sm:p-3 ${project.isApplication ? 'ring-1 ring-[#0E2B22]/10' : ''}`}
+      className={`relative rounded-[18px] border border-white bg-white p-2 shadow-[0_22px_58px_rgba(14,43,34,0.16)] transition-shadow duration-500 group-hover:shadow-[0_32px_70px_rgba(14,43,34,0.22)] sm:p-3 ${project.isApplication ? 'ring-1 ring-[#0E2B22]/10' : ''}`}
         style={{ transformStyle: 'preserve-3d' }}
         whileHover={prefersReducedMotion ? undefined : { rotateX: 1.3, rotateY: index % 2 ? -1.2 : 1.2, scale: 1.012 }}
         transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -68,14 +68,14 @@ const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project,
           <span className="ml-2 min-w-0 flex-1 truncate rounded-sm bg-[#F4F5F3] px-2 py-1 text-[8px] text-[#737B76] sm:ml-4 sm:px-3 sm:text-[10px]">{previewLabel}</span>
           <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-[#7C867F] sm:h-4 sm:w-4" aria-hidden="true" />
         </div>
-        <div className={`relative isolate aspect-[1.38] overflow-hidden bg-[#EEF1EC] ${project.isApplication ? 'sm:aspect-[1.5]' : ''}`}>
+        <div className={`relative isolate overflow-hidden bg-[#EEF1EC] ${project.sampleTemplate ? 'aspect-[2.1]' : `aspect-[1.38] ${project.isApplication ? 'sm:aspect-[1.5]' : ''}`}`}>
           {project.preview === 'queue' ? (
             <QueuePreview />
           ) : project.preview === 'unavailable' ? (
             <div className="flex h-full min-h-[250px] flex-col items-center justify-center bg-[#E9EDE7] px-6 text-center sm:min-h-[390px]">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#707B74]">Cortek Enterprises</span>
-              <span className="mt-3 font-heading text-2xl font-bold text-[#0E2B22] sm:text-4xl">Business management platform</span>
-              <span className="mt-5 border border-[#C7CEC7] px-3 py-2 text-xs text-[#59645C]">Live preview currently unavailable</span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#707B74]">{project.category}</span>
+              <span className="mt-3 font-heading text-2xl font-bold text-[#0E2B22] sm:text-4xl">{project.name}</span>
+              <span className="mt-5 border border-[#C7CEC7] px-3 py-2 text-xs text-[#59645C]">{project.sampleTemplate ? 'Sample template' : 'Live preview currently unavailable'}</span>
             </div>
           ) : imageUnavailable ? (
             <div className="flex h-full min-h-[250px] items-center justify-center bg-[#E9EDE7] px-6 text-center sm:min-h-[390px]">
@@ -93,6 +93,7 @@ const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project,
           )}
           {project.ownWork && <span className="absolute left-3 top-3 z-10 bg-[#0E2B22] px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white sm:left-5 sm:top-5 sm:px-3 sm:text-[9px]">Our own work</span>}
           {project.isApplication && <span className="absolute right-3 top-3 z-10 bg-[#0E2B22] px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.12em] text-white sm:right-5 sm:top-5 sm:px-3 sm:text-[9px]">Web application</span>}
+          {project.sampleTemplate && <span className="absolute left-3 top-3 z-10 bg-[#0E2B22] px-2.5 py-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white sm:left-5 sm:top-5 sm:px-3 sm:text-[9px]">Sample template</span>}
         </div>
       </motion.div>
     </motion.a>
@@ -104,12 +105,17 @@ export const Work: React.FC = () => {
 
   return (
     <div className="bg-[#F7F7F7] text-[#1E1E1E]">
-    <section id="work" aria-labelledby="work-heading" className="bg-[#0E2B22] px-4 pb-12 pt-28 text-white sm:px-6 sm:pb-16 sm:pt-32">
-      <div className="mx-auto max-w-7xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D8CBA4]">Selected projects</p>
-        <h1 id="work-heading" className="mt-4 text-5xl font-extrabold leading-none font-heading sm:text-7xl">OUR WORK</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">Digital experiences we've designed, built and brought to life.</p>
-        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#D8CBA4] sm:text-sm">We don't just advise. We build.</p>
+    <section id="work" aria-labelledby="work-heading" className="relative isolate overflow-hidden bg-[#071b14] px-4 pb-16 pt-32 text-white sm:px-6 sm:pb-24 sm:pt-40">
+      <div aria-hidden="true" className="portfolio-noise absolute inset-0 opacity-20" />
+      <div aria-hidden="true" className="absolute -right-28 -top-36 h-[38rem] w-[38rem] rounded-full border border-[#C89B2B]/20 bg-[#C89B2B]/[0.06] shadow-[0_0_100px_rgba(200,155,43,0.08)]" />
+      <div aria-hidden="true" className="absolute right-[12%] top-16 h-48 w-48 rounded-full border border-white/10" />
+      <div className="relative mx-auto max-w-7xl">
+        <p className="eyebrow text-xs font-semibold uppercase tracking-[0.24em] text-[#D8CBA4]">Selected projects</p>
+        <h1 id="work-heading" className="mt-6 text-5xl font-extrabold leading-[0.88] tracking-[-0.06em] font-heading sm:text-7xl lg:text-8xl">OUR WORK</h1>
+        <div className="mt-8 flex max-w-3xl flex-col gap-4 border-l border-[#C89B2B]/60 pl-5 sm:pl-7">
+          <p className="text-lg leading-relaxed text-white/75 sm:text-xl">Digital experiences we've designed, built and brought to life.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#D8CBA4] sm:text-sm">We don't just advise. We build.</p>
+        </div>
       </div>
     </section>
 
@@ -121,14 +127,15 @@ export const Work: React.FC = () => {
 
           return (
             <Reveal key={project.id} delay={index === 0 ? 0 : 0.04} duration={0.55}>
-              <article className={`grid gap-6 py-12 sm:gap-8 sm:py-16 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-x-14 ${project.isApplication ? 'lg:py-20' : ''}`}>
+              <article className={`portfolio-project grid gap-6 py-14 sm:gap-8 sm:py-20 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-x-16 ${project.isApplication ? 'lg:py-24' : ''}`}>
                 <div className={`order-1 flex flex-col items-start ${infoColumn} lg:row-start-1`}>
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm text-[#8A6A1E]">{project.number}</span>
-                    {project.ownWork && <span className="border border-[#D8DCD8] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Built by us, for us</span>}
-                    {project.isApplication && <span className="border border-[#D8DCD8] px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Digital product</span>}
+                    {project.ownWork && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Built by us, for us</span>}
+                    {project.isApplication && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Digital product</span>}
+                    {project.sampleTemplate && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Sample template</span>}
                   </div>
-                  <h2 className="mt-4 text-3xl font-bold leading-tight text-[#0E2B22] font-heading sm:text-4xl lg:text-5xl">{project.name}</h2>
+                  <h2 className="section-title mt-4 text-3xl font-bold leading-tight text-[#0E2B22] font-heading sm:text-4xl lg:text-5xl">{project.name}</h2>
                   {project.fullName && <p className="mt-2 text-sm font-medium text-[#59645C] sm:text-base">{project.fullName}</p>}
                   <p className="mt-3 text-xs font-semibold uppercase tracking-[0.1em] text-[#8A6A1E] sm:text-sm">{project.category}</p>
                 </div>
@@ -138,7 +145,7 @@ export const Work: React.FC = () => {
                 <div className={`order-3 flex flex-col items-start ${infoColumn} lg:row-start-2`}>
                   <p className="mt-5 max-w-xl leading-relaxed text-[#1E1E1E]/75 sm:text-lg">{project.description}</p>
                   <ul className="mt-5 flex flex-wrap gap-2" aria-label={`${project.name} project tags`}>
-                    {project.tags.map((tag) => <li key={tag} className="border border-[#D8DCD8] px-2.5 py-1 text-[10px] font-medium text-[#59645C] sm:text-xs">{tag}</li>)}
+                    {project.tags.map((tag) => <li key={tag} className="rounded-full border border-[#D8DCD8] bg-white/65 px-3 py-1 text-[10px] font-medium text-[#59645C] sm:text-xs">{tag}</li>)}
                   </ul>
                   <a
                     href={project.url}
@@ -157,14 +164,15 @@ export const Work: React.FC = () => {
       </div>
     </section>
 
-    <section className="bg-[#E9EDE7] px-4 py-14 sm:px-6 sm:py-20">
-      <div className="mx-auto flex max-w-7xl flex-col gap-7 md:flex-row md:items-center md:justify-between">
+    <section className="relative overflow-hidden bg-[#E9EDE7] px-4 py-16 sm:px-6 sm:py-24">
+      <div aria-hidden="true" className="absolute -right-20 -top-32 h-96 w-96 rounded-full bg-[#C89B2B]/10 blur-3xl" />
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-7 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8A6A1E]">Your next chapter</p>
-          <h2 className="mt-3 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">Have a challenge worth solving?</h2>
+          <h2 className="section-title mt-3 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">Have a challenge worth solving?</h2>
           <p className="mt-3 leading-relaxed text-[#1E1E1E]/70">Tell us where you want to go. We'll help you identify a practical way to get there.</p>
         </div>
-        <a href={SITE_DATA.googleFormUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-3 self-start bg-[#0E2B22] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#164537] md:self-auto">
+        <a href={SITE_DATA.googleFormUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-3 self-start rounded-full bg-[#0E2B22] px-6 py-3 font-semibold text-white shadow-[0_12px_25px_rgba(14,43,34,0.2)] transition-all hover:-translate-y-0.5 hover:bg-[#164537] md:self-auto">
           Start a conversation <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </a>
       </div>

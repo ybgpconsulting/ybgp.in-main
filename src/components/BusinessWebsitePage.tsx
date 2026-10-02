@@ -58,17 +58,21 @@ const WebsitePreview: React.FC<{ variant: 'service' | 'local' | 'professional'; 
 
 export const BusinessWebsitePage: React.FC = () => (
   <div className="bg-[#F7F7F7] text-[#1E1E1E]">
-    <section className="bg-[#0E2B22] px-4 pb-14 pt-14 text-white sm:px-6 sm:pb-18 sm:pt-20">
-      <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
+    <section className="relative overflow-hidden bg-[#0E2B22] px-4 pb-14 pt-28 text-white sm:px-6 sm:pb-18 sm:pt-36">
+      <div aria-hidden="true" className="absolute -right-24 -top-28 h-[32rem] w-[32rem] rounded-full bg-[#C89B2B]/10 blur-3xl" />
+      <div aria-hidden="true" className="dot-grid absolute bottom-0 right-[8%] h-64 w-64 opacity-25" />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D8CBA4]">Website offer for growing businesses</p>
-          <h1 className="mt-5 max-w-3xl text-4xl font-extrabold leading-[1.04] font-heading sm:text-6xl lg:text-7xl">Professional Business Website</h1>
+          <h1 className="section-title mt-5 max-w-3xl text-4xl font-extrabold leading-[1.04] font-heading sm:text-6xl lg:text-7xl">Professional Business Website</h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">A fast, mobile-ready website that makes your business easier to trust, discover and contact.</p>
-          <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-lg font-bold text-[#0E2B22] shadow-lg transition-colors hover:bg-[#D5AA3E]">
+          <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-lg font-bold text-[#0E2B22] shadow-[0_12px_28px_rgba(200,155,43,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#D5AA3E]">
             Get My Website <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </a>
         </div>
-        <div className="rounded-[28px] border border-white/10 bg-white p-6 text-[#0E2B22] shadow-2xl sm:p-8">
+        <div className="three-d-stage">
+        <div className="three-d-card relative overflow-hidden rounded-[28px] border border-white/30 bg-white/95 p-6 text-[#0E2B22] shadow-2xl backdrop-blur-sm sm:p-8">
+          <div aria-hidden="true" className="absolute right-0 top-0 h-24 w-24 rounded-bl-[4rem] bg-[#C89B2B]/10" />
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Starting from</p>
           <div className="mt-4 flex items-end gap-3">
             <span className="text-lg font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹14,999</span>
@@ -79,18 +83,19 @@ export const BusinessWebsitePage: React.FC = () => (
             Discuss Your Website <MessageCircle className="h-5 w-5" aria-hidden="true" />
           </a>
         </div>
+        </div>
       </div>
     </section>
 
-    <section className="bg-white px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-includes-heading">
+    <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="website-includes-heading">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">What you get</p>
-          <h2 id="website-includes-heading" className="mt-4 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">A clear digital home for your business.</h2>
+          <h2 id="website-includes-heading" className="section-title mt-4 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">A clear digital home for your business.</h2>
           <p className="mt-5 leading-relaxed text-[#1E1E1E]/70">Everything is structured around one practical goal: helping the right visitors understand your offer and take the next step.</p>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2">
-          {includedFeatures.map((feature) => <li key={feature} className="flex items-start gap-3 rounded-xl border border-[#E8E8E8] p-4 text-base"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBD9A2] text-[#0E2B22]"><Check className="h-4 w-4" aria-hidden="true" /></span>{feature}</li>)}
+          {includedFeatures.map((feature) => <li key={feature} className="soft-panel flex items-start gap-3 rounded-xl p-4 text-base transition-transform hover:-translate-y-0.5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBD9A2] text-[#0E2B22]"><Check className="h-4 w-4" aria-hidden="true" /></span>{feature}</li>)}
         </ul>
       </div>
     </section>

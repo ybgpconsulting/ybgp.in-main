@@ -11,6 +11,8 @@ import {
   SERVICE_PAGES,
 } from './src/data/servicePages';
 
+import { cloudflare } from "@cloudflare/vite-plugin";
+
 const SITE_URL = 'https://www.ybgp.in/';
 const ORGANIZATION_ID = `${SITE_URL}#organization`;
 
@@ -165,7 +167,7 @@ const generateSeoRouteEntrypoints = () => ({
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), generateSeoRouteEntrypoints()],
+    plugins: [react(), tailwindcss(), generateSeoRouteEntrypoints(), cloudflare()],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

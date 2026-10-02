@@ -16,7 +16,7 @@ export const SectionPage: React.FC<SectionPageProps> = ({ children, onOpenConsul
   });
 
   return (
-    <div className="min-h-screen bg-white text-[#1E1E1E] flex flex-col font-sans">
+    <div className="site-shell min-h-screen text-[#1E1E1E] flex flex-col font-sans">
       <Navbar onOpenConsultationModal={handleOpenConsultation} />
       <main className="flex-grow">
         {children}

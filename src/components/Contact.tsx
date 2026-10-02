@@ -55,7 +55,7 @@ export const Contact: React.FC<ContactProps> = ({ onOpenConsultationModal }) => 
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="mb-4 text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0E2B22] font-heading tracking-tight"
+          className="mb-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0E2B22] font-heading tracking-[-0.035em]"
           >
             {SITE_DATA.contact.title}
           </motion.h2>
@@ -78,7 +78,7 @@ export const Contact: React.FC<ContactProps> = ({ onOpenConsultationModal }) => 
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="bg-white rounded-[28px] border border-[#EBEBEB] p-8 sm:p-12 shadow-xl text-center space-y-8"
+            className="premium-card bg-white/90 rounded-[30px] border border-white p-8 sm:p-12 text-center space-y-8"
           >
             {/* Header: Name & Title */}
             <div>
@@ -135,7 +135,7 @@ export const Contact: React.FC<ContactProps> = ({ onOpenConsultationModal }) => 
             <div className="pt-4">
               <button
                 onClick={onOpenConsultationModal}
-                className="w-full bg-[#0E2B22] hover:bg-[#164537] text-white py-4 rounded-full font-semibold text-sm sm:text-base transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
+                className="w-full bg-[#0E2B22] hover:bg-[#164537] text-white py-4 rounded-full font-semibold text-sm sm:text-base transition-all duration-300 shadow-[0_10px_24px_rgba(14,43,34,0.22)] hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(14,43,34,0.30)] cursor-pointer"
               >
                 {SITE_DATA.contact.primaryCta}
               </button>

@@ -12,6 +12,7 @@ export interface Project {
   preview: 'image' | 'queue' | 'unavailable';
   ownWork?: boolean;
   isApplication?: boolean;
+  sampleTemplate?: boolean;
 }
 
 export const PROJECTS: Project[] = [
@@ -22,8 +23,8 @@ export const PROJECTS: Project[] = [
     fullName: 'Your Business Growth Partner',
     category: 'Business Growth / Consulting / Digital',
     description: 'Our own website brings YBGP’s business consulting offer, services and enquiry path together in one digital home.',
-    image: '/og-image.svg',
-    imageAlt: 'YBGP brand artwork and the From Idea to a Profitable Business tagline',
+    image: '/work-ybgp.png',
+    imageAlt: 'YBGP homepage preview',
     url: 'https://ybgp.in/',
     tags: ['Consulting', 'Digital experience'],
     preview: 'image',
@@ -34,9 +35,9 @@ export const PROJECTS: Project[] = [
     number: '02',
     name: 'Freshera Foods',
     category: 'Food & Beverage / Brand Website',
-    description: 'A brand website presenting Freshera Foods’ vegetarian menu, fresh shakes and local ordering details for Sector 168, Noida.',
-    image: '/freshera-foods-preview.webp',
-    imageAlt: 'Freshera Foods homepage food photography',
+    description: 'A healthy-food delivery website for Sector 168, Noida, showcasing 100% vegetarian burgers, sandwiches, pasta, protein-focused meals and fresh fruit shakes.',
+    image: '/work-freshera-foods.png',
+    imageAlt: 'Freshera Foods healthy food delivery homepage',
     url: 'https://fresherafoods.in/',
     tags: ['Brand website', 'Food & beverage', 'Local ordering'],
     preview: 'image'
@@ -46,9 +47,9 @@ export const PROJECTS: Project[] = [
     number: '03',
     name: 'Cakes N More',
     category: 'Bakery / Local Business Website',
-    description: 'A bakery and florist storefront showcasing cakes, flowers and gifts with product browsing and local ordering information.',
-    image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1600&auto=format&fit=crop',
-    imageAlt: 'Cake featured on the Cakes N More homepage',
+    description: 'A Sector 76, Noida bakery and florist storefront for 100% eggless cakes, flower bouquets, gifts, plants and celebration hampers, with local delivery and WhatsApp ordering.',
+    image: '/work-cakes-n-more.png',
+    imageAlt: 'Cakes N More homepage showing cakes, flowers and gifts',
     url: 'https://cakesnmorenoida.in/',
     tags: ['Bakery', 'Flowers & gifts', 'Online storefront'],
     preview: 'image'
@@ -59,10 +60,11 @@ export const PROJECTS: Project[] = [
     name: 'NextQ',
     category: 'Clinic Queue Management / Appointment Software',
     description: 'A clinic appointment and queue experience connecting patient booking with reception, doctor and display views, including live token tracking.',
-    imageAlt: 'NEXTQ clinic queue dashboard preview based on the live homepage',
+    image: '/work-nextq.png',
+    imageAlt: 'NEXTQ clinic appointment and live queue management homepage',
     url: 'https://nextq.in/',
     tags: ['Clinic software', 'Queue management', 'Patient booking'],
-    preview: 'queue',
+    preview: 'image',
     isApplication: true
   },
   {
@@ -70,22 +72,50 @@ export const PROJECTS: Project[] = [
     number: '05',
     name: 'Unique Aroma',
     category: 'Home Fragrance / E-commerce',
-    description: 'A product storefront for artisanal soy candles and DIY candle kits, organized around its candle and home-fragrance collections.',
-    image: 'https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=1600&q=85',
-    imageAlt: 'Hand-poured candle product featured on the Unique Aroma homepage',
+    description: 'An artisanal home-fragrance storefront for hand-poured soy candles, DIY candle kits, gift hampers and aromatherapy collections, with direct WhatsApp ordering.',
+    image: '/work-unique-aroma.png',
+    imageAlt: 'Unique Aroma homepage showing artisanal candles and DIY kits',
     url: 'https://unique-aroma.uniquearoma29.workers.dev/',
     tags: ['Soy candles', 'DIY kits', 'E-commerce'],
     preview: 'image'
   },
   {
-    id: 'cortek-enterprises',
+    id: 'gandhinagar-wholesale',
     number: '06',
+    name: 'Gandhinagar Wholesale',
+    category: 'Garments Wholesale / Sample Template',
+    description: 'A sample template for a garments wholesale business in Gandhi Nagar, Delhi, with a product-catalogue structure, wholesale-only messaging and enquiry paths for retailers and resellers.',
+    image: '/work-gandhinagar-wholesale.png',
+    imageAlt: 'Desktop homepage screenshot of the Gandhinagar Wholesale sample storefront',
+    url: 'https://gandhinagar-wholesale.ybgp-consulting.workers.dev/',
+    tags: ['Garments', 'Wholesale catalogue', 'Sample template'],
+    preview: 'image',
+    sampleTemplate: true
+  },
+  {
+    id: 'zewargali',
+    number: '07',
+    name: 'Zewar Gali',
+    category: 'Jewellery E-commerce / Sample Template',
+    description: 'A sample e-commerce storefront for a jewellery business, with category-led product discovery, product details, payment and delivery information, and direct WhatsApp ordering.',
+    image: '/work-zewar-gali.png',
+    imageAlt: 'Desktop homepage screenshot of the Zewar Gali jewellery sample storefront',
+    url: 'https://zewargali-in.ybgp-consulting.workers.dev/',
+    tags: ['Jewellery', 'E-commerce', 'WhatsApp ordering', 'Sample template'],
+    preview: 'image',
+    sampleTemplate: true
+  },
+  {
+    id: 'cortek-enterprises',
+    number: '08',
     name: 'Cortek Enterprises',
-    category: 'Business Management Platform / Web Application',
-    description: 'A custom business management platform presented as a web application. The supplied live project URL is currently returning a 404 response.',
+    category: 'Consumer Electronics Inventory / E-commerce Platform',
+    description: 'A live consumer-electronics inventory platform for Cortek Enterprises, presenting available devices, stock readiness, product conditions and customer safety checks.',
+    image: '/work-cortek-enterprises.png',
+    imageAlt: 'Cortek Enterprises electronics inventory homepage',
     url: 'https://cortek-enterprises.ybgp-consulting.workers.dev/',
     tags: ['Web application', 'Business management'],
-    preview: 'unavailable',
+    preview: 'image',
     isApplication: true
   }
 ];

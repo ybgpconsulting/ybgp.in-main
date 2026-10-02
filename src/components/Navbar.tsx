@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Logo } from './Logo';
 import { SITE_DATA } from '../data/siteData';
-import { Menu, X } from 'lucide-react';
 
 interface NavbarProps {
   onOpenConsultationModal: () => void;
@@ -10,7 +9,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onOpenConsultationModal }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState(() => window.location.pathname.replace(/^\/+|\/+$/g, '') || 'home');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,12 +49,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenConsultationModal }) => {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md border-b border-[#E9E9E9] py-1 shadow-sm'
-          : 'bg-white py-1.5 border-b border-[#F0F0F0]'
+          ? 'bg-white/85 backdrop-blur-xl border-b border-white/70 py-2 shadow-[0_10px_35px_rgba(14,43,34,0.07)]'
+          : 'bg-white/75 backdrop-blur-md py-2 border-b border-transparent'
       }`}
     >
-      <div className="max-w-none mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-14 items-center justify-between gap-3">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2.5 focus:outline-none">
             <Logo size="sm" showSubtitle={false} />
@@ -67,16 +65,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenConsultationModal }) => {
           </a>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-7 rounded-full border border-[#0E2B22]/[0.08] bg-white/70 px-5 py-2 shadow-[0_4px_18px_rgba(14,43,34,0.035)]">
             {navLinks.map((link) => {
               const isActive = activeSection === link.id;
               return (
                 <a
                   key={link.id}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors hover:text-[#0E2B22] ${
+                  className={`relative text-sm font-medium transition-colors hover:text-[#0E2B22] after:absolute after:-bottom-2 after:left-1/2 after:h-0.5 after:w-0 after:-translate-x-1/2 after:rounded-full after:bg-[#C89B2B] after:transition-all hover:after:w-4 ${
                     isActive
-                      ? 'text-[#0E2B22] font-semibold'
+                      ? 'text-[#0E2B22] font-semibold after:w-4'
                       : 'text-[#555555]'
                   }`}
                 >
@@ -90,58 +88,39 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenConsultationModal }) => {
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={onOpenConsultationModal}
-              className="bg-[#0E2B22] hover:bg-[#164537] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2 group cursor-pointer"
+              className="bg-[#0E2B22] hover:bg-[#164537] text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 shadow-[0_8px_20px_rgba(14,43,34,0.22)] hover:-translate-y-0.5 hover:shadow-[0_12px_25px_rgba(14,43,34,0.28)] flex items-center gap-2 group cursor-pointer"
             >
               <span>{SITE_DATA.hero.primaryCta}</span>
             </button>
           </div>
 
-          {/* Mobile Menu Toggle Button */}
-          <div className="md:hidden flex items-center">
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#0E2B22] hover:bg-gray-100 rounded-lg transition-colors focus:outline-none"
-              aria-label="Toggle Menu"
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
+          <button
+            onClick={onOpenConsultationModal}
+            className="md:hidden shrink-0 bg-[#0E2B22] px-3 py-2 text-[11px] font-semibold text-white"
+          >
+            Start a project
+          </button>
         </div>
-      </div>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-[#E9E9E9] px-4 pt-4 pb-6 space-y-4 shadow-lg animate-in fade-in slide-in-from-top-2">
-          <div className="flex flex-col space-y-3">
+        <nav aria-label="Mobile navigation" className="md:hidden -mx-4 overflow-x-auto border-t border-[#0E2B22]/10 px-4 [scrollbar-width:thin]">
+          <div className="flex w-max min-w-full items-center gap-6 py-2.5">
             {navLinks.map((link) => (
               <a
                 key={link.id}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                aria-current={activeSection === link.id ? 'page' : undefined}
+                className={`shrink-0 border-b pb-1 text-xs font-medium transition-colors ${
                   activeSection === link.id
-                    ? 'bg-[#0E2B22]/5 text-[#0E2B22] font-bold'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'border-[#C89B2B] text-[#0E2B22] font-semibold'
+                    : 'border-transparent text-[#555555]'
                 }`}
               >
                 {link.label}
               </a>
             ))}
           </div>
-
-          <div className="pt-2 border-t border-gray-100">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenConsultationModal();
-              }}
-              className="w-full bg-[#0E2B22] text-white py-3 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
-            >
-              <span>{SITE_DATA.hero.primaryCta}</span>
-            </button>
-          </div>
-        </div>
-      )}
+        </nav>
+      </div>
     </header>
   );
 };

@@ -25,8 +25,8 @@ export const Logo: React.FC<LogoProps> = ({
   return (
     <div className={`select-none ${className}`}>
       <img
-        src="/logo.png"
-        alt="YBGP logo"
+        src="/Black%20and%20Gold%20YBGP%20Logo.png"
+        alt="YBGP black and gold logo"
         className={`${currentSize.logo} object-contain ${variant === 'light' ? 'shadow-sm' : ''}`}
         width={size === 'sm' ? 80 : size === 'md' ? 112 : size === 'lg' ? 144 : 208}
         height={size === 'sm' ? 32 : size === 'md' ? 45 : size === 'lg' ? 57 : 83}

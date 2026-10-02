@@ -82,7 +82,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-[#1E1E1E] flex flex-col font-sans selection:bg-[#C89B2B] selection:text-white">
+    <div className="site-shell min-h-screen text-[#1E1E1E] flex flex-col font-sans selection:bg-[#C89B2B] selection:text-white">
       {/* Sticky Header Navigation */}
       <Navbar onOpenConsultationModal={handleOpenConsultation} />
 
