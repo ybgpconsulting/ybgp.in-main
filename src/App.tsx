@@ -15,13 +15,11 @@ const BusinessWebsitePage = lazy(() => import('./components/BusinessWebsitePage'
 const ServicePage = lazy(() => import('./components/ServicePage').then((module) => ({ default: module.ServicePage })));
 const SectionPage = lazy(() => import('./components/SectionPage').then((module) => ({ default: module.SectionPage })));
 const Work = lazy(() => import('./components/Work').then((module) => ({ default: module.Work })));
-const WorksAdmin = lazy(() => import('./components/WorksAdmin').then((module) => ({ default: module.WorksAdmin })));
 
 export default function App() {
   const routeSlug = window.location.pathname.replace(/^\/+|\/+$/g, '');
   const servicePage = getServicePage(routeSlug);
   const isHome = routeSlug === '' || routeSlug === 'index.html';
-  const isWorksAdmin = routeSlug === 'admin';
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
 
   useEffect(() => {
@@ -31,19 +29,11 @@ export default function App() {
       return;
     }
 
-    if (servicePage || isHome || isWorksAdmin) return;
+    if (servicePage || isHome) return;
 
     document.title = 'Page Not Found | YBGP';
     document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-  }, [isHome, isWorksAdmin, sectionPage, servicePage]);
-
-  if (isWorksAdmin) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-[#F4F6F3]" />}>
-        <WorksAdmin />
-      </Suspense>
-    );
-  }
+  }, [isHome, sectionPage, servicePage]);
 
   if (servicePage) {
     return (

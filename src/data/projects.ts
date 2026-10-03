@@ -15,8 +15,6 @@ export interface Project {
   sampleTemplate?: boolean;
 }
 
-export type StoredProject = Omit<Project, 'number'>;
-
 export const PROJECTS: Project[] = [
   {
     id: 'ybgp',

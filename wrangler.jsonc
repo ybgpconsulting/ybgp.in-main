@@ -1,27 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ybgp-in-main",
-  "main": "src/worker.ts",
   "compatibility_date": "2026-09-26",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "./dist",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
-  },
-  "d1_databases": [
-    {
-      "binding": "WORKS",
-      "database_name": "ybgp-works",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "vars": {
-    "ACCESS_AUD": "REPLACE_WITH_CLOUDFLARE_ACCESS_AUD",
-    "ACCESS_TEAM_DOMAIN": "REPLACE_WITH_TEAM_NAME.cloudflareaccess.com"
+    "not_found_handling": "single-page-application"
   }
 }
