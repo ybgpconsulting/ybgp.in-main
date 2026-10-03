@@ -15,6 +15,8 @@ export interface Project {
   sampleTemplate?: boolean;
 }
 
+export type StoredProject = Omit<Project, 'number'>;
+
 export const PROJECTS: Project[] = [
   {
     id: 'ybgp',
@@ -117,5 +119,18 @@ export const PROJECTS: Project[] = [
     tags: ['Web application', 'Business management'],
     preview: 'image',
     isApplication: true
+  },
+  {
+    id: 'ybgp-travel',
+    number: '09',
+    name: 'YBGP Travel',
+    fullName: 'A YBGP Concept',
+    category: 'Travel Planning / Curated Journeys',
+    description: 'A travel-planning concept for thoughtfully curated journeys, featuring destination discovery, trip inspiration and bespoke travel experiences.',
+    image: '/work-ybgp-travel.png',
+    imageAlt: 'YBGP Travel homepage featuring curated journeys and a scenic beach',
+    url: 'https://ybgp-travel-concept.ybgp-consulting.workers.dev/',
+    tags: ['Travel concept', 'Curated journeys', 'Destination discovery'],
+    preview: 'image'
   }
 ];

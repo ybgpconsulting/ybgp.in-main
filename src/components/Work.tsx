@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowUpRight, ChevronRight, Minus, Plus } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { PROJECTS, type Project } from '../data/projects';
+import { PROJECTS, type Project, type StoredProject } from '../data/projects';
 import { SITE_DATA } from '../data/siteData';
 import { Reveal } from './Reveal';
 
@@ -102,6 +102,24 @@ const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project,
 
 export const Work: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
+  const [projects, setProjects] = useState<Project[]>(PROJECTS);
+
+  useEffect(() => {
+    fetch('/api/works')
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`Could not load published work (${response.status})`);
+        const result = await response.json() as { projects?: StoredProject[] };
+        if (!Array.isArray(result.projects)) throw new Error('Published works response has an invalid format');
+        setProjects([
+          ...PROJECTS,
+          ...result.projects.map((project, index) => ({
+            ...project,
+            number: String(PROJECTS.length + index + 1).padStart(2, '0'),
+          })),
+        ]);
+      })
+      .catch((error: unknown) => console.error('Could not load admin-published work:', error));
+  }, []);
 
   return (
     <div className="bg-[#F7F7F7] text-[#1E1E1E]">
@@ -121,7 +139,7 @@ export const Work: React.FC = () => {
 
     <section aria-label="Selected projects" className="px-4 sm:px-6">
       <div className="mx-auto max-w-7xl divide-y divide-[#DCDCD6]">
-        {PROJECTS.map((project, index) => {
+        {projects.map((project, index) => {
           const imageColumn = index % 2 === 0 ? 'lg:col-start-2' : 'lg:col-start-1';
           const infoColumn = index % 2 === 0 ? 'lg:col-start-1' : 'lg:col-start-2';
 

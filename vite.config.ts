@@ -98,7 +98,9 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
 
 const generateSeoRouteEntrypoints = () => ({
   name: 'generate-seo-route-entrypoints',
-  async writeBundle(options: { dir?: string }) {
+  async writeBundle(options: { dir?: string }, bundle: Record<string, unknown>) {
+    if (!Object.prototype.hasOwnProperty.call(bundle, 'index.html')) return;
+
     const outputDirectory = options.dir ?? path.resolve(__dirname, 'dist');
     const indexPath = path.join(outputDirectory, 'index.html');
     await fs.access(indexPath);
