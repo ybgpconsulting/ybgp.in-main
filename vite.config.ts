@@ -10,6 +10,7 @@ import {
   SECTION_ROUTES,
   SERVICE_PAGES,
 } from './src/data/servicePages';
+import { PROJECTS } from './src/data/projects';
 
 import { cloudflare } from "@cloudflare/vite-plugin";
 
@@ -25,9 +26,10 @@ const escapeHtml = (value: string) => value
 
 const buildRouteJsonLd = (slug: string, url: string, description: string) => {
   const servicePage = SERVICE_PAGES.find((page) => page.slug === slug);
+  const project = PROJECTS.find((item) => `work/${item.slug}` === slug);
   const isWebsiteOffer = slug === 'business-website';
   const sectionPage = SECTION_ROUTES[slug as keyof typeof SECTION_ROUTES];
-  const pageName = servicePage?.name ?? (isWebsiteOffer ? 'Business Website Design and Development' : sectionPage ? ROUTE_METADATA[slug as keyof typeof ROUTE_METADATA].title : 'YBGP');
+  const pageName = servicePage?.name ?? project?.name ?? (isWebsiteOffer ? 'Business Website Design and Development' : sectionPage ? ROUTE_METADATA[slug as keyof typeof ROUTE_METADATA].title : 'YBGP');
   const graph = [{
     '@context': 'https://schema.org',
     '@type': ['Organization', 'ProfessionalService'],
@@ -50,13 +52,13 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
     ]
   }];
 
-  if (servicePage || isWebsiteOffer) {
+  if (servicePage || isWebsiteOffer || project) {
     graph.push({
       '@context': 'https://schema.org',
-      '@type': 'Service',
-      '@id': `${url}#service`,
+      '@type': project ? 'CreativeWork' : 'Service',
+      '@id': `${url}#${project ? 'project' : 'service'}`,
       name: pageName,
-      serviceType: pageName,
+      serviceType: project ? undefined : pageName,
       description,
       url,
       provider: { '@id': ORGANIZATION_ID },
@@ -69,7 +71,8 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
           url,
           availability: 'https://schema.org/InStock'
         }
-      } : {})
+      } : {}),
+      ...(project ? { genre: project.category, about: project.industry } : {})
     });
   } else {
     graph.push({

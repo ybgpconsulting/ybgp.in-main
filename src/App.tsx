@@ -5,6 +5,7 @@ import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { SITE_DATA } from './data/siteData';
 import { getServicePage, SECTION_ROUTES } from './data/servicePages';
+import { getProjectBySlug } from './data/projects';
 
 const About = lazy(() => import('./components/About').then((module) => ({ default: module.About })));
 const Services = lazy(() => import('./components/Services').then((module) => ({ default: module.Services })));
@@ -15,14 +16,33 @@ const BusinessWebsitePage = lazy(() => import('./components/BusinessWebsitePage'
 const ServicePage = lazy(() => import('./components/ServicePage').then((module) => ({ default: module.ServicePage })));
 const SectionPage = lazy(() => import('./components/SectionPage').then((module) => ({ default: module.SectionPage })));
 const Work = lazy(() => import('./components/Work').then((module) => ({ default: module.Work })));
+const ProjectCaseStudy = lazy(() => import('./components/ProjectCaseStudy').then((module) => ({ default: module.ProjectCaseStudy })));
 
 export default function App() {
   const routeSlug = window.location.pathname.replace(/^\/+|\/+$/g, '');
   const servicePage = getServicePage(routeSlug);
+  const projectSlug = routeSlug.startsWith('work/') ? routeSlug.replace(/^work\//, '') : null;
+  const project = projectSlug ? getProjectBySlug(projectSlug) : null;
+  const demoWebsiteSlug = routeSlug.startsWith('websites/') ? routeSlug.replace(/^websites\//, '') : null;
   const isHome = routeSlug === '' || routeSlug === 'index.html';
+  const isWebsitesPage = routeSlug === 'websites' || routeSlug === 'business-website';
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
 
   useEffect(() => {
+    if (project) {
+      document.title = project.seo.title;
+      document.head.querySelector('meta[name="description"]')?.setAttribute('content', project.seo.description);
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'index, follow');
+      return;
+    }
+
+    if (demoWebsiteSlug) {
+      document.title = 'Demo Business Website | YBGP Websites';
+      document.head.querySelector('meta[name="description"]')?.setAttribute('content', 'A sample business website created with the YBGP Websites V1 product flow.');
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
+      return;
+    }
+
     if (sectionPage) {
       document.title = sectionPage.title;
       document.head.querySelector('meta[name="description"]')?.setAttribute('content', sectionPage.description);
@@ -33,12 +53,35 @@ export default function App() {
 
     document.title = 'Page Not Found | YBGP';
     document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-  }, [isHome, sectionPage, servicePage]);
+  }, [demoWebsiteSlug, isHome, sectionPage, servicePage, project]);
+
+  if (project) {
+    const handleOpenConsultation = () => {
+      const formUrl = SITE_DATA.googleFormUrl || `https://wa.me/${SITE_DATA.phoneRaw}?text=${encodeURIComponent(SITE_DATA.whatsappPrefilledMessage)}`;
+      window.open(formUrl, '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-white" /> }>
+        <SectionPage onOpenConsultationModal={handleOpenConsultation}>
+          <ProjectCaseStudy project={project} />
+        </SectionPage>
+      </Suspense>
+    );
+  }
 
   if (servicePage) {
     return (
       <Suspense fallback={<div className="min-h-screen bg-white" /> }>
         <ServicePage page={servicePage} />
+      </Suspense>
+    );
+  }
+
+  if (demoWebsiteSlug) {
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-white" /> }>
+        <BusinessWebsitePage demoSlug={demoWebsiteSlug} />
       </Suspense>
     );
   }
@@ -50,9 +93,9 @@ export default function App() {
     };
 
     return (
-      <Suspense fallback={<div className="min-h-screen bg-white" /> }>
+      <Suspense fallback={<div className="min-h-screen bg-white" /> }> 
         <SectionPage onOpenConsultationModal={handleOpenConsultation}>
-          {routeSlug === 'business-website' && <BusinessWebsitePage />}
+          {isWebsitesPage && <BusinessWebsitePage />}
           {routeSlug === 'work' && <Work />}
           {routeSlug === 'about' && <About />}
           {routeSlug === 'services' && <Services />}

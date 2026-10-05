@@ -1,3 +1,5 @@
+import { PROJECTS } from './projects';
+
 export interface ServicePageData {
   slug: string;
   name: string;
@@ -17,9 +19,13 @@ export const SECTION_ROUTES = {
     title: 'Our Work | YBGP Business Growth Partner',
     description: 'See how YBGP brings business strategy, digital experiences and growth support together to help founders move forward.'
   },
+  websites: {
+    title: 'YBGP Websites | Multi-tenant business websites at ₹999/year',
+    description: 'Launch a reliable, multi-tenant business website with a clean template flow, product pages, gallery management and a simple publish experience.'
+  },
   'business-website': {
-    title: 'Business Website at ₹4,999 | YBGP',
-    description: 'Get a professional, mobile-ready business website with WhatsApp integration, SEO-ready structure and fast loading for ₹4,999.'
+    title: 'YBGP Websites | Multi-tenant business websites at ₹999/year',
+    description: 'Launch a reliable, multi-tenant business website with a clean template flow, product pages, gallery management and a simple publish experience.'
   },
   about: {
     title: 'About YBGP | Your Business Growth Partner',
@@ -186,12 +192,16 @@ export const ROUTE_METADATA = {
   ...Object.fromEntries(
     SERVICE_PAGES.map((page) => [page.slug, { title: page.title, description: page.description }])
   ),
+  ...Object.fromEntries(
+    PROJECTS.map((project) => [`work/${project.slug}`, { title: project.seo.title, description: project.seo.description }])
+  ),
   ...SECTION_ROUTES
 } as const;
 
 export const ROUTE_SLUGS = [
   'home',
   ...SERVICE_PAGES.map((page) => page.slug),
+  ...PROJECTS.map((project) => `work/${project.slug}`),
   ...Object.keys(SECTION_ROUTES)
 ] as const;
 

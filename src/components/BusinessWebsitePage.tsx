@@ -1,130 +1,355 @@
-import React from 'react';
-import { ArrowRight, Check, MessageCircle, Phone, Zap } from 'lucide-react';
-import { SITE_DATA } from '../data/siteData';
+﻿import React from 'react';
+import { ArrowRight, Check, CheckCircle2, MessageCircle, LayoutTemplate, Store, ShieldCheck, Sparkles, Camera, ShoppingBag } from 'lucide-react';
 
-const websiteOfferUrl = 'https://wa.me/919953270270?text=Hi%2C%20I%20want%20to%20discuss%20the%20business%20website%20starting%20from%20%E2%82%B94%2C999.';
+const websiteOfferUrl = 'https://wa.me/919953270270?text=Hi%2C%20I%20want%20to%20discuss%20the%20YBGP%20Websites%20plan%20for%20%E2%82%B9999%2Fyear.';
 
 const includedFeatures = [
-  'Professional design',
-  'Mobile responsive layout',
-  'WhatsApp integration',
-  'SEO-ready structure',
-  'Fast-loading build',
-  'Business-focused content structure'
+  'Business profile and website setup',
+  'Template-based design flow',
+  'Products and services sections',
+  'Gallery and visual storytelling',
+  'Mobile-first public website',
+  'Simple publish workflow for updates'
 ];
 
-const audienceItems = [
-  'Local businesses that need a credible online presence',
-  'Founders launching a new service or company',
-  'Professionals who want more enquiries from their website'
+const workflowSteps = [
+  ['01', 'Create business', 'Set up a new business profile and choose your website tenant.'],
+  ['02', 'Select template', 'Pick a brand-aligned layout for your industry and customer journey.'],
+  ['03', 'Add details', 'Add your business information, services, gallery, pricing and contact details.'],
+  ['04', 'Publish', 'Launch your business website and keep the content updated from one place.']
 ];
 
-const processSteps = [
-  ['01', 'Share your requirements', 'Tell us about your business, audience, services and the action you want visitors to take.'],
-  ['02', 'We shape the first version', 'We organise the content, structure and visual direction around your business goals.'],
-  ['03', 'Review and launch', 'You review the page, we refine the details, and your website goes live ready for enquiries.']
+const platformHighlights = [
+  { title: 'One application', description: 'One app serves multiple businesses without separate codebases or duplicated customer sites.', icon: LayoutTemplate },
+  { title: 'Business-safe data model', description: 'Every tenant record is tied to a business_id so one business never sees another business’s content.', icon: ShieldCheck },
+  { title: 'Launch-ready templates', description: 'Start with bakery, salon, jewellery or service-oriented layouts and adapt them to the business quickly.', icon: Store },
+  { title: 'Fast updates', description: 'Business owners can update products, gallery items and service content directly from the dashboard.', icon: Sparkles }
 ];
+
+const demoBusinesses = {
+  'demo-bakery': {
+    slug: 'demo-bakery',
+    name: 'Aroma & Crumb',
+    category: 'Bakery & gifting studio',
+    description: 'A warm neighbourhood bakery site with signature items, seasonal collections and a direct WhatsApp ordering flow.',
+    heroText: 'Fresh cakes, savoury bites and gifting that feels personal.',
+    services: ['Custom cakes', 'Birthday hampers', 'Corporate gifting', 'Festive boxes'],
+    gallery: ['Signature cakes', 'Bakery counters', 'Event gifting', 'Custom packaging']
+  },
+  'demo-salon': {
+    slug: 'demo-salon',
+    name: 'Maison Gloss',
+    category: 'Salon & wellness studio',
+    description: 'A polished beauty brand experience with service cards, before-and-after inspiration and booking prompts.',
+    heroText: 'Style that looks premium and feels effortless.',
+    services: ['Hair styling', 'Bridal finishing', 'Facials', 'Beard grooming'],
+    gallery: ['Hair transformations', 'Salon interiors', 'Spa rituals', 'Bridal styling']
+  },
+  'demo-jewellery': {
+    slug: 'demo-jewellery',
+    name: 'Silver Elara',
+    category: 'Jewellery boutique',
+    description: 'A refined jewellery storefront for collections, gifting moments and artisan craftsmanship.',
+    heroText: 'Crafted stories in every detail.',
+    services: ['Wedding jewellery', 'Daily wear', 'Custom engraving', 'Gift boxes'],
+    gallery: ['Necklace drops', 'Custom collections', 'Gift styling', 'Fine finishes']
+  }
+} as const;
 
 const faqs = [
-  ['Is ₹4,999 the final price?', '₹4,999 is the starting price for a focused business website. The final quote depends on the number of pages, content requirements, integrations and custom features.'],
-  ['What do I need to provide?', 'You can provide your logo, business details, services, contact information and any images you want to use. We can help organise the content if needed.'],
-  ['Will the website work on mobile?', 'Yes. The website is designed to work across mobile, tablet and desktop screens so customers can contact you from any device.'],
-  ['Can visitors contact me on WhatsApp?', 'Yes. WhatsApp integration can be included so visitors have a direct, familiar way to start a conversation with your business.'],
-  ['How quickly can it launch?', 'The timeline depends on how quickly the content and feedback are available. We confirm the delivery plan after understanding your requirements.']
+  ['What is included in the ₹999/year plan?', 'The V1 package includes business setup, template selection, essential content sections, gallery upload support, a mobile-friendly public website and simple publish access.'],
+  ['Does this work for multiple business types?', 'Yes. The platform is designed for small businesses such as bakeries, salons, clinics, boutiques, service providers and local brands.'],
+  ['Are future SaaS features already built in?', 'This V1 keeps the product lean and extension-ready: the core architecture is designed for multi-tenancy and future SaaS scaling without creating complexity in the first release.'],
+  ['What is not included in V1?', 'V1 does not include payment gateways, advanced analytics, custom domains, complex CRM, automated billing or other advanced operational modules.']
 ];
 
-const WebsitePreview: React.FC<{ variant: 'service' | 'local' | 'professional'; title: string }> = ({ variant, title }) => (
-  <div className="overflow-hidden rounded-2xl border border-[#DCDCDC] bg-white shadow-[0_14px_30px_rgba(14,43,34,0.08)]">
-    <div className="flex items-center gap-1 border-b border-[#EAEAEA] bg-[#F5F5F5] px-3 py-2">
-      <span className="h-2 w-2 rounded-full bg-[#D7A4A0]" />
-      <span className="h-2 w-2 rounded-full bg-[#D8CBA4]" />
-      <span className="h-2 w-2 rounded-full bg-[#9FBBA9]" />
-      <span className="ml-2 truncate text-[9px] text-[#888]">yourbusiness.in</span>
-    </div>
-    <div className={`min-h-[220px] p-5 ${variant === 'service' ? 'bg-[#0E2B22]' : variant === 'local' ? 'bg-[#F2EDE5]' : 'bg-[#E9F1EF]'}`}>
-      <div className="flex items-center justify-between">
-        <div className={`h-3 w-20 rounded ${variant === 'service' ? 'bg-[#C89B2B]' : 'bg-[#0E2B22]'}`} />
-        <div className="h-2 w-12 rounded bg-black/20" />
-      </div>
-      <div className="mt-10 max-w-[180px]">
-        <div className={`h-5 w-full rounded ${variant === 'service' ? 'bg-white/90' : 'bg-[#0E2B22]'}`} />
-        <div className={`mt-2 h-3 w-4/5 rounded ${variant === 'service' ? 'bg-white/50' : 'bg-black/20'}`} />
-        <div className={`mt-5 h-8 w-24 rounded-full ${variant === 'service' ? 'bg-[#C89B2B]' : 'bg-[#0E2B22]'}`} />
-      </div>
-      <p className={`mt-8 text-xs font-semibold ${variant === 'service' ? 'text-white/80' : 'text-[#0E2B22]/70'}`}>{title}</p>
-    </div>
-  </div>
-);
+const WebsitePreview: React.FC<{ title: string; accent: 'bakery' | 'salon' | 'jewellery' }> = ({ title, accent }) => {
+  const palette = {
+    bakery: 'bg-[#F7E7D5] text-[#0E2B22]',
+    salon: 'bg-[#EAEAE2] text-[#0E2B22]',
+    jewellery: 'bg-[#F2EFEA] text-[#0E2B22]'
+  }[accent];
 
-export const BusinessWebsitePage: React.FC = () => (
-  <div className="bg-[#F7F7F7] text-[#1E1E1E]">
-    <section className="relative overflow-hidden bg-[#0E2B22] px-4 pb-14 pt-28 text-white sm:px-6 sm:pb-18 sm:pt-36">
-      <div aria-hidden="true" className="absolute -right-24 -top-28 h-[32rem] w-[32rem] rounded-full bg-[#C89B2B]/10 blur-3xl" />
-      <div aria-hidden="true" className="dot-grid absolute bottom-0 right-[8%] h-64 w-64 opacity-25" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D8CBA4]">Website offer for growing businesses</p>
-          <h1 className="section-title mt-5 max-w-3xl text-4xl font-extrabold leading-[1.04] font-heading sm:text-6xl lg:text-7xl">Professional Business Website</h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">A fast, mobile-ready website that makes your business easier to trust, discover and contact.</p>
-          <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-lg font-bold text-[#0E2B22] shadow-[0_12px_28px_rgba(200,155,43,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#D5AA3E]">
-            Get My Website <ArrowRight className="h-5 w-5" aria-hidden="true" />
-          </a>
+  return (
+    <div className="overflow-hidden rounded-2xl border border-[#E4E4E4] bg-white shadow-[0_12px_30px_rgba(14,43,34,0.06)]">
+      <div className="flex items-center gap-1.5 border-b border-[#EFEFEF] bg-[#F7F7F7] px-3 py-2">
+        <span className="h-2.5 w-2.5 rounded-full bg-[#D7A4A0]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#D8CBA4]" />
+        <span className="h-2.5 w-2.5 rounded-full bg-[#9FBBA9]" />
+        <span className="ml-2 truncate text-[9px] font-medium uppercase tracking-[0.12em] text-[#66736F]">example-brand.in</span>
+      </div>
+      <div className={`min-h-[230px] p-5 ${palette}`}>
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-20 rounded bg-[#0E2B22]/75" />
+          <div className="h-2 w-12 rounded bg-[#0E2B22]/20" />
         </div>
-        <div className="three-d-stage">
-        <div className="three-d-card relative overflow-hidden rounded-[28px] border border-white/30 bg-white/95 p-6 text-[#0E2B22] shadow-2xl backdrop-blur-sm sm:p-8">
-          <div aria-hidden="true" className="absolute right-0 top-0 h-24 w-24 rounded-bl-[4rem] bg-[#C89B2B]/10" />
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Starting from</p>
-          <div className="mt-4 flex items-end gap-3">
-            <span className="text-lg font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹14,999</span>
-            <span className="text-5xl font-semibold leading-none sm:text-6xl">₹4,999</span>
+        <div className="mt-10 space-y-2">
+          <div className="h-4 w-3/4 rounded bg-[#0E2B22]/80" />
+          <div className="h-3 w-2/3 rounded bg-[#0E2B22]/35" />
+          <div className="mt-5 h-8 w-24 rounded-full bg-[#C89B2B]" />
+        </div>
+        <div className="mt-8 text-xs font-semibold uppercase tracking-[0.16em] text-[#0E2B22]/70">{title}</div>
+      </div>
+    </div>
+  );
+};
+
+export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug }) => {
+  const demoBusiness = demoSlug ? demoBusinesses[demoSlug as keyof typeof demoBusinesses] ?? demoBusinesses['demo-bakery'] : null;
+
+  if (demoBusiness) {
+    return (
+      <div className="bg-[#fffaf4] text-[#1E1E1E]">
+        <header className="border-b border-[#F1E2D3] bg-white/90 backdrop-blur-sm">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#C89B2B]">YBGP Websites</p>
+              <h1 className="text-xl font-extrabold text-[#0E2B22]">{demoBusiness.name}</h1>
+            </div>
+            <a href="/websites/" className="inline-flex items-center gap-2 rounded-full bg-[#0E2B22] px-4 py-2 text-sm font-semibold text-white">Back to YBGP Websites</a>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-[#1E1E1E]/65">Final pricing depends on pages, content, integrations and custom requirements.</p>
-          <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0E2B22] px-5 py-4 font-bold text-white transition-colors hover:bg-[#164537]">
-            Discuss Your Website <MessageCircle className="h-5 w-5" aria-hidden="true" />
-          </a>
-        </div>
-        </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
+          <section className="grid gap-8 rounded-[30px] bg-[#0E2B22] p-6 text-white shadow-[0_20px_60px_rgba(14,43,34,0.12)] lg:grid-cols-[1.1fr_0.9fr] lg:p-10">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#D8CBA4]">{demoBusiness.category}</p>
+              <h2 className="mt-4 text-4xl font-extrabold leading-tight font-heading sm:text-5xl">{demoBusiness.heroText}</h2>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-white/75">{demoBusiness.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-5 py-3 font-bold text-[#0E2B22]">Book a consultation <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
+                <a href="#services" className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 font-semibold text-white">View services</a>
+              </div>
+            </div>
+            <div className="rounded-[26px] border border-white/10 bg-[#F7F4EE] p-5 text-[#0E2B22] shadow-inner">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6B726E]">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#B8C7AF]" />
+                <span>Business preview</span>
+              </div>
+              <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between border-b border-[#EFEAE4] pb-3">
+                  <div className="text-sm font-semibold">{demoBusiness.name}</div>
+                  <span className="rounded-full bg-[#F7E8CB] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#0E2B22]">Featured</span>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {demoBusiness.services.map((service) => (
+                    <div key={service} className="flex items-center justify-between rounded-xl bg-[#F8F6F2] px-3 py-2 text-sm">
+                      <span>{service}</span>
+                      <CheckCircle2 className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="services" className="mt-16">
+            <div className="mb-6 max-w-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#C89B2B]">What is on offer</p>
+              <h3 className="mt-3 text-3xl font-extrabold font-heading text-[#0E2B22]">Built around the real customer journey.</h3>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {demoBusiness.services.map((service, index) => (
+                <div key={service} className="rounded-2xl border border-[#E9E7E2] bg-white p-5 shadow-[0_10px_24px_rgba(14,43,34,0.04)]">
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-[#F7E8CB] text-[#0E2B22]">
+                    {index % 2 === 0 ? <ShoppingBag className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
+                  </div>
+                  <h4 className="text-lg font-bold text-[#0E2B22]">{service}</h4>
+                  <p className="mt-2 text-sm leading-relaxed text-[#49524F]">Purpose-built to help this business showcase value clearly and convert enquiries with less friction.</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-16 rounded-[28px] border border-[#F0E5D4] bg-white p-6 shadow-[0_16px_40px_rgba(14,43,34,0.04)] sm:p-8">
+            <div className="mb-6 max-w-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C89B2B]">Gallery</p>
+              <h3 className="mt-3 text-3xl font-extrabold font-heading text-[#0E2B22]">A website that tells the story visually.</h3>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {demoBusiness.gallery.map((item) => (
+                <div key={item} className="rounded-2xl border border-[#F0E7E1] bg-[#FFF8F0] p-4">
+                  <div className="flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-[#F4E7D5] via-[#F8F6F2] to-[#E9F0EB] text-sm font-semibold uppercase tracking-[0.12em] text-[#0E2B22]">{item}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
       </div>
-    </section>
+    );
+  }
 
-    <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="website-includes-heading">
-      <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">What you get</p>
-          <h2 id="website-includes-heading" className="section-title mt-4 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">A clear digital home for your business.</h2>
-          <p className="mt-5 leading-relaxed text-[#1E1E1E]/70">Everything is structured around one practical goal: helping the right visitors understand your offer and take the next step.</p>
+  return (
+    <div className="bg-[#F7F7F7] text-[#1E1E1E]">
+      <section className="relative overflow-hidden bg-[#0E2B22] px-4 pb-16 pt-28 text-white sm:px-6 sm:pb-20 sm:pt-36">
+        <div aria-hidden="true" className="absolute -right-24 -top-28 h-[30rem] w-[30rem] rounded-full bg-[#C89B2B]/10 blur-3xl" />
+        <div aria-hidden="true" className="dot-grid absolute bottom-0 right-[8%] h-64 w-64 opacity-20" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D8CBA4]">YBGP Websites • V1 launch</p>
+            <h1 className="section-title mt-5 max-w-3xl text-4xl font-extrabold leading-[1.04] font-heading sm:text-6xl lg:text-7xl">Launch your business website for ₹999/year.</h1>
+            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">A clean, multi-tenant website platform for small businesses—built to help owners publish a credible online presence without the complexity of a full SaaS suite.</p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-base font-bold text-[#0E2B22] shadow-[0_12px_28px_rgba(200,155,43,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#D5AA3E]">
+                Start my website <ArrowRight className="h-5 w-5" aria-hidden="true" />
+              </a>
+              <a href="/websites/demo-bakery/" className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-4 text-base font-semibold text-white transition-colors hover:bg-white/10">View demo site</a>
+            </div>
+          </div>
+
+          <div className="three-d-stage">
+            <div className="three-d-card relative overflow-hidden rounded-[28px] border border-white/20 bg-white/95 p-6 text-[#0E2B22] shadow-[0_28px_70px_rgba(0,0,0,0.18)] backdrop-blur-sm sm:p-8">
+              <div aria-hidden="true" className="absolute right-0 top-0 h-24 w-24 rounded-bl-[4rem] bg-[#C89B2B]/10" />
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Annual plan</p>
+              <div className="mt-4 flex items-end gap-3">
+                <span className="text-xl font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹1,999</span>
+                <span className="text-5xl font-semibold leading-none sm:text-6xl">₹999</span>
+              </div>
+              <p className="mt-3 text-base font-medium text-[#1E1E1E]/70">Per business, per year</p>
+              <div className="mt-6 space-y-3 text-sm text-[#0E2B22]/80">
+                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Tenant-safe architecture</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
+                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Template-based setup</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
+                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Publish & update flow</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
+              </div>
+              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0E2B22] px-5 py-4 font-bold text-white transition-colors hover:bg-[#164537]">
+                Discuss the plan <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              </a>
+            </div>
+          </div>
         </div>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {includedFeatures.map((feature) => <li key={feature} className="soft-panel flex items-start gap-3 rounded-xl p-4 text-base transition-transform hover:-translate-y-0.5"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBD9A2] text-[#0E2B22]"><Check className="h-4 w-4" aria-hidden="true" /></span>{feature}</li>)}
-        </ul>
-      </div>
-    </section>
+      </section>
 
-    <section className="px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-fit-heading">
-      <div className="mx-auto max-w-6xl">
-        <div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Who it is for</p><h2 id="website-fit-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Built for businesses that need momentum.</h2></div>
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
-          {audienceItems.map((item, index) => <article key={item} className="rounded-2xl border border-[#E5E5E5] bg-white p-6"><span className="text-sm font-bold text-[#C89B2B]">0{index + 1}</span><p className="mt-5 font-semibold leading-relaxed text-[#0E2B22]">{item}</p></article>)}
+      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-includes-heading">
+        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Built for V1</p>
+            <h2 id="platform-includes-heading" className="section-title mt-4 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">A lean, scalable system for the first real customers.</h2>
+            <p className="mt-5 leading-relaxed text-[#1E1E1E]/70">This launch keeps the product focused on the immediate business goal: helping YBGP create, publish and manage small-business websites without heavy operational complexity.</p>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {includedFeatures.map((feature) => (
+              <li key={feature} className="soft-panel flex items-start gap-3 rounded-xl p-4 text-base transition-transform hover:-translate-y-0.5">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBD9A2] text-[#0E2B22]"><Check className="h-4 w-4" aria-hidden="true" /></span>
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section className="bg-white px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-examples-heading">
-      <div className="mx-auto max-w-6xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Example directions</p><h2 id="website-examples-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">A visual direction shaped around your business.</h2><div className="mt-8 grid gap-6 md:grid-cols-3"><WebsitePreview variant="service" title="Service business" /><WebsitePreview variant="local" title="Local business" /><WebsitePreview variant="professional" title="Professional practice" /></div></div>
-    </section>
+      <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-architecture-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">System design</p>
+            <h2 id="platform-architecture-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">An architecture that stays ready for future SaaS growth.</h2>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {platformHighlights.map(({ title, description, icon: Icon }) => (
+              <article key={title} className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-[0_12px_28px_rgba(14,43,34,0.04)]">
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#F7E8CB] text-[#0E2B22]">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <h3 className="text-xl font-bold text-[#0E2B22]">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#1E1E1E]/70">{description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-    <section className="px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-process-heading">
-      <div className="mx-auto max-w-6xl"><div className="max-w-2xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">How it works</p><h2 id="website-process-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">From brief to business-ready website.</h2></div><div className="mt-8 grid gap-5 md:grid-cols-3">{processSteps.map(([number, title, description]) => <article key={number} className="border-t-2 border-[#C89B2B] pt-5"><span className="text-sm font-bold text-[#C89B2B]">{number}</span><h3 className="mt-3 text-xl font-bold text-[#0E2B22] font-heading">{title}</h3><p className="mt-3 leading-relaxed text-[#1E1E1E]/70">{description}</p></article>)}</div><a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-10 inline-flex items-center gap-2 rounded-full bg-[#0E2B22] px-6 py-4 font-bold text-white hover:bg-[#164537]">Start with WhatsApp <ArrowRight className="h-5 w-5" aria-hidden="true" /></a></div>
-    </section>
+      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-workflow-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">V1 workflow</p>
+            <h2 id="platform-workflow-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">From business setup to public website in one simple flow.</h2>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {workflowSteps.map(([step, title, description]) => (
+              <article key={step} className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
+                <span className="text-sm font-bold text-[#C89B2B]">{step}</span>
+                <h3 className="mt-3 text-xl font-bold text-[#0E2B22]">{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#1E1E1E]/70">{description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
-    <section className="bg-white px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-scope-heading">
-      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2"><article className="rounded-2xl border border-[#D7E6DC] bg-[#F2F8F3] p-6 sm:p-8"><h2 id="website-scope-heading" className="text-2xl font-bold text-[#0E2B22] font-heading">Included in the starting scope</h2><ul className="mt-5 space-y-3 text-[#1E1E1E]/75">{['Focused business website structure', 'Responsive front-end layout', 'Contact and WhatsApp call-to-action', 'Basic on-page SEO structure', 'Deployment-ready production build'].map((item) => <li key={item} className="flex gap-3"><Check className="mt-1 h-4 w-4 shrink-0 text-[#0E2B22]" aria-hidden="true" />{item}</li>)}</ul></article><article className="rounded-2xl border border-[#E9D9D5] bg-[#FFF8F6] p-6 sm:p-8"><h2 className="text-2xl font-bold text-[#0E2B22] font-heading">May be quoted separately</h2><ul className="mt-5 space-y-3 text-[#1E1E1E]/75">{['Additional pages or complex content', 'Custom application features', 'Paid hosting, domain or third-party tools', 'Professional photography or copywriting', 'Advanced SEO or ongoing marketing'].map((item) => <li key={item} className="flex gap-3"><span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#C89B2B]" />{item}</li>)}</ul></article></div>
-    </section>
+      <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="template-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Demo templates</p>
+            <h2 id="template-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">A few fast starting points for different business types.</h2>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            <a href="/websites/demo-bakery/" className="group block"><WebsitePreview title="Bakery & gifting" accent="bakery" /></a>
+            <a href="/websites/demo-salon/" className="group block"><WebsitePreview title="Salon & wellness" accent="salon" /></a>
+            <a href="/websites/demo-jewellery/" className="group block"><WebsitePreview title="Jewellery boutique" accent="jewellery" /></a>
+          </div>
+        </div>
+      </section>
 
-    <section className="px-4 py-14 sm:px-6 sm:py-18" aria-labelledby="website-faq-heading">
-      <div className="mx-auto max-w-4xl"><p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Questions</p><h2 id="website-faq-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Before we build, let us make the scope clear.</h2><div className="mt-8 divide-y divide-[#E5E5E5] border-y border-[#E5E5E5]">{faqs.map(([question, answer]) => <details key={question} className="group py-5"><summary className="cursor-pointer list-none pr-8 font-semibold text-[#0E2B22] marker:hidden">{question}<span className="float-right text-[#C89B2B] transition-transform group-open:rotate-45">+</span></summary><p className="mt-3 max-w-3xl leading-relaxed text-[#1E1E1E]/70">{answer}</p></details>)}</div></div>
-    </section>
+      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="v1-scope-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">V1 scope</p>
+            <h2 id="v1-scope-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Focused on the product that matters now.</h2>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
+              <h3 className="text-xl font-bold text-[#0E2B22]">Included in V1</h3>
+              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-[#1E1E1E]/75">
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Business creation and tenant management</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Template selection and published website output</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Content updates from the business dashboard</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Essential SEO, gallery and contact elements</li>
+              </ul>
+            </div>
+            <div className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
+              <h3 className="text-xl font-bold text-[#0E2B22]">Not in V1</h3>
+              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-[#1E1E1E]/75">
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Payments, invoices and automated billing</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Custom domains and verification flows</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Advanced analytics or CRM automation</li>
+                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Complex page-builder or AI tools</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <section className="bg-[#0E2B22] px-4 py-14 text-center text-white sm:px-6 sm:py-18"><div className="mx-auto max-w-3xl"><Zap className="mx-auto h-9 w-9 text-[#C89B2B]" aria-hidden="true" /><h2 className="mt-5 text-3xl font-extrabold font-heading sm:text-4xl">Ready to make your business easier to choose?</h2><p className="mx-auto mt-4 max-w-xl leading-relaxed text-white/75">Tell us what you do and we will help you understand the right website scope and starting price.</p><div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row"><a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 font-bold text-[#0E2B22] hover:bg-[#D5AA3E]">Get My Website <MessageCircle className="h-5 w-5" aria-hidden="true" /></a><a href={`tel:+${SITE_DATA.phoneRaw}`} className="inline-flex items-center gap-2 font-semibold text-white hover:text-[#D8CBA4]"><Phone className="h-4 w-4" aria-hidden="true" />{SITE_DATA.phoneDisplay}</a></div></div></section>
-  </div>
-);
+      <section className="px-4 pb-20 pt-6 sm:px-6" aria-labelledby="final-cta-heading">
+        <div className="mx-auto max-w-5xl rounded-[30px] bg-[#0E2B22] p-8 text-white shadow-[0_22px_60px_rgba(14,43,34,0.18)] sm:p-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D8CBA4]">Start with V1</p>
+              <h2 id="final-cta-heading" className="mt-4 text-3xl font-extrabold font-heading sm:text-5xl">Create a clean digital presence for the next business you grow.</h2>
+            </div>
+            <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-base font-bold text-[#0E2B22] transition-transform hover:-translate-y-0.5">
+              Get started with YBGP Websites <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6" aria-labelledby="faq-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">FAQ</p>
+            <h2 id="faq-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Common questions about the V1 rollout.</h2>
+          </div>
+          <div className="mt-8 grid gap-4">
+            {faqs.map(([question, answer]) => (
+              <div key={question} className="rounded-2xl border border-[#E7E7E7] bg-[#F9F9F7] p-5">
+                <h3 className="text-lg font-bold text-[#0E2B22]">{question}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-[#1E1E1E]/70">{answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default BusinessWebsitePage;

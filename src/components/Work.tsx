@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { ArrowUpRight, ChevronRight, Minus, Plus } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { ArrowUpRight, ChevronRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
-import { PROJECTS, type Project } from '../data/projects';
+import { PROJECTS, type Project, WORK_FILTERS } from '../data/projects';
 import { SITE_DATA } from '../data/siteData';
 import { Reveal } from './Reveal';
 
@@ -42,14 +42,12 @@ const QueuePreview: React.FC = () => (
 const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project, index }) => {
   const [imageUnavailable, setImageUnavailable] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-  const previewLabel = project.url.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const previewLabel = `/work/${project.slug}`;
 
   return (
     <motion.a
-      href={project.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Open ${project.name} live site in a new tab`}
+      href={`/work/${project.slug}/`}
+      aria-label={`Open the ${project.name} case study`}
       className="group block rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#C89B2B] focus-visible:ring-offset-4"
       style={{ perspective: 1200 }}
       whileHover={prefersReducedMotion ? undefined : { y: -4 }}
@@ -102,6 +100,29 @@ const ProjectVisual: React.FC<{ project: Project; index: number }> = ({ project,
 
 export const Work: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
+  const [activeFilter, setActiveFilter] = useState<(typeof WORK_FILTERS)[number]>('All');
+
+  const filteredProjects = useMemo(() => {
+    if (activeFilter === 'All') return PROJECTS;
+
+    const normalize = (value: string) => value.toLowerCase();
+    return PROJECTS.filter((project) => {
+      switch (activeFilter) {
+        case 'Websites':
+          return project.projectType.toLowerCase().includes('website') || project.category.toLowerCase().includes('retail') || project.category.toLowerCase().includes('food');
+        case 'E-commerce':
+          return project.projectType.toLowerCase().includes('e-commerce') || project.tags.some((tag) => normalize(tag).includes('e-commerce')) || project.tags.some((tag) => normalize(tag).includes('bakery'));
+        case 'Business Platforms':
+          return project.isApplication || project.projectType.toLowerCase().includes('platform') || project.projectType.toLowerCase().includes('management');
+        case 'B2B':
+          return project.category.toLowerCase().includes('wholesale') || project.industry.toLowerCase().includes('wholesale');
+        case 'Concepts':
+          return project.badge.toLowerCase().includes('concept') || project.ownership.toLowerCase().includes('concept');
+        default:
+          return true;
+      }
+    });
+  }, [activeFilter]);
 
   return (
     <div className="bg-[#F7F7F7] text-[#1E1E1E]">
@@ -110,30 +131,48 @@ export const Work: React.FC = () => {
       <div aria-hidden="true" className="absolute -right-28 -top-36 h-[38rem] w-[38rem] rounded-full border border-[#C89B2B]/20 bg-[#C89B2B]/[0.06] shadow-[0_0_100px_rgba(200,155,43,0.08)]" />
       <div aria-hidden="true" className="absolute right-[12%] top-16 h-48 w-48 rounded-full border border-white/10" />
       <div className="relative mx-auto max-w-7xl">
-        <p className="eyebrow text-xs font-semibold uppercase tracking-[0.24em] text-[#D8CBA4]">Selected projects</p>
-        <h1 id="work-heading" className="mt-6 text-5xl font-extrabold leading-[0.88] tracking-[-0.06em] font-heading sm:text-7xl lg:text-8xl">OUR WORK</h1>
+        <p className="eyebrow text-xs font-semibold uppercase tracking-[0.24em] text-[#D8CBA4]">Selected work</p>
+        <h1 id="work-heading" className="mt-6 text-5xl font-extrabold leading-[0.88] tracking-[-0.06em] font-heading sm:text-7xl lg:text-8xl">Selected Work</h1>
         <div className="mt-8 flex max-w-3xl flex-col gap-4 border-l border-[#C89B2B]/60 pl-5 sm:pl-7">
-          <p className="text-lg leading-relaxed text-white/75 sm:text-xl">Digital experiences we've designed, built and brought to life.</p>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#D8CBA4] sm:text-sm">We don't just advise. We build.</p>
+          <p className="text-lg leading-relaxed text-white/75 sm:text-xl">From business websites and e-commerce platforms to custom business systems, explore how YBGP turns business requirements into practical digital solutions.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#D8CBA4] sm:text-sm">Premium digital execution for real business needs.</p>
         </div>
       </div>
     </section>
 
-    <section aria-label="Selected projects" className="px-4 sm:px-6">
+    <section aria-label="Project filters" className="px-4 pt-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-wrap gap-3">
+          {WORK_FILTERS.map((filter) => {
+            const isActive = activeFilter === filter;
+            return (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setActiveFilter(filter)}
+                className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition-all ${isActive ? 'border-[#0E2B22] bg-[#0E2B22] text-white' : 'border-[#D8DCD8] bg-white text-[#475B52] hover:border-[#C89B2B] hover:text-[#0E2B22]'}`}
+              >
+                {filter}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Selected projects" className="px-4 pb-8 sm:px-6 sm:pb-10 lg:px-8">
       <div className="mx-auto max-w-7xl divide-y divide-[#DCDCD6]">
-        {PROJECTS.map((project, index) => {
+        {filteredProjects.map((project, index) => {
           const imageColumn = index % 2 === 0 ? 'lg:col-start-2' : 'lg:col-start-1';
           const infoColumn = index % 2 === 0 ? 'lg:col-start-1' : 'lg:col-start-2';
 
           return (
-            <Reveal key={project.id} delay={index === 0 ? 0 : 0.04} duration={0.55}>
+            <Reveal key={project.slug} delay={index === 0 ? 0 : 0.04} duration={0.55}>
               <article className={`portfolio-project grid gap-6 py-14 sm:gap-8 sm:py-20 lg:grid-cols-[0.82fr_1.18fr] lg:items-center lg:gap-x-16 ${project.isApplication ? 'lg:py-24' : ''}`}>
                 <div className={`order-1 flex flex-col items-start ${infoColumn} lg:row-start-1`}>
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-sm text-[#8A6A1E]">{project.number}</span>
-                    {project.ownWork && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Built by us, for us</span>}
-                    {project.isApplication && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Digital product</span>}
-                    {project.sampleTemplate && <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">Sample template</span>}
+                    <span className="rounded-full border border-[#D8DCD8] bg-white/70 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-[#56645A]">{project.badge}</span>
                   </div>
                   <h2 className="section-title mt-4 text-3xl font-bold leading-tight text-[#0E2B22] font-heading sm:text-4xl lg:text-5xl">{project.name}</h2>
                   {project.fullName && <p className="mt-2 text-sm font-medium text-[#59645C] sm:text-base">{project.fullName}</p>}
@@ -148,12 +187,10 @@ export const Work: React.FC = () => {
                     {project.tags.map((tag) => <li key={tag} className="rounded-full border border-[#D8DCD8] bg-white/65 px-3 py-1 text-[10px] font-medium text-[#59645C] sm:text-xs">{tag}</li>)}
                   </ul>
                   <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={`/work/${project.slug}/`}
                     className="group/link mt-7 inline-flex min-h-11 items-center gap-2 border-b border-[#C89B2B] pb-1 text-xs font-bold uppercase tracking-[0.12em] text-[#0E2B22] outline-none transition-colors hover:text-[#8A6A1E] focus-visible:ring-2 focus-visible:ring-[#C89B2B] focus-visible:ring-offset-4 sm:text-sm"
                   >
-                    View live {project.isApplication ? 'project' : 'site'}
+                    View case study
                     <ArrowUpRight className={`h-4 w-4 transition-transform duration-300 ${prefersReducedMotion ? '' : 'group-hover/link:translate-x-1 group-hover/link:-translate-y-1'}`} aria-hidden="true" />
                   </a>
                 </div>
