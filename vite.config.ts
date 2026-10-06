@@ -30,7 +30,7 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
   const isWebsiteOffer = slug === 'business-website';
   const sectionPage = SECTION_ROUTES[slug as keyof typeof SECTION_ROUTES];
   const pageName = servicePage?.name ?? project?.name ?? (isWebsiteOffer ? 'Business Website Design and Development' : sectionPage ? ROUTE_METADATA[slug as keyof typeof ROUTE_METADATA].title : 'YBGP');
-  const graph = [{
+  const graph: Record<string, unknown>[] = [{
     '@context': 'https://schema.org',
     '@type': ['Organization', 'ProfessionalService'],
     '@id': ORGANIZATION_ID,
@@ -197,6 +197,12 @@ export default defineConfig(() => {
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
+      proxy: {
+        '/api': {
+          target: `http://127.0.0.1:${process.env.API_PORT ?? '3001'}`,
+          changeOrigin: false,
+        },
+      },
     },
   };
 });

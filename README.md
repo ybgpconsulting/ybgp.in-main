@@ -4,14 +4,48 @@ YBGP is a Vite and React website for Your Business Growth Partner, a business co
 
 ## Local development
 
-Requires Node.js 18 or newer.
+Requires Node.js 18 or newer and a MySQL server.
 
 ```bash
 npm install
+# Terminal 1: React/Vite frontend
 npm run dev
+# Terminal 2: Express API
+npm run server:dev
 ```
 
-The development site runs at `http://localhost:3000`.
+The frontend runs at `http://localhost:3000` and proxies `/api` requests to the API at `http://localhost:3001`.
+
+Copy `.env.example` to `.env` and set the local MySQL connection values before starting the API. Create the configured database in MySQL first. Never commit `.env` or production credentials.
+
+Create the configured database and grant the configured MySQL user access to it. Then run:
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+The migration creates the ten YBGP Websites V1 tables. It is safe to run again and does not create a migration-tracking table. The development seed is repeatable and resets the local demo records and seeded account passwords when rerun; it refuses to run with `NODE_ENV=production`.
+
+Development-only seed accounts (never use these on a production system):
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Super admin | `admin@ybgp.local` | `Ybgp-Dev-Only-6cV9-Qm2X!Local` |
+| Aroma & Crumb owner | `owner@aroma-crumb.demo.test` | `Ybgp-Dev-Only-6cV9-Qm2X!Local` |
+| Maison Gloss owner | `owner@maison-gloss.demo.test` | `Ybgp-Dev-Only-6cV9-Qm2X!Local` |
+
+These credentials are for local development only. The seed stores salted scrypt password hashes, never plaintext passwords.
+
+`GET /api/health` checks API liveness. `GET /api/health/db` tests the MySQL connection and returns only a generic unavailable status on failure.
+
+Database migrations and product endpoints beyond this phase are added in subsequent implementation phases.
+
+## Authentication API
+
+After running the migrations and development seed, start the Express API with `npm run server:dev`. Authentication uses the `ybgp_session` HTTP-only cookie and server-side MySQL sessions with a seven-day lifetime. The API provides `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`. In non-production environments, `/api/auth/test/*` routes are enabled only to exercise role and business ownership authorization; they are not product APIs.
+
+Run the Phase 3 authentication integration tests against the migrated and seeded development database with `npm run test:auth`. The tests use the local demo accounts documented above and roll back direct database security probes.
 
 ## Production build
 
@@ -20,7 +54,7 @@ npm run lint
 npm run build
 ```
 
-The deployable static site is generated in `dist/`.
+The existing frontend build is generated in `dist/`. Build the API separately with `npm run server:build`; the Node server entrypoint is `npm run server:start`. The current static deployment does not deploy or proxy the API, so production API hosting and same-origin routing must be configured on a Node-capable host before customer data is served.
 
 ## Hostinger deployment
 
