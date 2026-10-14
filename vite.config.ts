@@ -67,7 +67,7 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
         offers: {
           '@type': 'Offer',
           priceCurrency: 'INR',
-          price: '999',
+          price: '1999',
           url,
           availability: 'https://schema.org/InStock'
         }

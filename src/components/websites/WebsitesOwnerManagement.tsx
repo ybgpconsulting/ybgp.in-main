@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import {
   apiRequest,
   buttonClassName,
@@ -70,6 +70,10 @@ function PanelHeading({ title, description }: { title: string; description: stri
   return <div className="mb-5"><h2 className="text-xl font-bold text-[#0E2B22]">{title}</h2><p className="mt-1 text-sm leading-5 text-[#6c786f]">{description}</p></div>;
 }
 
+function FormSection({ title, children }: { title: string; children: ReactNode }) {
+  return <section><h3 className="mb-3 font-bold text-[#173328]">{title}</h3><div className="grid gap-4 sm:grid-cols-2">{children}</div></section>;
+}
+
 function useLoadError() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -104,6 +108,10 @@ export function BusinessProfileManager({
       instagram_url: business.instagram_url ?? '',
       facebook_url: business.facebook_url ?? '',
       google_maps_url: business.google_maps_url ?? '',
+      youtube_url: settings.youtube_url ?? '',
+      linkedin_url: settings.linkedin_url ?? '',
+      google_business_url: settings.google_business_url ?? '',
+      other_social_url: settings.other_social_url ?? '',
       city: settings.city ?? '',
       pincode: settings.pincode ?? '',
     });
@@ -115,6 +123,43 @@ export function BusinessProfileManager({
     setLoading(true);
     setError('');
     setSuccess('');
+    if (form.pincode && !/^\d{4,10}$/.test(form.pincode)) {
+      setError('Pincode must contain 4 to 10 digits.');
+      setLoading(false);
+      return;
+    }
+    for (const [label, value] of [
+      ['Phone', form.phone],
+      ['WhatsApp', form.whatsapp],
+    ]) {
+      const digits = (value ?? '').replace(/\D/g, '');
+      if (value && (digits.length < 7 || digits.length > 15)) {
+        setError(`${label} number must contain 7 to 15 digits.`);
+        setLoading(false);
+        return;
+      }
+    }
+    for (const [label, value] of [
+      ['Google Maps', form.google_maps_url],
+      ['Instagram', form.instagram_url],
+      ['Facebook', form.facebook_url],
+      ['YouTube', form.youtube_url],
+      ['LinkedIn', form.linkedin_url],
+      ['Google Business', form.google_business_url],
+      ['Other social link', form.other_social_url],
+    ]) {
+      if (!value) continue;
+      try {
+        const url = new URL(value);
+        if (!['http:', 'https:'].includes(url.protocol) || !url.hostname || url.username || url.password) {
+          throw new Error('invalid URL');
+        }
+      } catch {
+        setError(`${label} must be a valid http or https URL.`);
+        setLoading(false);
+        return;
+      }
+    }
     try {
       await apiRequest('/api/business/me', {
         method: 'PATCH',
@@ -128,22 +173,21 @@ export function BusinessProfileManager({
           address: form.address,
           instagram_url: form.instagram_url,
           facebook_url: form.facebook_url,
-          google_maps_url: form.google_maps_url,
-        }),
-      });
-      await apiRequest('/api/business/settings', {
-        method: 'PATCH',
-        body: JSON.stringify({
           city: form.city,
           pincode: form.pincode,
-          whatsapp: form.whatsapp,
-          call_phone: form.phone,
-          contact_email: form.email,
-          contact_address: form.address,
+          google_maps_url: form.google_maps_url,
+          youtube_url: form.youtube_url,
+          linkedin_url: form.linkedin_url,
+          google_business_url: form.google_business_url,
+          other_social_url: form.other_social_url,
         }),
       });
-      await onSaved();
       setSuccess('Business profile saved. Your public website is updated.');
+      try {
+        await onSaved();
+      } catch {
+        setError('Changes were saved, but the dashboard could not refresh. Reload the page to see the latest details.');
+      }
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Unable to save the business profile');
     } finally {
@@ -153,8 +197,9 @@ export function BusinessProfileManager({
 
   return (
     <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
-      <PanelHeading title="Business profile" description="Keep your public business details and contact links current." />
+      <PanelHeading title="Contact, Location & Social Links" description="Keep your address, directions, contact details and social links up to date on your website." />
       <form onSubmit={save} className="space-y-5">
+        <FormSection title="Contact and location">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Business name" value={form.name ?? ''} onChange={(value) => update('name', value)} required />
           <Field label="Website address (slug)" value={form.slug ?? ''} onChange={() => undefined} readOnly />
@@ -164,15 +209,22 @@ export function BusinessProfileManager({
           <Field label="WhatsApp" value={form.whatsapp ?? ''} onChange={(value) => update('whatsapp', value)} type="tel" />
           <Field label="City" value={form.city ?? ''} onChange={(value) => update('city', value)} />
           <Field label="Pincode" value={form.pincode ?? ''} onChange={(value) => update('pincode', value)} inputMode="numeric" />
-          <Field label="Instagram URL" value={form.instagram_url ?? ''} onChange={(value) => update('instagram_url', value)} type="url" />
-          <Field label="Facebook URL" value={form.facebook_url ?? ''} onChange={(value) => update('facebook_url', value)} type="url" />
           <Field label="Google Maps URL" value={form.google_maps_url ?? ''} onChange={(value) => update('google_maps_url', value)} type="url" />
         </div>
-        <TextAreaField label="Address" value={form.address ?? ''} onChange={(value) => update('address', value)} />
+        <TextAreaField label="Business address" value={form.address ?? ''} onChange={(value) => update('address', value)} />
+        </FormSection>
+        <FormSection title="Social links">
+          <Field label="Instagram URL" value={form.instagram_url ?? ''} onChange={(value) => update('instagram_url', value)} type="url" />
+          <Field label="Facebook URL" value={form.facebook_url ?? ''} onChange={(value) => update('facebook_url', value)} type="url" />
+          <Field label="YouTube URL" value={form.youtube_url ?? ''} onChange={(value) => update('youtube_url', value)} type="url" />
+          <Field label="LinkedIn URL" value={form.linkedin_url ?? ''} onChange={(value) => update('linkedin_url', value)} type="url" />
+          <Field label="Google Business URL" value={form.google_business_url ?? ''} onChange={(value) => update('google_business_url', value)} type="url" />
+          <Field label="Other social link" value={form.other_social_url ?? ''} onChange={(value) => update('other_social_url', value)} type="url" />
+        </FormSection>
         <TextAreaField label="Business description" value={form.description ?? ''} onChange={(value) => update('description', value)} />
         {error ? <Notice>{error}</Notice> : null}
         {success ? <Notice kind="success">{success}</Notice> : null}
-        <button className={buttonClassName} disabled={loading}>{loading ? 'Saving…' : 'Save business profile'}</button>
+        <button className={buttonClassName} disabled={loading}>{loading ? 'Saving…' : 'Save Changes'}</button>
       </form>
     </section>
   );
@@ -455,11 +507,6 @@ export function SettingsManager({
       cta_text: initialSettings.cta_text ?? '',
       cta_url: initialSettings.cta_url ?? '',
       contact_email: initialSettings.contact_email ?? '',
-      contact_address: initialSettings.contact_address ?? '',
-      city: initialSettings.city ?? '',
-      pincode: initialSettings.pincode ?? '',
-      youtube_url: initialSettings.youtube_url ?? '',
-      google_business_url: initialSettings.google_business_url ?? '',
       working_hours: initialSettings.working_hours ?? '',
     });
   }, [initialSettings]);
@@ -474,7 +521,7 @@ export function SettingsManager({
   };
   return (
     <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
-      <PanelHeading title="Website settings" description="Set contact actions, location and business hours shown on the public website." />
+      <PanelHeading title="Website settings" description="Set contact actions and business hours shown on the public website." />
       <form onSubmit={save} className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="WhatsApp number" value={form.whatsapp ?? ''} onChange={(value) => update('whatsapp', value)} type="tel" />
@@ -482,12 +529,7 @@ export function SettingsManager({
           <Field label="CTA button text" value={form.cta_text ?? ''} onChange={(value) => update('cta_text', value)} placeholder="Contact us" />
           <Field label="CTA link URL" value={form.cta_url ?? ''} onChange={(value) => update('cta_url', value)} type="url" />
           <Field label="Contact email" value={form.contact_email ?? ''} onChange={(value) => update('contact_email', value)} type="email" />
-          <Field label="City" value={form.city ?? ''} onChange={(value) => update('city', value)} />
-          <Field label="Pincode" value={form.pincode ?? ''} onChange={(value) => update('pincode', value)} inputMode="numeric" />
-          <Field label="YouTube URL" value={form.youtube_url ?? ''} onChange={(value) => update('youtube_url', value)} type="url" />
-          <Field label="Google Business URL" value={form.google_business_url ?? ''} onChange={(value) => update('google_business_url', value)} type="url" />
         </div>
-        <TextAreaField label="Contact address" value={form.contact_address ?? ''} onChange={(value) => update('contact_address', value)} />
         <TextAreaField label="Working hours" value={form.working_hours ?? ''} onChange={(value) => update('working_hours', value)} rows={3} />
         {error ? <Notice>{error}</Notice> : null}{success ? <Notice kind="success">{success}</Notice> : null}
         <button className={buttonClassName} disabled={busy}>{busy ? 'Saving…' : 'Save settings'}</button>

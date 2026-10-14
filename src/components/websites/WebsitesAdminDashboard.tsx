@@ -25,6 +25,15 @@ interface BusinessSummary {
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  google_maps_url: string | null;
+  city: string | null;
+  pincode: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  linkedin_url: string | null;
+  google_business_url: string | null;
+  other_social_url: string | null;
   template_name: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
@@ -63,19 +72,22 @@ const emptyForm = (): FormValues => ({
   whatsapp: '',
   email: '',
   address: '',
+  google_maps_url: '',
   city: '',
   pincode: '',
   instagram_url: '',
   facebook_url: '',
   youtube_url: '',
+  linkedin_url: '',
   google_business_url: '',
+  other_social_url: '',
   template_slug: '',
   owner_name: '',
   owner_email: '',
   owner_phone: '',
   owner_password: '',
   plan: 'YBGP Websites',
-  amount: '999',
+  amount: '1999',
   start_date: today(),
   expiry_date: yearFromToday(),
   subscription_active: 'true',
@@ -149,8 +161,17 @@ export function WebsitesAdminDashboard() {
       whatsapp: business.whatsapp ?? '',
       email: business.email ?? '',
       address: business.address ?? '',
+      google_maps_url: business.google_maps_url ?? '',
+      city: business.city ?? '',
+      pincode: business.pincode ?? '',
+      instagram_url: business.instagram_url ?? '',
+      facebook_url: business.facebook_url ?? '',
+      youtube_url: business.youtube_url ?? '',
+      linkedin_url: business.linkedin_url ?? '',
+      google_business_url: business.google_business_url ?? '',
+      other_social_url: business.other_social_url ?? '',
       plan: business.plan ?? 'YBGP Websites',
-      amount: business.amount ?? '999',
+      amount: business.amount ?? '1999',
       start_date: business.start_date?.slice(0, 10) ?? today(),
       expiry_date: business.expiry_date?.slice(0, 10) ?? yearFromToday(),
       subscription_active: business.subscription_status === 'EXPIRED' ? 'false' : 'true',
@@ -217,6 +238,15 @@ export function WebsitesAdminDashboard() {
             whatsapp: form.whatsapp,
             email: form.email,
             address: form.address,
+            google_maps_url: form.google_maps_url,
+            city: form.city,
+            pincode: form.pincode,
+            instagram_url: form.instagram_url,
+            facebook_url: form.facebook_url,
+            youtube_url: form.youtube_url,
+            linkedin_url: form.linkedin_url,
+            google_business_url: form.google_business_url,
+            other_social_url: form.other_social_url,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -358,12 +388,15 @@ export function WebsitesAdminDashboard() {
                     <Field label="Address" value={form.address} onChange={(value) => updateField('address', value)} />
                     <Field label="City" value={form.city} onChange={(value) => updateField('city', value)} />
                     <Field label="Pincode" value={form.pincode} onChange={(value) => updateField('pincode', value)} inputMode="numeric" />
+                    <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
                   </FormSection>
                   <FormSection title="Social profiles">
                     <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />
                     <Field label="Facebook URL" value={form.facebook_url} onChange={(value) => updateField('facebook_url', value)} type="url" />
                     <Field label="YouTube URL" value={form.youtube_url} onChange={(value) => updateField('youtube_url', value)} type="url" />
+                    <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
                     <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
+                    <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
                   </FormSection>
                   <section>
                     <h3 className="font-bold">Choose a template</h3>
@@ -386,7 +419,7 @@ export function WebsitesAdminDashboard() {
                     <Field label="Owner phone" value={form.owner_phone} onChange={(value) => updateField('owner_phone', value)} type="tel" />
                     <Field label="Temporary password" value={form.owner_password} onChange={(value) => updateField('owner_password', value)} type="password" required min="8" autoComplete="new-password" />
                   </FormSection>
-                  <FormSection title="Subscription · ₹999/year">
+                  <FormSection title="Subscription · ₹1,999/year">
                     <Field label="Plan" value={form.plan} onChange={(value) => updateField('plan', value)} required />
                     <Field label="Annual price (₹)" value={form.amount} onChange={(value) => updateField('amount', value)} type="number" min="0" step="1" required />
                     <Field label="Start date" value={form.start_date} onChange={(value) => updateField('start_date', value)} type="date" required />
@@ -404,17 +437,31 @@ export function WebsitesAdminDashboard() {
                   <SelectField label="Subscription status" value={form.subscription_active} onChange={(value) => updateField('subscription_active', value)} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Expired / inactive' }]} />
                 </FormSection>
               ) : (
-                <FormSection title="Business profile">
-                  <Field label="Business name" value={form.name} onChange={(value) => updateField('name', value)} required />
-                  <Field label="Website slug" value={form.slug} onChange={(value) => updateField('slug', value)} required />
-                  <Field label="Category" value={form.category} onChange={(value) => updateField('category', value)} required />
-                  <TextAreaField label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
-                  <Field label="Phone" value={form.phone} onChange={(value) => updateField('phone', value)} type="tel" />
-                  <Field label="WhatsApp" value={form.whatsapp} onChange={(value) => updateField('whatsapp', value)} type="tel" />
-                  <Field label="Email" value={form.email} onChange={(value) => updateField('email', value)} type="email" />
-                  <Field label="Address" value={form.address} onChange={(value) => updateField('address', value)} />
-                  <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
-                </FormSection>
+                <>
+                  <FormSection title="Business profile">
+                    <Field label="Business name" value={form.name} onChange={(value) => updateField('name', value)} required />
+                    <Field label="Website slug" value={form.slug} onChange={(value) => updateField('slug', value)} required />
+                    <Field label="Category" value={form.category} onChange={(value) => updateField('category', value)} required />
+                    <TextAreaField label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
+                    <Field label="Phone" value={form.phone} onChange={(value) => updateField('phone', value)} type="tel" />
+                    <Field label="WhatsApp" value={form.whatsapp} onChange={(value) => updateField('whatsapp', value)} type="tel" />
+                    <Field label="Email" value={form.email} onChange={(value) => updateField('email', value)} type="email" />
+                    <Field label="City" value={form.city} onChange={(value) => updateField('city', value)} />
+                    <Field label="Pincode" value={form.pincode} onChange={(value) => updateField('pincode', value)} inputMode="numeric" />
+                    <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
+                    <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
+                  </FormSection>
+                  {formMode === 'edit' ? (
+                    <FormSection title="Contact, Location & Social Links">
+                      <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />
+                      <Field label="Facebook URL" value={form.facebook_url} onChange={(value) => updateField('facebook_url', value)} type="url" />
+                      <Field label="YouTube URL" value={form.youtube_url} onChange={(value) => updateField('youtube_url', value)} type="url" />
+                      <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
+                      <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
+                      <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
+                    </FormSection>
+                  ) : null}
+                </>
               )}
               {error ? <Notice>{error}</Notice> : null}
               <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:justify-end">

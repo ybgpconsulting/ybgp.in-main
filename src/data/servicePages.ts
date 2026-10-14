@@ -20,12 +20,12 @@ export const SECTION_ROUTES = {
     description: 'See how YBGP brings business strategy, digital experiences and growth support together to help founders move forward.'
   },
   websites: {
-    title: 'YBGP Websites | Multi-tenant business websites at ₹999/year',
-    description: 'Launch a reliable, multi-tenant business website with a clean template flow, product pages, gallery management and a simple publish experience.'
+    title: 'YBGP Websites | Business Website at ₹1,999/year',
+    description: 'Get your own mobile-friendly business website for ₹1,999/year. No hosting charges or setup fee. Explore live bakery, salon and jewellery demos.'
   },
   'business-website': {
-    title: 'YBGP Websites | Multi-tenant business websites at ₹999/year',
-    description: 'Launch a reliable, multi-tenant business website with a clean template flow, product pages, gallery management and a simple publish experience.'
+    title: 'YBGP Websites | Business Website at ₹1,999/year',
+    description: 'Get your own mobile-friendly business website for ₹1,999/year. No hosting charges or setup fee. Explore live bakery, salon and jewellery demos.'
   },
   about: {
     title: 'About YBGP | Your Business Growth Partner',
@@ -204,4 +204,3 @@ export const ROUTE_SLUGS = [
   ...PROJECTS.map((project) => `work/${project.slug}`),
   ...Object.keys(SECTION_ROUTES)
 ] as const;
-

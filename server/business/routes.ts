@@ -178,59 +178,130 @@ router.patch('/me', async (request, response) => {
     return;
   }
 
-  const updates: Array<string> = [];
-  const values: Array<string | number | null> = [];
+  const businessFields = [
+    'name',
+    'category',
+    'description',
+    'phone',
+    'whatsapp',
+    'email',
+    'address',
+    'instagram_url',
+    'facebook_url',
+    'google_maps_url',
+    'business_hours',
+  ] as const;
+  const settingFields = [
+    'city',
+    'pincode',
+    'youtube_url',
+    'linkedin_url',
+    'google_business_url',
+    'other_social_url',
+  ] as const;
+  const stringFields = [...businessFields, ...settingFields];
+  const values = new Map<string, string>();
 
-  if (typeof body.name === 'string' && body.name.trim()) {
-    updates.push('name = ?'); values.push(body.name.trim());
-  }
-  if (typeof body.description === 'string') {
-    updates.push('description = ?'); values.push(body.description.trim() || null);
-  }
-  if (typeof body.phone === 'string') {
-    updates.push('phone = ?'); values.push(body.phone.trim() || null);
-  }
-  if (typeof body.whatsapp === 'string') {
-    updates.push('whatsapp = ?'); values.push(body.whatsapp.trim() || null);
-  }
-  if (typeof body.email === 'string') {
-    updates.push('email = ?'); values.push(body.email.trim().toLowerCase() || null);
-  }
-  if (typeof body.address === 'string') {
-    updates.push('address = ?'); values.push(body.address.trim() || null);
-  }
-  if (typeof body.instagram_url === 'string') {
-    updates.push('instagram_url = ?'); values.push(body.instagram_url.trim() || null);
-  }
-  if (typeof body.facebook_url === 'string') {
-    updates.push('facebook_url = ?'); values.push(body.facebook_url.trim() || null);
-  }
-  if (typeof body.google_maps_url === 'string') {
-    updates.push('google_maps_url = ?'); values.push(body.google_maps_url.trim() || null);
-  }
-  if (typeof body.category === 'string') {
-    updates.push('category = ?'); values.push(body.category.trim());
-  }
-  if (typeof body.instagram_url === 'string') {
-    updates.push('instagram_url = ?'); values.push(body.instagram_url.trim() || null);
-  }
-  if (typeof body.facebook_url === 'string') {
-    updates.push('facebook_url = ?'); values.push(body.facebook_url.trim() || null);
-  }
-  if (typeof body.google_maps_url === 'string') {
-    updates.push('google_maps_url = ?'); values.push(body.google_maps_url.trim() || null);
-  }
-  if (typeof body.business_hours === 'string') {
-    updates.push('business_hours = ?'); values.push(body.business_hours.trim() || null);
+  for (const field of stringFields) {
+    if (body[field] === undefined) continue;
+    if (typeof body[field] !== 'string') {
+      response.status(400).json({ error: `${field.replaceAll('_', ' ')} must be text` });
+      return;
+    }
+    values.set(field, body[field].trim());
   }
 
-  if (updates.length === 0) {
+  if (!values.get('name') || !values.get('category')) {
+    response.status(400).json({ error: 'Business name and category are required' });
+    return;
+  }
+  if (values.has('pincode') && values.get('pincode') && !/^\d{4,10}$/.test(values.get('pincode')!)) {
+    response.status(400).json({ error: 'Pincode must contain 4 to 10 digits' });
+    return;
+  }
+
+  for (const field of ['phone', 'whatsapp'] as const) {
+    const value = values.get(field) ?? '';
+    const digits = value.replace(/\D/g, '');
+    if (value && (digits.length < 7 || digits.length > 15)) {
+      response.status(400).json({ error: `${field === 'phone' ? 'Phone' : 'WhatsApp'} number must contain 7 to 15 digits` });
+      return;
+    }
+  }
+
+  for (const field of ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const) {
+    const value = values.get(field) ?? '';
+    if (!value) continue;
+    try {
+      const url = new URL(value);
+      if (!['http:', 'https:'].includes(url.protocol) || !url.hostname || url.username || url.password) {
+        throw new Error('invalid URL');
+      }
+    } catch {
+      response.status(400).json({ error: `${field.replaceAll('_', ' ')} must be a valid http or https URL` });
+      return;
+    }
+  }
+
+  if (values.size === 0) {
     response.status(400).json({ error: 'No valid fields to update' });
     return;
   }
 
-  values.push(businessId);
-  await pool.execute(`UPDATE businesses SET ${updates.join(', ')} WHERE id = ?`, values);
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const columns: Record<typeof businessFields[number], string> = {
+      name: 'name',
+      category: 'category',
+      description: 'description',
+      phone: 'phone',
+      whatsapp: 'whatsapp',
+      email: 'email',
+      address: 'address',
+      instagram_url: 'instagram_url',
+      facebook_url: 'facebook_url',
+      google_maps_url: 'google_maps_url',
+      business_hours: 'business_hours',
+    };
+    const businessUpdates = businessFields.filter((field) => values.has(field));
+    if (businessUpdates.length > 0) {
+      await connection.execute(
+        `UPDATE businesses SET ${businessUpdates.map((field) => `${columns[field]} = ?`).join(', ')} WHERE id = ?`,
+        [...businessUpdates.map((field) => {
+          const value = values.get(field)!;
+          return field === 'email' ? value.toLowerCase() || null : value || null;
+        }), businessId]
+      );
+    }
+
+    const settings: Array<[string, string | null]> = [
+      ...(values.has('address') ? [['contact_address', values.get('address') || null] as [string, string | null]] : []),
+      ...(values.has('phone') ? [['call_phone', values.get('phone') || null] as [string, string | null]] : []),
+      ...(values.has('whatsapp') ? [['whatsapp', values.get('whatsapp') || null] as [string, string | null]] : []),
+      ...settingFields.filter((field) => values.has(field)).map((field) => [field, values.get(field) || null] as [string, string | null]),
+    ];
+    for (const [key, value] of settings) {
+      await connection.execute(
+        'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
+        [businessId, key, value]
+      );
+    }
+
+    await connection.commit();
+  } catch (error) {
+    try {
+      await connection.rollback();
+    } catch (rollbackError) {
+      console.error('Owner business profile transaction rollback failed', rollbackError);
+    }
+    console.error('Owner business profile save failed', error);
+    response.status(500).json({ error: 'Unable to save your business profile. Please try again.' });
+    return;
+  } finally {
+    connection.release();
+  }
+
   response.json({ success: true });
 });
 

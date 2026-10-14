@@ -1,29 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Check, CheckCircle2, MessageCircle, LayoutTemplate, Store, ShieldCheck, Sparkles, Camera, ShoppingBag, Star, MapPin, Clock3, Menu, ChevronRight, X } from 'lucide-react';
+import { ArrowRight, Check, ChevronRight, Images, Link2, MapPin, Menu, MessageCircle, Share2, Smartphone, X } from 'lucide-react';
+import { SITE_DATA } from '../data/siteData';
 
-const websiteOfferUrl = 'https://wa.me/919953270270?text=Hi%2C%20I%20want%20to%20discuss%20the%20YBGP%20Websites%20plan%20for%20%E2%82%B9999%2Fyear.';
+const websiteOfferMessage = 'Hi YBGP, I am interested in getting my business website for ₹1,999/year. Please share the details.';
+const websiteOfferUrl = `https://wa.me/${SITE_DATA.phoneRaw}?text=${encodeURIComponent(websiteOfferMessage)}`;
 
-const includedFeatures = [
-  'Business profile and website setup',
-  'Template-based design flow',
-  'Products and services sections',
-  'Gallery and visual storytelling',
-  'Mobile-first public website',
-  'Simple publish workflow for updates'
+const websiteBenefits = [
+  { title: 'Show What You Sell', description: 'Display your products, services and business photos in one place.', icon: Images },
+  { title: 'Connect on WhatsApp', description: 'Make it easy for customers to contact you and ask about your business.', icon: MessageCircle },
+  { title: 'One Link to Share', description: 'Bring your business details, social links and contact information together.', icon: Link2 },
+  { title: 'Made for Mobile', description: 'Give customers a simple way to browse your website on their phones.', icon: Smartphone },
+  { title: 'Your Location, One Tap Away', description: 'Show customers where to find you with your business address and Google Maps directions.', icon: MapPin },
+  { title: 'All Your Social Links in One Place', description: 'Connect your Instagram, Facebook, YouTube and other social profiles directly from your website.', icon: Share2 }
 ];
 
-const workflowSteps = [
-  ['01', 'Create business', 'Set up a new business profile and choose your website tenant.'],
-  ['02', 'Select template', 'Pick a brand-aligned layout for your industry and customer journey.'],
-  ['03', 'Add details', 'Add your business information, services, gallery, pricing and contact details.'],
-  ['04', 'Publish', 'Launch your business website and keep the content updated from one place.']
-];
-
-const platformHighlights = [
-  { title: 'One application', description: 'One app serves multiple businesses without separate codebases or duplicated customer sites.', icon: LayoutTemplate },
-  { title: 'Business-safe data model', description: 'Every tenant record is tied to a business_id so one business never sees another business’s content.', icon: ShieldCheck },
-  { title: 'Launch-ready templates', description: 'Start with bakery, salon, jewellery or service-oriented layouts and adapt them to the business quickly.', icon: Store },
-  { title: 'Fast updates', description: 'Business owners can update products, gallery items and service content directly from the dashboard.', icon: Sparkles }
+const websiteSteps = [
+  ['01', 'Choose Your Design', 'Explore the examples and choose a style that suits your business.'],
+  ['02', 'Share Your Details', 'Send your business information, products, services and photos.'],
+  ['03', 'Get Your Website', 'Launch your online presence with a link you can share with customers.']
 ];
 
 const demoThemes = {
@@ -274,10 +268,12 @@ const demoBusinesses: Record<string, DemoBusiness> = {
 } as const;
 
 const faqs = [
-  ['What is included in the ₹999/year plan?', 'The V1 package includes business setup, template selection, essential content sections, gallery upload support, a mobile-friendly public website and simple publish access.'],
-  ['Does this work for multiple business types?', 'Yes. The platform is designed for small businesses such as bakeries, salons, clinics, boutiques, service providers and local brands.'],
-  ['Are future SaaS features already built in?', 'This V1 keeps the product lean and extension-ready: the core architecture is designed for multi-tenancy and future SaaS scaling without creating complexity in the first release.'],
-  ['What is not included in V1?', 'V1 does not include payment gateways, advanced analytics, custom domains, complex CRM, automated billing or other advanced operational modules.']
+  ['What is included in the ₹1,999/year plan?', 'A mobile-friendly business website with supported business details, products or services, a gallery and contact features. The final website depends on the selected design and the information you provide.'],
+  ['Are there hosting or setup charges?', 'There are no hosting charges or setup fees under this plan. The annual website plan is ₹1,999, with no hidden platform charges. Optional third-party services, if requested, may have their own costs.'],
+  ['Can I use it for my type of business?', 'YBGP Websites is designed for small businesses such as boutiques, jewellery stores, bakeries, salons, consultants and local service providers.'],
+  ['Can customers contact me through WhatsApp?', 'Your website can display your business contact information and a WhatsApp contact option, wherever supported by your selected website setup.'],
+  ['Can I update my website later?', 'Yes. Use your website dashboard to update supported business contact details, address, location and social links.'],
+  ['Is a custom domain included?', 'The plan provides a shareable website link. Custom domain registration is not included; if you want a separate domain, it must be registered separately and may have an additional third-party cost.']
 ];
 
 const WebsitePreview: React.FC<{ businessName: string; businessType: string; templateName: string; accent: 'bakery' | 'salon' | 'jewellery'; image: string }> = ({ businessName, businessType, templateName, accent, image }) => {
@@ -629,172 +625,149 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
   }
 
   return (
-    <div className="bg-[#F7F7F7] text-[#1E1E1E]">
-      <section className="relative overflow-hidden bg-[#0E2B22] px-4 pb-16 pt-28 text-white sm:px-6 sm:pb-20 sm:pt-36">
+    <div className="bg-[#F8F7F3] text-[#1E1E1E]">
+      <section className="relative overflow-hidden bg-[#0E2B22] px-4 pb-14 pt-24 text-white sm:px-6 sm:pb-20 sm:pt-32" aria-labelledby="website-hero-heading">
         <div aria-hidden="true" className="absolute -right-24 -top-28 h-[30rem] w-[30rem] rounded-full bg-[#C89B2B]/10 blur-3xl" />
-        <div aria-hidden="true" className="dot-grid absolute bottom-0 right-[8%] h-64 w-64 opacity-20" />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+        <div aria-hidden="true" className="dot-grid absolute bottom-0 right-[8%] hidden h-64 w-64 opacity-15 sm:block" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1.08fr_0.92fr] lg:gap-14">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#D8CBA4]">YBGP Websites • V1 launch</p>
-            <h1 className="section-title mt-5 max-w-3xl text-4xl font-extrabold leading-[1.04] font-heading sm:text-6xl lg:text-7xl">Launch your business website for ₹999/year.</h1>
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/75 sm:text-xl">A clean, multi-tenant website platform for small businesses—built to help owners publish a credible online presence without the complexity of a full SaaS suite.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-base font-bold text-[#0E2B22] shadow-[0_12px_28px_rgba(200,155,43,0.28)] transition-all hover:-translate-y-0.5 hover:bg-[#D5AA3E]">
-                Start my website <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#E8D69D] sm:text-xs">YBGP Websites · Special annual offer</p>
+            <h1 id="website-hero-heading" className="section-title mt-4 max-w-2xl text-[2.2rem] font-extrabold leading-[1.05] tracking-[-0.035em] font-heading sm:mt-5 sm:text-6xl lg:text-[4.2rem]">
+              Your Business.<br />Your Own Website.
+            </h1>
+            <p className="mt-4 text-base font-semibold text-white/90 sm:mt-5 sm:text-lg">Instagram par business? Ab apni website bhi banaiye.</p>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/75 sm:text-base sm:leading-7">Show your products and services, share one simple link, and let customers contact you directly on WhatsApp.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 lg:hidden">
+              <span className="text-2xl font-extrabold leading-none text-white">₹1,999/year</span>
+              <span className="text-sm font-medium text-white/65 line-through">₹4,999/year</span>
+              <span className="text-xs font-semibold text-[#E8D69D]">Save ₹3,000 · 60% OFF</span>
+              <span className="basis-full text-xs text-white/70">No hosting charges · No setup fee</span>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#D6B85A] px-6 py-3 text-sm font-bold text-[#0E2B22] shadow-[0_10px_24px_rgba(200,155,43,0.24)] transition-colors hover:bg-[#E4CA76] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white motion-reduce:transition-none">
+                Get My Website <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </a>
-              <a href="/websites/demo-bakery/" className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-4 text-base font-semibold text-white transition-colors hover:bg-white/10">View demo site</a>
+              <a href="#website-demos" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white motion-reduce:transition-none">
+                View Live Demos
+              </a>
             </div>
           </div>
 
-          <div className="three-d-stage">
-            <div className="three-d-card relative overflow-hidden rounded-[28px] border border-white/20 bg-white/95 p-6 text-[#0E2B22] shadow-[0_28px_70px_rgba(0,0,0,0.18)] backdrop-blur-sm sm:p-8">
+          <div className="three-d-stage w-full">
+            <div className="three-d-card relative overflow-hidden rounded-[26px] border border-[#E8D69D]/60 bg-white p-5 text-[#0E2B22] shadow-[0_28px_70px_rgba(0,0,0,0.22)] sm:rounded-[30px] sm:p-8">
               <div aria-hidden="true" className="absolute right-0 top-0 h-24 w-24 rounded-bl-[4rem] bg-[#C89B2B]/10" />
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Annual plan</p>
-              <div className="mt-4 flex items-end gap-3">
-                <span className="text-xl font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹1,999</span>
-                <span className="text-5xl font-semibold leading-none sm:text-6xl">₹999</span>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#78601F]">Annual plan</p>
+              <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-base font-semibold text-[#66736F] line-through decoration-1">₹4,999/year</span>
+                <span className="rounded-full bg-[#F5EDD3] px-3 py-1 text-xs font-bold text-[#66521E]">Save ₹3,000 · 60% OFF</span>
               </div>
-              <p className="mt-3 text-base font-medium text-[#1E1E1E]/70">Per business, per year</p>
-              <div className="mt-6 space-y-3 text-sm text-[#0E2B22]/80">
-                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Tenant-safe architecture</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
-                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Template-based setup</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
-                <div className="flex items-center justify-between rounded-xl bg-[#F7F5F2] px-3 py-2"><span>Publish & update flow</span><Check className="h-4 w-4 text-[#0E2B22]" aria-hidden="true" /></div>
-              </div>
-              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#0E2B22] px-5 py-4 font-bold text-white transition-colors hover:bg-[#164537]">
-                Discuss the plan <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              <p className="mt-1 text-[2.85rem] font-extrabold leading-none tracking-tight text-[#0E2B22] sm:text-6xl">₹1,999<span className="ml-1 text-base font-semibold tracking-normal text-[#526258]">/year</span></p>
+              <ul className="mt-5 space-y-2.5 text-sm text-[#33463D] sm:mt-6">
+                {['Mobile-friendly business website', 'Products, services and business photos', 'WhatsApp contact option'].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2.5"><span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E9F0E9] text-[#0E2B22]"><Check className="h-3.5 w-3.5" aria-hidden="true" /></span><span>{feature}</span></li>
+                ))}
+              </ul>
+              <p className="mt-4 border-t border-[#E8E5DC] pt-3 text-xs font-semibold leading-5 text-[#526258]">No hosting charges · No setup fee · No hidden platform charges</p>
+              <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#0E2B22] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#194638] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
+                Get Started on WhatsApp <MessageCircle className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-includes-heading">
-        <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Built for V1</p>
-            <h2 id="platform-includes-heading" className="section-title mt-4 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">A lean, scalable system for the first real customers.</h2>
-            <p className="mt-5 leading-relaxed text-[#1E1E1E]/70">This launch keeps the product focused on the immediate business goal: helping YBGP create, publish and manage small-business websites without heavy operational complexity.</p>
-          </div>
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {includedFeatures.map((feature) => (
-              <li key={feature} className="soft-panel flex items-start gap-3 rounded-xl p-4 text-base transition-transform hover:-translate-y-0.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EBD9A2] text-[#0E2B22]"><Check className="h-4 w-4" aria-hidden="true" /></span>
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-architecture-heading">
+      <section id="website-demos" className="scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="website-demos-heading">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">System design</p>
-            <h2 id="platform-architecture-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">An architecture that stays ready for future SaaS growth.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8D7026]">Live website demos</p>
+            <h2 id="website-demos-heading" className="section-title mt-3 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">See What Your Website Could Look Like</h2>
+            <p className="mt-3 text-sm leading-6 text-[#5B655F] sm:text-base">Explore live examples for different types of businesses.</p>
           </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {platformHighlights.map(({ title, description, icon: Icon }) => (
-              <article key={title} className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-[0_12px_28px_rgba(14,43,34,0.04)]">
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-[#F7E8CB] text-[#0E2B22]">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <h3 className="text-xl font-bold text-[#0E2B22]">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[#1E1E1E]/70">{description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="platform-workflow-heading">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">V1 workflow</p>
-            <h2 id="platform-workflow-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">From business setup to public website in one simple flow.</h2>
-          </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {workflowSteps.map(([step, title, description]) => (
-              <article key={step} className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
-                <span className="text-sm font-bold text-[#C89B2B]">{step}</span>
-                <h3 className="mt-3 text-xl font-bold text-[#0E2B22]">{title}</h3>
-                <p className="mt-3 text-sm leading-relaxed text-[#1E1E1E]/70">{description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="template-heading">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Demo templates</p>
-            <h2 id="template-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Explore the live website demos.</h2>
-            <p className="mt-4 text-base leading-relaxed text-[#1E1E1E]/70">Open a complete example to see how each business website works on desktop and mobile.</p>
-          </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            <a href="/websites/demo-bakery/" aria-label="Open the Aroma & Crumb bakery website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Aroma & Crumb" businessType="Bakery & gifting studio" templateName="The Bakehouse" accent="bakery" image="/demo-sites/bakery/hero.jpg" /></a>
-            <a href="/websites/demo-salon/" aria-label="Open the Maison Gloss salon website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Maison Gloss" businessType="Salon & wellness studio" templateName="The Beauty Studio" accent="salon" image="/demo-sites/salon/hero.jpg" /></a>
-            <a href="/websites/demo-jewellery/" aria-label="Open the Silver Elara jewellery website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Silver Elara" businessType="Jewellery boutique" templateName="The Editorial Boutique" accent="jewellery" image="/demo-sites/jewellery/hero.jpg" /></a>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white px-4 py-16 sm:px-6 sm:py-20" aria-labelledby="v1-scope-heading">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">V1 scope</p>
-            <h2 id="v1-scope-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Focused on the product that matters now.</h2>
-          </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-2">
-            <div className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
-              <h3 className="text-xl font-bold text-[#0E2B22]">Included in V1</h3>
-              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-[#1E1E1E]/75">
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Business creation and tenant management</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Template selection and published website output</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Content updates from the business dashboard</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Essential SEO, gallery and contact elements</li>
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-[#E5E5E5] bg-[#F9F9F7] p-6">
-              <h3 className="text-xl font-bold text-[#0E2B22]">Not in V1</h3>
-              <ul className="mt-4 space-y-3 text-sm leading-relaxed text-[#1E1E1E]/75">
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Payments, invoices and automated billing</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Custom domains and verification flows</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Advanced analytics or CRM automation</li>
-                <li className="flex items-start gap-3"><Check className="mt-1 h-4 w-4 text-[#0E2B22]" aria-hidden="true" />Complex page-builder or AI tools</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-4 pb-20 pt-6 sm:px-6" aria-labelledby="final-cta-heading">
-        <div className="mx-auto max-w-5xl rounded-[30px] bg-[#0E2B22] p-8 text-white shadow-[0_22px_60px_rgba(14,43,34,0.18)] sm:p-12">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#D8CBA4]">Start with V1</p>
-              <h2 id="final-cta-heading" className="mt-4 text-3xl font-extrabold font-heading sm:text-5xl">Create a clean digital presence for the next business you grow.</h2>
-            </div>
-            <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#C89B2B] px-6 py-4 text-base font-bold text-[#0E2B22] transition-transform hover:-translate-y-0.5">
-              Get started with YBGP Websites <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-8 lg:grid-cols-3">
+            <a href="/websites/demo-bakery/" aria-label="Open live demo: Aroma & Crumb, bakery and gifting" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E6D9]"><img src="/demo-sites/bakery/hero.jpg" alt="A freshly decorated celebration cake from the Aroma & Crumb bakery demo" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#604330]">Live demo</span></div>
+              <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Aroma &amp; Crumb</h3><p className="mt-1 text-sm text-[#68746C]">Bakery &amp; gifting</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
+            </a>
+            <a href="/websites/demo-salon/" aria-label="Open live demo: Maison Gloss, salon and wellness" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E6D9]"><img src="/demo-sites/salon/hero.jpg" alt="The calm, modern Maison Gloss salon interior" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#604330]">Live demo</span></div>
+              <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Maison Gloss</h3><p className="mt-1 text-sm text-[#68746C]">Salon &amp; wellness</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
+            </a>
+            <a href="/websites/demo-jewellery/" aria-label="Open live demo: Silver Elara, jewellery boutique" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none sm:col-span-2 lg:col-span-1">
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E6D9]"><img src="/demo-sites/jewellery/hero.jpg" alt="Sculptural jewellery photographed for the Silver Elara boutique demo" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#604330]">Live demo</span></div>
+              <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Silver Elara</h3><p className="mt-1 text-sm text-[#68746C]">Jewellery boutique</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
           </div>
         </div>
       </section>
 
-      <section className="px-4 pb-20 sm:px-6" aria-labelledby="faq-heading">
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="website-benefits-heading">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">FAQ</p>
-            <h2 id="faq-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Common questions about the V1 rollout.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8D7026]">Made for small businesses</p>
+            <h2 id="website-benefits-heading" className="section-title mt-3 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">Everything Your Business Needs to Get Online</h2>
           </div>
-          <div className="mt-8 grid gap-4">
-            {faqs.map(([question, answer]) => (
-              <div key={question} className="rounded-2xl border border-[#E7E7E7] bg-[#F9F9F7] p-5">
-                <h3 className="text-lg font-bold text-[#0E2B22]">{question}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-[#1E1E1E]/70">{answer}</p>
-              </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-8 lg:grid-cols-3">
+            {websiteBenefits.map(({ title, description, icon: Icon }) => (
+              <article key={title} className="rounded-2xl border border-[#E8E3D9] bg-[#FBFAF7] p-5 sm:p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#F1E8CC] text-[#0E2B22]"><Icon className="h-5 w-5" aria-hidden="true" /></span>
+                <h3 className="mt-4 text-lg font-bold text-[#0E2B22]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5B655F]">{description}</p>
+              </article>
             ))}
+          </div>
+          <p className="mt-5 text-sm leading-6 text-[#526259]"><span className="font-bold text-[#0E2B22]">Easy to Update:</span> Update supported business details, location and social links through your website dashboard.</p>
+        </div>
+      </section>
+
+      <section className="px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="website-steps-heading">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8D7026]">Simple to get started</p>
+            <h2 id="website-steps-heading" className="section-title mt-3 text-3xl font-extrabold leading-tight text-[#0E2B22] font-heading sm:text-4xl">Get Your Business Website in 3 Simple Steps</h2>
+          </div>
+          <ol className="mt-6 grid gap-4 md:grid-cols-3 lg:mt-8">
+            {websiteSteps.map(([step, title, description]) => (
+              <li key={step} className="rounded-2xl border border-[#E8E3D9] bg-white p-5 sm:p-6">
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0E2B22] text-sm font-bold text-[#E8D69D]">{step}</span>
+                <h3 className="mt-4 text-lg font-bold text-[#0E2B22]">{title}</h3>
+                <p className="mt-2 text-sm leading-6 text-[#5B655F]">{description}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <section className="bg-white px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="website-faq-heading">
+        <div className="mx-auto max-w-3xl">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#8D7026]">Frequently asked questions</p>
+            <h2 id="website-faq-heading" className="section-title mt-3 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">A few things you may want to know</h2>
+          </div>
+          <div className="mt-6 space-y-3">
+            {faqs.map(([question, answer]) => (
+              <details key={question} className="group rounded-xl border border-[#E8E3D9] bg-[#FBFAF7] px-4 py-4 open:bg-white sm:px-5">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-[#0E2B22] marker:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]">
+                  {question}
+                  <span aria-hidden="true" className="text-xl leading-none text-[#8D7026] transition-transform group-open:rotate-45 motion-reduce:transition-none">+</span>
+                </summary>
+                <p className="max-w-2xl pt-3 text-sm leading-6 text-[#5B655F]">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-12 sm:px-6 sm:py-16" aria-labelledby="website-final-cta-heading">
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] bg-[#0E2B22] p-6 text-white shadow-[0_20px_55px_rgba(14,43,34,0.15)] sm:p-10 lg:p-12">
+          <div aria-hidden="true" className="absolute -right-16 -top-20 h-56 w-56 rounded-full border border-[#C89B2B]/25" />
+          <div className="relative max-w-3xl">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#E8D69D]">Ready to get started?</p>
+            <h2 id="website-final-cta-heading" className="section-title mt-3 text-3xl font-extrabold leading-tight font-heading sm:text-4xl lg:text-5xl">Give Your Business Its Own Website.</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-white/75 sm:text-base sm:leading-7">Get started for just ₹1,999/year. Show your business, share your link and make it easier for customers to reach you.</p>
+            <p className="mt-4 text-xs font-semibold text-[#E8D69D] sm:text-sm">₹1,999/year · No hosting charges · No setup fee</p>
+            <a href={websiteOfferUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#D6B85A] px-6 py-3 text-sm font-bold text-[#0E2B22] transition-colors hover:bg-[#E4CA76] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white motion-reduce:transition-none">
+              Get My Website on WhatsApp <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            </a>
           </div>
         </div>
       </section>

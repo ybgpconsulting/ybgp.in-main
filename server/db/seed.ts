@@ -16,7 +16,7 @@ interface BusinessSeed {
   phone: string;
   whatsapp: string;
   email: string;
-  address: string;
+  address: string | null;
   templateSlug: string;
   ownerName: string;
   ownerEmail: string;
@@ -38,7 +38,7 @@ const businesses: BusinessSeed[] = [
     phone: '+1-202-555-0121',
     whatsapp: '12025550121',
     email: 'hello@aroma-crumb.demo.test',
-    address: 'Demo location, Example City, ZZ 00000',
+    address: null,
     templateSlug: 'food-bakery',
     ownerName: 'Aroma & Crumb Demo Owner',
     ownerEmail: 'owner@aroma-crumb.demo.test',
@@ -80,7 +80,7 @@ const businesses: BusinessSeed[] = [
     phone: '+1-202-555-0122',
     whatsapp: '12025550122',
     email: 'hello@maison-gloss.demo.test',
-    address: 'Demo location, Example City, ZZ 00000',
+    address: null,
     templateSlug: 'modern-business',
     ownerName: 'Maison Gloss Demo Owner',
     ownerEmail: 'owner@maison-gloss.demo.test',
@@ -214,6 +214,7 @@ const seed = async (): Promise<void> => {
            whatsapp = VALUES(whatsapp),
            email = VALUES(email),
            address = VALUES(address),
+           google_maps_url = VALUES(google_maps_url),
            template_id = VALUES(template_id),
            status = VALUES(status)`,
         [
@@ -297,7 +298,7 @@ const seed = async (): Promise<void> => {
 
       await connection.execute(
         `INSERT INTO subscriptions (business_id, plan, amount, start_date, expiry_date, status)
-         VALUES (?, 'Starter', 999.00, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 YEAR), 'ACTIVE')
+         VALUES (?, 'Starter', 1999.00, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 1 YEAR), 'ACTIVE')
          ON DUPLICATE KEY UPDATE
            plan = VALUES(plan),
            amount = VALUES(amount),

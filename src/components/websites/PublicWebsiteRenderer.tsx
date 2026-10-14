@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Facebook, Instagram, Link2, Linkedin, MapPin, Navigation, Youtube } from 'lucide-react';
 
 export interface BusinessWebsiteResponse {
   business: {
@@ -100,16 +101,23 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const whatsapp = settings.whatsapp || business.whatsapp;
   const phone = settings.call_phone || business.phone;
   const email = settings.contact_email || business.email;
-  const address = settings.contact_address || [business.address, settings.city, settings.pincode].filter(Boolean).join(', ');
+  const address = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
+  const explicitMapsUrl = safeExternalUrl(business.google_maps_url);
+  const locationQuery = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
+  const directionsUrl = explicitMapsUrl || (locationQuery
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`
+    : '');
   const ctaText = settings.cta_text || 'Contact us';
   const ctaUrl = safeUrl(settings.cta_url) || (whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : phone ? `tel:${phone}` : email ? `mailto:${email}` : '#contact');
   const socialLinks = [
-    { name: 'Instagram', url: business.instagram_url },
-    { name: 'Facebook', url: business.facebook_url },
-    { name: 'YouTube', url: settings.youtube_url },
-    { name: 'Google Business', url: settings.google_business_url || business.google_maps_url },
-  ].map((item) => ({ ...item, url: item.url ? safeUrl(item.url) : '' }))
-    .filter((item): item is { name: string; url: string } => Boolean(item.url));
+    { name: 'Instagram', url: business.instagram_url, icon: Instagram },
+    { name: 'Facebook', url: business.facebook_url, icon: Facebook },
+    { name: 'YouTube', url: settings.youtube_url, icon: Youtube },
+    { name: 'LinkedIn', url: settings.linkedin_url, icon: Linkedin },
+    { name: 'Google Business', url: settings.google_business_url, icon: MapPin },
+    { name: 'Other social link', url: settings.other_social_url, icon: Link2 },
+  ].map((item) => ({ ...item, url: safeExternalUrl(item.url) }))
+    .filter((item) => Boolean(item.url));
 
   return (
     <main className={`min-h-screen text-[#192c23] ${foodLayout ? 'bg-[#fbf5ed]' : 'bg-[#f4f7f4]'}`}>
@@ -182,11 +190,11 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
       <footer id="contact" className="bg-[#10271d] px-4 py-10 text-white sm:px-6">
         <div className="mx-auto grid max-w-6xl gap-7 sm:grid-cols-2">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{settings.working_hours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{settings.working_hours}</p> : null}</div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><Navigation aria-hidden="true" size={17} />Get Directions</a> : null}{settings.working_hours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{settings.working_hours}</p> : null}</div>
           <div className="flex flex-col gap-3 sm:items-end">
             {phone ? <a href={`tel:${phone}`} className="text-sm text-white/85">Call: {phone}</a> : null}
             {email ? <a href={`mailto:${email}`} className="text-sm text-white/85">{email}</a> : null}
-            <div className="flex flex-wrap gap-3">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noreferrer" className="rounded-full border border-white/20 px-3 py-2 text-xs font-semibold text-white/85 hover:bg-white/10">{social.name}</a>)}</div>
+            <div className="flex flex-wrap gap-3">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name} title={social.name} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition hover:bg-white/10"><social.icon aria-hidden="true" size={19} /></a>)}</div>
           </div>
         </div>
         <div className="mx-auto mt-8 max-w-6xl border-t border-white/10 pt-4 text-xs text-white/45">© {new Date().getFullYear()} {business.name}. Powered by YBGP Websites.</div>
@@ -200,6 +208,16 @@ function safeUrl(value: string | null | undefined): string {
   try {
     const url = new URL(value, window.location.origin);
     return ['http:', 'https:', 'tel:', 'mailto:'].includes(url.protocol) ? value : '';
+  } catch {
+    return '';
+  }
+}
+
+function safeExternalUrl(value: string | null | undefined): string {
+  if (!value) return '';
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) && url.hostname && !url.username && !url.password ? url.toString() : '';
   } catch {
     return '';
   }

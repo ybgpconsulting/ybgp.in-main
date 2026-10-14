@@ -9,14 +9,20 @@ export function WebsiteRoute({ slug }: { slug: string }) {
   const [tenant, setTenant] = useState<BusinessWebsiteResponse | null>(null);
 
   useEffect(() => {
+    if (showcaseSlugs.includes(slug)) {
+      setState('showcase');
+      setTenant(null);
+      return;
+    }
+
+    setState('checking');
     const controller = new AbortController();
     const resolveRoute = async () => {
-      const isShowcase = showcaseSlugs.includes(slug);
       let response: Response;
       try {
         response = await fetch(`/api/public/websites/${encodeURIComponent(slug)}`, { signal: controller.signal });
       } catch {
-        if (!controller.signal.aborted) setState(isShowcase ? 'showcase' : 'other');
+        if (!controller.signal.aborted) setState('other');
         return;
       }
 
@@ -30,11 +36,7 @@ export function WebsiteRoute({ slug }: { slug: string }) {
         return;
       }
 
-      if (isShowcase && (response.status === 404 || response.status >= 500)) {
-        setState('showcase');
-      } else {
-        setState('other');
-      }
+      setState('other');
     };
     void resolveRoute();
     return () => controller.abort();

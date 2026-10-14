@@ -94,6 +94,20 @@ test('admin can create a business and duplicate slug is rejected', async () => {
   createdEmails.push(ownerEmail);
   createdSlugs.push(slug);
 
+  const missingPasswordResponse = await request('/api/admin/businesses', {
+    method: 'POST',
+    cookie: adminCookie,
+    body: {
+      name: 'Missing Password Business',
+      slug: `${slug}-missing-password`,
+      category: 'Services',
+      template_slug: 'modern-business',
+      owner_name: 'Missing Password Owner',
+      owner_email: `missing-password-${ownerEmail}`,
+    },
+  });
+  assert.equal(missingPasswordResponse.status, 400);
+
   const createResponse = await request('/api/admin/businesses', {
     method: 'POST',
     cookie: adminCookie,
@@ -164,4 +178,208 @@ test('admin can create a draft website that remains unpublished', async () => {
 
   const publicResponse = await request(`/api/public/websites/${slug}`);
   assert.equal(publicResponse.status, 404);
+});
+
+test('owners can atomically update only their own profile, contact, location and social links', async () => {
+  const adminCookie = (await login('admin@ybgp.local', demoPassword)).cookie;
+  const timestamp = Date.now();
+  const tenants = [
+    { name: 'Contact A', slug: `contact-a-${timestamp}`, email: `contact-a-${timestamp}@example.test` },
+    { name: 'Contact B', slug: `contact-b-${timestamp}`, email: `contact-b-${timestamp}@example.test` },
+  ];
+  const businessIds: string[] = [];
+
+  for (const tenant of tenants) {
+    createdEmails.push(tenant.email);
+    createdSlugs.push(tenant.slug);
+    const response = await request('/api/admin/businesses', {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        name: tenant.name,
+        slug: tenant.slug,
+        category: 'Services',
+        template_slug: 'modern-business',
+        owner_name: tenant.name,
+        owner_email: tenant.email,
+        owner_password: 'StrongPass!123',
+        published: true,
+      },
+    });
+    assert.equal(response.status, 201);
+    const body = await response.json() as { business?: { id: string } };
+    assert.ok(body.business?.id);
+    businessIds.push(body.business.id);
+  }
+
+  const ownerA = (await login(tenants[0].email, 'StrongPass!123')).cookie;
+  const ownerB = (await login(tenants[1].email, 'StrongPass!123')).cookie;
+  const updateResponse = await request('/api/business/me', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: {
+      business_id: tenants[1].slug,
+      name: 'Contact A Updated',
+      category: 'Services',
+      description: 'Updated owner profile',
+      email: tenants[0].email,
+      address: '42 Sample Road',
+      city: 'Pune',
+      pincode: '411001',
+      google_maps_url: 'https://maps.google.com/?q=42+Sample+Road',
+      phone: '+919876543210',
+      whatsapp: '+919876543210',
+      instagram_url: 'https://instagram.com/contact-a',
+      facebook_url: '',
+      youtube_url: 'https://youtube.com/@contact-a',
+      linkedin_url: 'https://linkedin.com/company/contact-a',
+      google_business_url: '',
+      other_social_url: 'https://example.test/contact-a',
+    },
+  });
+  assert.equal(updateResponse.status, 200);
+
+  const [publicAResponse, publicBResponse] = await Promise.all([
+    request(`/api/public/websites/${tenants[0].slug}`),
+    request(`/api/public/websites/${tenants[1].slug}`),
+  ]);
+  assert.equal(publicAResponse.status, 200);
+  assert.equal(publicBResponse.status, 200);
+  const publicA = await publicAResponse.json() as {
+    business: { address: string; google_maps_url: string; phone: string; whatsapp: string; instagram_url: string; facebook_url: string | null };
+    settings: Record<string, string>;
+  };
+  const publicB = await publicBResponse.json() as {
+    business: { address: string | null; google_maps_url: string | null; instagram_url: string | null };
+    settings: Record<string, string>;
+  };
+
+  assert.equal(publicA.business.address, '42 Sample Road');
+  assert.equal(publicA.business.google_maps_url, 'https://maps.google.com/?q=42+Sample+Road');
+  assert.equal(publicA.business.phone, '+919876543210');
+  assert.equal(publicA.business.whatsapp, '+919876543210');
+  assert.equal(publicA.business.instagram_url, 'https://instagram.com/contact-a');
+  assert.equal(publicA.business.facebook_url, null);
+  assert.equal(publicA.settings.city, 'Pune');
+  assert.equal(publicA.settings.pincode, '411001');
+  assert.equal(publicA.settings.contact_address, '42 Sample Road');
+  assert.equal(publicA.settings.call_phone, '+919876543210');
+  assert.equal(publicA.settings.whatsapp, '+919876543210');
+  assert.equal(publicA.settings.youtube_url, 'https://youtube.com/@contact-a');
+  assert.equal(publicA.settings.linkedin_url, 'https://linkedin.com/company/contact-a');
+  assert.equal(publicA.settings.other_social_url, 'https://example.test/contact-a');
+  assert.equal(publicB.business.address, null);
+  assert.equal(publicB.business.google_maps_url, null);
+  assert.equal(publicB.business.instagram_url, null);
+  assert.equal(publicB.settings.city, undefined);
+
+  const adminUpdateResponse = await request(`/api/admin/businesses/${businessIds[1]}`, {
+    method: 'PATCH',
+    cookie: adminCookie,
+    body: {
+      address: '9 Business B Street',
+      city: 'Mumbai',
+      pincode: '400001',
+      google_maps_url: 'https://maps.google.com/?q=9+Business+B+Street',
+      phone: '+919876543211',
+      whatsapp: '+919876543211',
+      instagram_url: 'https://instagram.com/contact-b',
+      linkedin_url: 'https://linkedin.com/company/contact-b',
+    },
+  });
+  assert.equal(adminUpdateResponse.status, 200);
+  const adminListResponse = await request('/api/admin/businesses', { cookie: adminCookie });
+  assert.equal(adminListResponse.status, 200);
+  const adminList = await adminListResponse.json() as { businesses: Array<{ id: string; city: string; linkedin_url: string }> };
+  const adminBusinessB = adminList.businesses.find((business) => business.id === businessIds[1]);
+  assert.equal(adminBusinessB?.city, 'Mumbai');
+  assert.equal(adminBusinessB?.linkedin_url, 'https://linkedin.com/company/contact-b');
+
+  const updatedPublicBResponse = await request(`/api/public/websites/${tenants[1].slug}`);
+  const updatedPublicB = await updatedPublicBResponse.json() as {
+    business: { address: string; google_maps_url: string; instagram_url: string };
+    settings: Record<string, string>;
+  };
+  assert.equal(updatedPublicB.business.address, '9 Business B Street');
+  assert.equal(updatedPublicB.business.google_maps_url, 'https://maps.google.com/?q=9+Business+B+Street');
+  assert.equal(updatedPublicB.settings.contact_address, '9 Business B Street');
+  assert.equal(updatedPublicB.settings.call_phone, '+919876543211');
+  assert.equal(updatedPublicB.settings.whatsapp, '+919876543211');
+  assert.equal(updatedPublicB.business.instagram_url, 'https://instagram.com/contact-b');
+  assert.equal(updatedPublicB.settings.city, 'Mumbai');
+  assert.equal(updatedPublicB.settings.linkedin_url, 'https://linkedin.com/company/contact-b');
+
+  const ownerBUpdate = await request('/api/business/me', {
+    method: 'PATCH',
+    cookie: ownerB,
+    body: {
+      name: 'Contact B',
+      category: 'Services',
+      address: 'Business B Address',
+      city: '',
+      pincode: '',
+      google_maps_url: '',
+      phone: '',
+      whatsapp: '',
+      instagram_url: '',
+      facebook_url: '',
+      youtube_url: '',
+      linkedin_url: '',
+      google_business_url: '',
+      other_social_url: '',
+    },
+  });
+  assert.equal(ownerBUpdate.status, 200);
+
+  const invalidUrlResponse = await request('/api/business/me', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: {
+      name: 'Contact A Updated',
+      category: 'Services',
+      address: '',
+      city: '',
+      pincode: '',
+      google_maps_url: '',
+      phone: '',
+      whatsapp: '',
+      instagram_url: 'javascript:alert(1)',
+      facebook_url: '',
+      youtube_url: '',
+      linkedin_url: '',
+      google_business_url: '',
+      other_social_url: '',
+    },
+  });
+  assert.equal(invalidUrlResponse.status, 400);
+
+  const triggerName = `test_fail_business_settings_${timestamp}`;
+  await pool.query(
+    `CREATE TRIGGER ${triggerName} BEFORE INSERT ON business_settings FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'forced transaction failure'`
+  );
+  try {
+    const failedSave = await request('/api/business/me', {
+      method: 'PATCH',
+      cookie: ownerA,
+      body: {
+        name: 'Must Roll Back',
+        category: 'Services',
+        city: 'Should not persist',
+      },
+    });
+    assert.equal(failedSave.status, 500);
+    const failedSaveBody = await failedSave.json() as { error?: string };
+    assert.equal(failedSaveBody.error, 'Unable to save your business profile. Please try again.');
+
+    const ownerSnapshotResponse = await request('/api/business/me', { cookie: ownerA });
+    assert.equal(ownerSnapshotResponse.status, 200);
+    const ownerSnapshot = await ownerSnapshotResponse.json() as {
+      business: { name: string };
+      settings: Record<string, string>;
+    };
+    assert.equal(ownerSnapshot.business.name, 'Contact A Updated');
+    assert.equal(ownerSnapshot.settings.city, 'Pune');
+  } finally {
+    await pool.query(`DROP TRIGGER IF EXISTS ${triggerName}`);
+  }
 });

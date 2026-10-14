@@ -24,6 +24,15 @@ interface BusinessRow extends RowDataPacket {
   whatsapp: string | null;
   email: string | null;
   address: string | null;
+  google_maps_url: string | null;
+  city: string | null;
+  pincode: string | null;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  youtube_url: string | null;
+  linkedin_url: string | null;
+  google_business_url: string | null;
+  other_social_url: string | null;
   status: 'ACTIVE' | 'INACTIVE';
   template_id: string;
   created_at: string;
@@ -57,6 +66,20 @@ const normalizeSlug = (value: string): string => value
   .slice(0, 180) || 'business';
 
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+const isValidOptionalHttpUrl = (value: string): boolean => {
+  if (!value) return true;
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) && Boolean(url.hostname) && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+};
+const isValidOptionalPhone = (value: string): boolean => {
+  if (!value) return true;
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+};
 const isPositiveInteger = (value: string): boolean => /^[1-9]\d{0,19}$/.test(value);
 const isValidDate = (value: string): boolean =>
   /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
@@ -98,6 +121,15 @@ router.get('/businesses', async (_request, response) => {
       b.whatsapp,
       b.email,
       b.address,
+      b.google_maps_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'city') AS city,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pincode') AS pincode,
+      b.instagram_url,
+      b.facebook_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'youtube_url') AS youtube_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'linkedin_url') AS linkedin_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'google_business_url') AS google_business_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'other_social_url') AS other_social_url,
       b.status,
       b.template_id,
       b.created_at,
@@ -139,6 +171,15 @@ router.get('/businesses/:id', async (request, response) => {
       b.whatsapp,
       b.email,
       b.address,
+      b.google_maps_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'city') AS city,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pincode') AS pincode,
+      b.instagram_url,
+      b.facebook_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'youtube_url') AS youtube_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'linkedin_url') AS linkedin_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'google_business_url') AS google_business_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'other_social_url') AS other_social_url,
       b.status,
       b.template_id,
       b.created_at,
@@ -187,31 +228,46 @@ router.post('/businesses', async (request, response) => {
   const address = typeof body.address === 'string' ? body.address.trim() : '';
   const instagram = typeof body.instagram_url === 'string' ? body.instagram_url.trim() : '';
   const facebook = typeof body.facebook_url === 'string' ? body.facebook_url.trim() : '';
+  const linkedin = typeof body.linkedin_url === 'string' ? body.linkedin_url.trim() : '';
   const googleBusiness = typeof body.google_business_url === 'string' ? body.google_business_url.trim() : '';
+  const otherSocial = typeof body.other_social_url === 'string' ? body.other_social_url.trim() : '';
+  const googleMaps = typeof body.google_maps_url === 'string' ? body.google_maps_url.trim() : '';
   const youtube = typeof body.youtube_url === 'string' ? body.youtube_url.trim() : '';
   const city = typeof body.city === 'string' ? body.city.trim() : '';
   const pincode = typeof body.pincode === 'string' ? body.pincode.trim() : '';
   const ownerPhone = typeof body.owner_phone === 'string' ? body.owner_phone.trim() : '';
   const ownerName = typeof body.owner_name === 'string' ? body.owner_name.trim() : (typeof body.ownerName === 'string' ? body.ownerName.trim() : '');
   const ownerEmail = typeof body.owner_email === 'string' ? body.owner_email.trim().toLowerCase() : (typeof body.ownerEmail === 'string' ? body.ownerEmail.trim().toLowerCase() : '');
-  const ownerPassword = typeof body.owner_password === 'string' ? body.owner_password : (typeof body.ownerPassword === 'string' ? body.ownerPassword : 'Ybgp-Websites-Owner-2026');
+  const ownerPassword = typeof body.owner_password === 'string' ? body.owner_password : (typeof body.ownerPassword === 'string' ? body.ownerPassword : '');
   const rawSlug = typeof body.slug === 'string' ? body.slug : normalizeSlug(name);
   const slug = normalizeSlug(rawSlug);
   const plan = typeof body.plan === 'string' && body.plan.trim() ? body.plan.trim() : 'YBGP Websites';
   const businessStatus: 'ACTIVE' | 'INACTIVE' = body.published === false
     ? 'INACTIVE'
     : parseBusinessStatus(body.published === true ? 'ACTIVE' : body.status);
-  const amount = Number(body.amount ?? 999);
+  const amount = Number(body.amount ?? 1999);
   const startDate = typeof body.start_date === 'string' ? body.start_date : new Date().toISOString().slice(0, 10);
   const expiryDate = typeof body.expiry_date === 'string' ? body.expiry_date : addOneYear(startDate);
 
-  if (!name || !category || !ownerName || !ownerEmail || !isValidEmail(ownerEmail)) {
-    response.status(400).json({ error: 'Business name, category, owner name, and valid owner email are required' });
+  if (!name || !category || !ownerName || !ownerEmail || !isValidEmail(ownerEmail) || ownerPassword.length < 8) {
+    response.status(400).json({ error: 'Business name, category, owner name, valid owner email, and an owner password of at least 8 characters are required' });
     return;
   }
 
   if (slug.length < 2) {
     response.status(400).json({ error: 'Slug must be at least 2 characters' });
+    return;
+  }
+  if (pincode && !/^\d{4,10}$/.test(pincode)) {
+    response.status(400).json({ error: 'Pincode must contain 4 to 10 digits' });
+    return;
+  }
+  if (!isValidOptionalPhone(phone) || !isValidOptionalPhone(whatsapp)) {
+    response.status(400).json({ error: 'Phone and WhatsApp numbers must contain 7 to 15 digits' });
+    return;
+  }
+  if (![googleMaps, instagram, facebook, youtube, linkedin, googleBusiness, otherSocial].every(isValidOptionalHttpUrl)) {
+    response.status(400).json({ error: 'Location and social links must be valid http or https URLs' });
     return;
   }
   if (!Number.isFinite(amount) || amount < 0 || !isValidDate(startDate) || !isValidDate(expiryDate) || expiryDate < startDate) {
@@ -274,7 +330,7 @@ router.post('/businesses', async (request, response) => {
     const [businessInsert] = await connection.execute(
       `INSERT INTO businesses (name, slug, category, description, phone, whatsapp, email, address, instagram_url, facebook_url, google_maps_url, template_id, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [name, slug, category, description || null, phone || null, whatsapp || null, businessEmail || ownerEmail, address || null, instagram || null, facebook || null, null, template.id, businessStatus]
+      [name, slug, category, description || null, phone || null, whatsapp || null, businessEmail || ownerEmail, address || null, instagram || null, facebook || null, googleMaps || null, template.id, businessStatus]
     );
 
     const businessId = Number((businessInsert as { insertId: number }).insertId);
@@ -298,6 +354,8 @@ router.post('/businesses', async (request, response) => {
       owner_phone: ownerPhone,
       youtube_url: youtube,
       google_business_url: googleBusiness,
+      linkedin_url: linkedin,
+      other_social_url: otherSocial,
     }).filter(([, value]) => value);
     for (const [key, value] of settings) {
       await connection.execute(
@@ -400,6 +458,24 @@ router.patch('/businesses/:id', async (request, response) => {
     values.push(body.google_maps_url.trim() || null);
   }
 
+  const socialUrlFields = ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const;
+  for (const field of socialUrlFields) {
+    if (typeof body[field] === 'string' && !isValidOptionalHttpUrl(body[field].trim())) {
+      response.status(400).json({ error: `${field.replaceAll('_', ' ')} must be a valid http or https URL` });
+      return;
+    }
+  }
+  if (typeof body.pincode === 'string' && body.pincode.trim() && !/^\d{4,10}$/.test(body.pincode.trim())) {
+    response.status(400).json({ error: 'Pincode must contain 4 to 10 digits' });
+    return;
+  }
+  for (const field of ['phone', 'whatsapp'] as const) {
+    if (typeof body[field] === 'string' && !isValidOptionalPhone(body[field].trim())) {
+      response.status(400).json({ error: `${field === 'phone' ? 'Phone' : 'WhatsApp'} number must contain 7 to 15 digits` });
+      return;
+    }
+  }
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
@@ -441,7 +517,8 @@ router.patch('/businesses/:id', async (request, response) => {
       subscriptionUpdates.push('status = ?');
       subscriptionValues.push(body.subscription_status);
     }
-    if (updates.length === 0 && subscriptionUpdates.length === 0 && !['city', 'pincode', 'youtube_url', 'google_business_url'].some((field) => typeof body[field] === 'string')) {
+    const businessSettingFields = ['address', 'phone', 'whatsapp', 'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'];
+    if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string')) {
       await connection.rollback();
       response.status(400).json({ error: 'No valid fields to update' });
       return;
@@ -457,7 +534,10 @@ router.patch('/businesses/:id', async (request, response) => {
     if (typeof body.status === 'string') {
       settingsToSave.push(['website_visibility', parseBusinessStatus(body.status) === 'ACTIVE' ? 'public' : 'draft']);
     }
-    for (const field of ['city', 'pincode', 'youtube_url', 'google_business_url'] as const) {
+    if (typeof body.address === 'string') settingsToSave.push(['contact_address', body.address.trim() || null]);
+    if (typeof body.phone === 'string') settingsToSave.push(['call_phone', body.phone.trim() || null]);
+    if (typeof body.whatsapp === 'string') settingsToSave.push(['whatsapp', body.whatsapp.trim() || null]);
+    for (const field of ['city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const) {
       if (typeof body[field] === 'string') settingsToSave.push([field, body[field].trim() || null]);
     }
     for (const [key, value] of settingsToSave) {

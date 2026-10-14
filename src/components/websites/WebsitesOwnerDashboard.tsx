@@ -42,12 +42,12 @@ interface OwnerSnapshot {
 type Section = 'overview' | 'profile' | 'products' | 'categories' | 'gallery' | 'enquiries' | 'settings' | 'seo';
 const sections: Array<{ id: Section; label: string; detail: string }> = [
   { id: 'overview', label: 'Overview', detail: 'Website and account status' },
-  { id: 'profile', label: 'Business profile', detail: 'Name, contact and social links' },
+  { id: 'profile', label: 'Contact, Location & Social Links', detail: 'Address, contact and social links' },
   { id: 'products', label: 'Products / Services', detail: 'Your catalogue' },
   { id: 'categories', label: 'Categories', detail: 'Organize your catalogue' },
   { id: 'gallery', label: 'Gallery', detail: 'Images shown on your site' },
   { id: 'enquiries', label: 'Enquiries', detail: 'Customer messages' },
-  { id: 'settings', label: 'Settings', detail: 'Contact, CTA and hours' },
+  { id: 'settings', label: 'Website settings', detail: 'CTA and business hours' },
   { id: 'seo', label: 'SEO', detail: 'Search and social previews' },
 ];
 
@@ -136,7 +136,7 @@ export function WebsitesOwnerDashboard() {
           eyebrow="YBGP Websites · Owner workspace"
           title={business.name}
           description={`Manage your ${business.category.toLowerCase()} website and keep your business information up to date.`}
-          action={<div className="flex flex-wrap gap-2"><SignOutButton /><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
+          action={<div className="flex flex-wrap gap-2"><SignOutButton /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
         />
 
         <div className="grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
