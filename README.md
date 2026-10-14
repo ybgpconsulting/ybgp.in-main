@@ -47,6 +47,14 @@ After running the migrations and development seed, start the Express API with `n
 
 Run the Phase 3 authentication integration tests against the migrated and seeded development database with `npm run test:auth`. The tests use the local demo accounts documented above and roll back direct database security probes.
 
+## YBGP Websites V1 management layer
+
+The product flow adds a tenant-safe management layer to the existing corporate site without overwriting the existing YBGP content routes. Public-facing business pages live under `/websites/:slug`, the super-admin dashboard sits at `/websites/admin`, and the business-owner dashboard sits at `/websites/dashboard`.
+
+The backend exposes template and tenant data through `/api/templates`, `/api/admin/businesses`, `/api/business/*`, and `/api/public/websites/:slug`. The data model keeps each tenant isolated by `business_id` and relies on the existing shared MySQL pool and authorization middleware. The admin workspace supports tenant creation, publishing, activation, and subscription management; the owner workspace supports profile, product/service, category, gallery, enquiry, settings, and SEO management. Gallery images use URL/path values; file uploads are not implemented. The existing showcase demos remain available when no tenant exists at their reserved demo slug, while a database-backed tenant at that slug takes precedence.
+
+The React frontend remains a static Cloudflare-friendly build. The management APIs, business dashboard, and public website rendering require a Node.js + MySQL host with the Express server running behind the same domain or a separate API host.
+
 ## Production build
 
 ```bash

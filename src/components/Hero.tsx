@@ -42,12 +42,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenConsultationModal }) => {
               <p className="relative text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Launch your website now</p>
               <p className="mt-5 text-sm font-semibold uppercase tracking-[0.16em] text-[#0E2B22]/60">Special campaign price</p>
               <div className="mt-3 flex items-end gap-4">
-                <span className="text-lg font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹14,999</span>
-                <span className="text-5xl font-semibold leading-none text-[#0E2B22]">₹4,999</span>
+                <span className="text-lg font-semibold text-[#1E1E1E]/35 line-through decoration-2 decoration-red-500">₹24,999</span>
+                <span className="text-5xl font-semibold leading-none text-[#0E2B22]">₹9,999</span>
               </div>
               <p className="mt-5 max-w-sm text-base leading-relaxed text-[#1E1E1E]/70">A focused website that makes your business easier to understand, trust and contact.</p>
               <a
-                href="https://wa.me/919953270270?text=Hi%2C%20I%20visited%20ybgp.in%20and%20I%27m%20interested%20in%20getting%20a%20website%20designed%20for%20my%20business.%20I%27d%20like%20to%20know%20more%20about%20the%20%E2%82%B94%2C999%20offer."
+                href="https://wa.me/919953270270?text=Hi%2C%20I%20visited%20ybgp.in%20and%20I%27m%20interested%20in%20getting%20a%20website%20designed%20for%20my%20business.%20I%27d%20like%20to%20know%20more%20about%20the%20%E2%82%B99%2C999%20offer."
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-[#C89B2B] px-6 py-4 text-lg font-bold text-[#0E2B22] shadow-[0_10px_24px_rgba(200,155,43,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#D5AA3E] hover:shadow-[0_14px_30px_rgba(200,155,43,0.38)]"

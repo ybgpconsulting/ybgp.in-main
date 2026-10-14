@@ -94,6 +94,8 @@ type DemoProduct = {
 
 type DemoBusiness = {
   slug: string;
+  template: 'bakery' | 'salon' | 'jewellery';
+  templateName: string;
   name: string;
   category: string;
   seoTitle: string;
@@ -114,6 +116,7 @@ type DemoBusiness = {
     image: string;
     alt: string;
     points: string[];
+    cta: string;
   };
   bestsellers: DemoProduct[];
   gallery: { image: string; alt: string }[];
@@ -123,6 +126,8 @@ type DemoBusiness = {
 const demoBusinesses: Record<string, DemoBusiness> = {
   'demo-bakery': {
     slug: 'demo-bakery',
+    template: 'bakery',
+    templateName: 'The Bakehouse',
     name: 'Aroma & Crumb',
     category: 'Bakery & gifting studio',
     seoTitle: 'Aroma & Crumb | Artisan Bakery Demo',
@@ -147,7 +152,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
       description: 'At Aroma & Crumb, every order starts with a simple idea: beautifully made treats that make gatherings feel warmer, more thoughtful and more personal. We bake in small batches, mix in seasonal ingredients and design finishes that feel premium without losing the warmth of a neighbourhood bakery.',
       image: '/demo-sites/bakery/story.jpg',
       alt: 'A baker shaping fresh dough at a flour-dusted worktable',
-      points: ['Small-batch artisan baking', 'Custom celebration cakes', 'Thoughtful gifting and event styling']
+      points: ['Small-batch artisan baking', 'Custom celebration cakes', 'Thoughtful gifting and event styling'],
+      cta: 'Plan your celebration'
     },
     bestsellers: [
       { name: 'Cocoa Velvet Cake', image: '/demo-sites/bakery/bestseller-1.jpg', alt: 'A chocolate layer cake finished with smooth ganache', description: 'Dark chocolate layers with a silky ganache finish.', price: '₹2,199' },
@@ -170,6 +176,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
   },
   'demo-salon': {
     slug: 'demo-salon',
+    template: 'salon',
+    templateName: 'The Beauty Studio',
     name: 'Maison Gloss',
     category: 'Salon & wellness studio',
     seoTitle: 'Maison Gloss | Salon & Wellness Demo',
@@ -194,7 +202,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
       description: 'Maison Gloss blends technique, calm and personal care to create a salon experience that feels elevated yet effortless. Every service is customised to your features, your routine and your sense of self, so the outcome feels polished and entirely yours.',
       image: '/demo-sites/salon/story.jpg',
       alt: 'A stylist shampooing a client’s hair at the salon basin',
-      points: ['Luxury hair and beauty care', 'Personalised salon rituals', 'Wellness-first finishing']
+      points: ['Luxury hair and beauty care', 'Personalised salon rituals', 'Wellness-first finishing'],
+      cta: 'Find your appointment'
     },
     bestsellers: [
       { name: 'The Maison Blowout', image: '/demo-sites/salon/bestseller-1.jpg', alt: 'A stylist blow-drying a client’s hair into soft waves', description: 'Soft volume and a polished finish with lasting movement.', price: '₹2,800' },
@@ -217,6 +226,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
   },
   'demo-jewellery': {
     slug: 'demo-jewellery',
+    template: 'jewellery',
+    templateName: 'The Editorial Boutique',
     name: 'Silver Elara',
     category: 'Jewellery boutique',
     seoTitle: 'Silver Elara | Jewellery Boutique Demo',
@@ -241,7 +252,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
       description: 'Silver Elara curates refined jewellery for marking life’s milestones, gifting with intention and building a wardrobe of treasured pieces that feel personal. Each design pairs sculptural form, meaningful craftsmanship and a quietly luxurious finish.',
       image: '/demo-sites/jewellery/story.jpg',
       alt: 'A jeweller’s hands arranging a pearl necklace in its presentation box',
-      points: ['Hand-finished design studio', 'Wedding and gifting collections', 'Modern heirloom pieces']
+      points: ['Hand-finished design studio', 'Wedding and gifting collections', 'Modern heirloom pieces'],
+      cta: 'Discover the craft'
     },
     bestsellers: [
       { name: 'The Heirloom Chain', image: '/demo-sites/jewellery/bestseller-1.jpg', alt: 'A fine gold chain arranged over an open book', description: 'A finely weighted chain with a quiet, enduring finish.', price: '₹6,500' },
@@ -268,32 +280,26 @@ const faqs = [
   ['What is not included in V1?', 'V1 does not include payment gateways, advanced analytics, custom domains, complex CRM, automated billing or other advanced operational modules.']
 ];
 
-const WebsitePreview: React.FC<{ title: string; accent: 'bakery' | 'salon' | 'jewellery' }> = ({ title, accent }) => {
-  const palette = {
-    bakery: 'bg-[#F7E7D5] text-[#0E2B22]',
-    salon: 'bg-[#EAEAE2] text-[#0E2B22]',
-    jewellery: 'bg-[#F2EFEA] text-[#0E2B22]'
+const WebsitePreview: React.FC<{ businessName: string; businessType: string; templateName: string; accent: 'bakery' | 'salon' | 'jewellery'; image: string }> = ({ businessName, businessType, templateName, accent, image }) => {
+  const overlay = {
+    bakery: 'from-[#28170f]/80 via-[#28170f]/25 to-transparent',
+    salon: 'from-[#251b18]/75 via-[#251b18]/20 to-transparent',
+    jewellery: 'from-[#171411]/75 via-[#171411]/15 to-transparent'
   }[accent];
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-[#E4E4E4] bg-white shadow-[0_12px_30px_rgba(14,43,34,0.06)]">
-      <div className="flex items-center gap-1.5 border-b border-[#EFEFEF] bg-[#F7F7F7] px-3 py-2">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#D7A4A0]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#D8CBA4]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#9FBBA9]" />
-        <span className="ml-2 truncate text-[9px] font-medium uppercase tracking-[0.12em] text-[#66736F]">example-brand.in</span>
+    <div className="overflow-hidden rounded-2xl border border-[#E4E4E4] bg-white shadow-[0_12px_30px_rgba(14,43,34,0.06)] transition duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_rgba(14,43,34,0.13)]">
+      <div className="relative h-56 overflow-hidden sm:h-64">
+        <img src={image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <div className={`absolute inset-0 bg-gradient-to-t ${overlay}`} />
+        <div className="absolute inset-x-5 bottom-5 text-white">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/75">{templateName} template</p>
+          <h3 className="mt-2 font-heading text-2xl font-bold">{businessName}</h3>
+        </div>
       </div>
-      <div className={`min-h-[230px] p-5 ${palette}`}>
-        <div className="flex items-center justify-between">
-          <div className="h-3 w-20 rounded bg-[#0E2B22]/75" />
-          <div className="h-2 w-12 rounded bg-[#0E2B22]/20" />
-        </div>
-        <div className="mt-10 space-y-2">
-          <div className="h-4 w-3/4 rounded bg-[#0E2B22]/80" />
-          <div className="h-3 w-2/3 rounded bg-[#0E2B22]/35" />
-          <div className="mt-5 h-8 w-24 rounded-full bg-[#C89B2B]" />
-        </div>
-        <div className="mt-8 text-xs font-semibold uppercase tracking-[0.16em] text-[#0E2B22]/70">{title}</div>
+      <div className="flex items-center justify-between gap-3 px-5 py-4">
+        <span className="text-sm font-medium text-[#54635a]">{businessType}</span>
+        <span aria-hidden="true" className="inline-flex items-center gap-1 text-sm font-bold text-[#0E2B22]">Open demo <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" /></span>
       </div>
     </div>
   );
@@ -308,8 +314,9 @@ const demoWhatsappUrl = (businessName: string, action: string) =>
 
 const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThemes)[keyof typeof demoThemes] }> = ({ business, theme }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const isBakery = business.slug === 'demo-bakery';
-  const isSalon = business.slug === 'demo-salon';
+  const isBakery = business.template === 'bakery';
+  const isSalon = business.template === 'salon';
+  const isJewellery = business.template === 'jewellery';
   const collectionId = isSalon ? 'services' : 'collections';
   const primaryAction = isBakery
     ? { href: demoWhatsappUrl(business.name, 'place an order'), external: true, label: 'Order on WhatsApp' }
@@ -343,7 +350,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
           { label: 'Enquire', href: '#contact' }
         ];
   const whatsappUrl = demoWhatsappUrl(business.name, isSalon ? 'book an appointment' : isBakery ? 'place an order' : 'ask about a piece');
-  const headerAction = isJewellery(business.slug)
+  const headerAction = isJewellery
     ? { href: whatsappUrl, external: true, label: 'WhatsApp Us' }
     : primaryAction;
 
@@ -414,8 +421,8 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
               <h1 className="mt-5 max-w-[660px] font-heading text-[clamp(3rem,8vw,6.5rem)] font-semibold leading-[0.92] tracking-[-0.045em] text-white">{business.hero.title}</h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">{business.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href={primaryAction.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 sm:px-6 sm:text-base" style={{ background: theme.cta }}>
-                  Order on WhatsApp <ArrowRight className="h-4 w-4" />
+                <a href={primaryAction.href} target={primaryAction.external ? '_blank' : undefined} rel={primaryAction.external ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 sm:px-6 sm:text-base" style={{ background: theme.cta }}>
+                  {business.hero.primaryCta} <ArrowRight className="h-4 w-4" />
                 </a>
                 <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:px-6 sm:text-base">
                   Browse the menu
@@ -431,8 +438,8 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
               <h1 className="mt-5 max-w-xl font-heading text-5xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-[5.25rem]">{business.hero.title}</h1>
               <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href={primaryAction.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
-                  Book Appointment <ArrowRight className="h-4 w-4" />
+                <a href={primaryAction.href} target={primaryAction.external ? '_blank' : undefined} rel={primaryAction.external ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {business.hero.primaryCta} <ArrowRight className="h-4 w-4" />
                 </a>
                 <a href="#services" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
                   Explore services
@@ -465,7 +472,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         )}
 
         <section id={collectionId} className="scroll-mt-24 mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
-          <div className={`mb-8 ${isJewellery(business.slug) ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
+          <div className={`mb-8 ${isJewellery ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
             <SectionEyebrow label={isSalon ? 'The Maison Gloss menu' : isBakery ? 'From the counter' : 'The Elara collection'} accent={theme.label} />
             <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
               {isBakery ? 'A little something for every kind of gathering.' : isSalon ? 'Care that starts with listening.' : 'Pieces with presence. Made for your own story.'}
@@ -497,7 +504,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
                 <SectionEyebrow label={business.story.eyebrow} accent={theme.label} />
                 <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{business.story.title}</h2>
                 <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.story.description}</p>
-                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>Plan your celebration <ArrowRight className="h-4 w-4" /></a>
+                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{business.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
             </div>
           ) : isSalon ? (
@@ -513,7 +520,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
                 <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
                   {business.story.points.map((point) => <p key={point} className="text-sm font-medium">{point}</p>)}
                 </div>
-                <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>Find your appointment <ArrowRight className="h-4 w-4" /></a>
+                <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{business.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
             </div>
           ) : (
@@ -522,7 +529,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
                 <SectionEyebrow label={business.story.eyebrow} accent={theme.label} />
                 <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{business.story.title}</h2>
                 <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{business.story.description}</p>
-                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>Discover the craft <ArrowRight className="h-4 w-4" /></a>
+                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{business.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
               <img src={business.story.image} alt={business.story.alt} className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
             </div>
@@ -539,7 +546,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
           </div>
           <div className={`grid gap-5 ${isBakery ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
             {business.bestsellers.map((item) => (
-              <article key={item.name} className={isJewellery(business.slug) ? '' : 'overflow-hidden border'} style={!isJewellery(business.slug) ? { background: theme.panel, borderColor: theme.border } : undefined}>
+              <article key={item.name} className={isJewellery ? '' : 'overflow-hidden border'} style={!isJewellery ? { background: theme.panel, borderColor: theme.border } : undefined}>
                 <img src={item.image} alt={item.alt} className={`${isSalon ? 'h-[320px] sm:h-[380px]' : 'h-[280px] sm:h-[340px]'} w-full object-cover`} loading="lazy" />
                 <div className="px-4 py-4 sm:px-5">
                   <div className="flex items-start justify-between gap-3">
@@ -556,7 +563,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         </section>
 
         <section id="gallery" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`mb-8 ${isJewellery(business.slug) ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
+          <div className={`mb-8 ${isJewellery ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
             <SectionEyebrow label={isSalon ? 'Inside the studio' : isBakery ? 'A peek behind the counter' : 'Details in their own light'} accent={theme.label} />
             <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{isSalon ? 'A little of the Maison Gloss feeling.' : isBakery ? 'Made, dressed and shared with care.' : 'A closer look at the little things.'}</h2>
           </div>
@@ -570,11 +577,11 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         </section>
 
         <section id="contact" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${isJewellery(business.slug) ? 'bg-[#171411] text-white' : ''}`} style={!isJewellery(business.slug) ? { background: theme.panelStrong } : undefined}>
+          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${isJewellery ? 'bg-[#171411] text-white' : ''}`} style={!isJewellery ? { background: theme.panelStrong } : undefined}>
             <div className="max-w-2xl">
-              <SectionEyebrow label={isSalon ? 'Make a little time for you' : isBakery ? 'Tell us what you are celebrating' : 'A piece, chosen personally'} accent={isJewellery(business.slug) ? '#c5a77e' : theme.label} />
+              <SectionEyebrow label={isSalon ? 'Make a little time for you' : isBakery ? 'Tell us what you are celebrating' : 'A piece, chosen personally'} accent={isJewellery ? '#c5a77e' : theme.label} />
               <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{business.finalCta.title}</h2>
-              <p className="mt-3 text-base leading-relaxed" style={{ color: isJewellery(business.slug) ? 'rgba(255,255,255,0.68)' : theme.muted }}>{business.finalCta.description}</p>
+              <p className="mt-3 text-base leading-relaxed" style={{ color: isJewellery ? 'rgba(255,255,255,0.68)' : theme.muted }}>{business.finalCta.description}</p>
             </div>
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
               {business.finalCta.button} <MessageCircle className="h-5 w-5" />
@@ -592,14 +599,12 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
           <nav aria-label={`${business.name} footer navigation`} className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium" style={{ color: theme.muted }}>
             {navItems.slice(1, 5).map((item) => <a key={item.href} href={item.href} className="hover:underline">{item.label}</a>)}
           </nav>
-          <p className="text-[10px]" style={{ color: theme.muted }}>A YBGP Websites sample storefront</p>
+          <p className="text-[10px]" style={{ color: theme.muted }}>YBGP {business.templateName} demo</p>
         </div>
       </footer>
     </div>
   );
 };
-
-const isJewellery = (value: string) => value.toLowerCase().includes('jewellery') || value.toLowerCase().includes('collection');
 
 export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug }) => {
   const demoBusiness = demoSlug ? demoBusinesses[demoSlug] ?? demoBusinesses['demo-bakery'] : null;
@@ -614,9 +619,9 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
   }, [demoBusiness]);
 
   if (demoBusiness) {
-    const theme = demoBusiness.slug === 'demo-bakery'
+    const theme = demoBusiness.template === 'bakery'
       ? demoThemes.bakery
-      : demoBusiness.slug === 'demo-salon'
+      : demoBusiness.template === 'salon'
         ? demoThemes.salon
         : demoThemes.jewellery;
 
@@ -723,12 +728,13 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
         <div className="mx-auto max-w-6xl">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#C89B2B]">Demo templates</p>
-            <h2 id="template-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">A few fast starting points for different business types.</h2>
+            <h2 id="template-heading" className="mt-4 text-3xl font-extrabold text-[#0E2B22] font-heading sm:text-4xl">Explore the live website demos.</h2>
+            <p className="mt-4 text-base leading-relaxed text-[#1E1E1E]/70">Open a complete example to see how each business website works on desktop and mobile.</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-3">
-            <a href="/websites/demo-bakery/" className="group block"><WebsitePreview title="Bakery & gifting" accent="bakery" /></a>
-            <a href="/websites/demo-salon/" className="group block"><WebsitePreview title="Salon & wellness" accent="salon" /></a>
-            <a href="/websites/demo-jewellery/" className="group block"><WebsitePreview title="Jewellery boutique" accent="jewellery" /></a>
+            <a href="/websites/demo-bakery/" aria-label="Open the Aroma & Crumb bakery website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Aroma & Crumb" businessType="Bakery & gifting studio" templateName="The Bakehouse" accent="bakery" image="/demo-sites/bakery/hero.jpg" /></a>
+            <a href="/websites/demo-salon/" aria-label="Open the Maison Gloss salon website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Maison Gloss" businessType="Salon & wellness studio" templateName="The Beauty Studio" accent="salon" image="/demo-sites/salon/hero.jpg" /></a>
+            <a href="/websites/demo-jewellery/" aria-label="Open the Silver Elara jewellery website demo" className="group block rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22]"><WebsitePreview businessName="Silver Elara" businessType="Jewellery boutique" templateName="The Editorial Boutique" accent="jewellery" image="/demo-sites/jewellery/hero.jpg" /></a>
           </div>
         </div>
       </section>

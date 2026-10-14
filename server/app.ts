@@ -1,12 +1,20 @@
 import express from 'express';
 import { pool } from './db/pool.js';
 import authRouter from './auth/routes.js';
+import adminRouter from './admin/routes.js';
+import businessRouter from './business/routes.js';
+import publicRouter from './public/routes.js';
+import templatesRouter from './templates/routes.js';
 
 const app = express();
 
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
 app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
+app.use('/api/business', businessRouter);
+app.use('/api/public', publicRouter);
+app.use('/api/templates', templatesRouter);
 
 app.get('/api/health', (_request, response) => {
   response.json({ status: 'ok', service: 'ybgp-websites-api' });

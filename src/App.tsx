@@ -3,6 +3,10 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
+import { WebsitesAdminDashboard } from './components/websites/WebsitesAdminDashboard';
+import { WebsitesOwnerDashboard } from './components/websites/WebsitesOwnerDashboard';
+import { PublicWebsiteRenderer } from './components/websites/PublicWebsiteRenderer';
+import { WebsiteRoute } from './components/websites/WebsiteRoute';
 import { SITE_DATA } from './data/siteData';
 import { getServicePage, SECTION_ROUTES } from './data/servicePages';
 import { getProjectBySlug } from './data/projects';
@@ -23,7 +27,10 @@ export default function App() {
   const servicePage = getServicePage(routeSlug);
   const projectSlug = routeSlug.startsWith('work/') ? routeSlug.replace(/^work\//, '') : null;
   const project = projectSlug ? getProjectBySlug(projectSlug) : null;
-  const demoWebsiteSlug = routeSlug.startsWith('websites/') ? routeSlug.replace(/^websites\//, '') : null;
+  const websiteRouteSlug = routeSlug.startsWith('websites/') ? routeSlug.replace(/^websites\//, '') : null;
+  const isWebsitesAdmin = routeSlug === 'websites/admin';
+  const isWebsitesDashboard = routeSlug === 'websites/dashboard';
+  const demoWebsiteSlug = websiteRouteSlug && ['demo-bakery', 'demo-salon', 'demo-jewellery'].includes(websiteRouteSlug) ? websiteRouteSlug : null;
   const isHome = routeSlug === '' || routeSlug === 'index.html';
   const isWebsitesPage = routeSlug === 'websites' || routeSlug === 'business-website';
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
@@ -43,6 +50,12 @@ export default function App() {
       return;
     }
 
+    if (isWebsitesAdmin || isWebsitesDashboard) {
+      document.title = isWebsitesAdmin ? 'Websites Admin | YBGP' : 'Website Dashboard | YBGP';
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
+      return;
+    }
+
     if (sectionPage) {
       document.title = sectionPage.title;
       document.head.querySelector('meta[name="description"]')?.setAttribute('content', sectionPage.description);
@@ -53,7 +66,7 @@ export default function App() {
 
     document.title = 'Page Not Found | YBGP';
     document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-  }, [demoWebsiteSlug, isHome, sectionPage, servicePage, project]);
+  }, [demoWebsiteSlug, isWebsitesAdmin, isWebsitesDashboard, isHome, sectionPage, servicePage, project]);
 
   if (project) {
     const handleOpenConsultation = () => {
@@ -78,12 +91,20 @@ export default function App() {
     );
   }
 
+  if (isWebsitesAdmin) {
+    return <WebsitesAdminDashboard />;
+  }
+
+  if (isWebsitesDashboard) {
+    return <WebsitesOwnerDashboard />;
+  }
+
   if (demoWebsiteSlug) {
-    return (
-      <Suspense fallback={<div className="min-h-screen bg-white" /> }>
-        <BusinessWebsitePage demoSlug={demoWebsiteSlug} />
-      </Suspense>
-    );
+    return <WebsiteRoute slug={demoWebsiteSlug} />;
+  }
+
+  if (websiteRouteSlug && !isWebsitesAdmin && !isWebsitesDashboard) {
+    return <PublicWebsiteRenderer slug={websiteRouteSlug} />;
   }
 
   if (sectionPage) {
