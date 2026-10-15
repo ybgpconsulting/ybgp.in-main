@@ -8,14 +8,17 @@
     "server:dev": "tsx watch server/index.ts",
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node build/server/index.js",
+    "start": "node build/server/index.js",
     "db:migrate": "tsx server/db/migrate.ts",
     "db:seed": "tsx server/db/seed.ts",
+    "test:unit": "tsx --test server/admin/dates.test.ts",
+    "test:seo": "npm run build && tsx --test server/seo/html.test.ts server/seo/output.test.ts",
     "test:auth": "tsx --test server/auth/auth.test.ts",
     "build": "vite build",
-    "preview": "npm run build && wrangler dev",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit && tsc -p server/tsconfig.json --noEmit",
-    "deploy": "npm run build && wrangler deploy"
+    "build:hostinger": "npm run build && npm run server:build",
+    "preview": "vite preview --host 0.0.0.0",
+    "clean": "node -e \"const fs = require('node:fs'); for (const path of ['dist', 'build']) fs.rmSync(path, { recursive: true, force: true })\"",
+    "lint": "tsc --noEmit && tsc -p server/tsconfig.json --noEmit"
   },
   "dependencies": {
     "dotenv": "^18.0.5",
@@ -27,7 +30,6 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.62.2",
     "@tailwindcss/vite": "^4.1.14",
     "@types/express": "^5.0.6",
     "@types/node": "^22.14.0",
@@ -35,7 +37,6 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.23.15",
     "typescript": "~5.8.2",
-    "vite": "^6.2.3",
-    "wrangler": "^4.144.0"
+    "vite": "^6.2.3"
   }
 }

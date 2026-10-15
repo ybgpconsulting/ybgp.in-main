@@ -3,6 +3,7 @@ import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { hashPassword } from '../auth/password.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { isValidSubscriptionPeriod } from './dates.js';
 
 const router = Router();
 
@@ -81,8 +82,6 @@ const isValidOptionalPhone = (value: string): boolean => {
   return digits.length >= 7 && digits.length <= 15;
 };
 const isPositiveInteger = (value: string): boolean => /^[1-9]\d{0,19}$/.test(value);
-const isValidDate = (value: string): boolean =>
-  /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
 const addOneYear = (value: string): string => {
   const date = new Date(`${value}T00:00:00Z`);
   date.setUTCFullYear(date.getUTCFullYear() + 1);
@@ -270,7 +269,7 @@ router.post('/businesses', async (request, response) => {
     response.status(400).json({ error: 'Location and social links must be valid http or https URLs' });
     return;
   }
-  if (!Number.isFinite(amount) || amount < 0 || !isValidDate(startDate) || !isValidDate(expiryDate) || expiryDate < startDate) {
+  if (!Number.isFinite(amount) || amount < 0 || !isValidSubscriptionPeriod(startDate, expiryDate)) {
     response.status(400).json({ error: 'Subscription amount and dates are invalid' });
     return;
   }
@@ -405,6 +404,12 @@ router.patch('/businesses/:id', async (request, response) => {
     response.status(400).json({ error: 'Subscription amount must be a non-negative number' });
     return;
   }
+  for (const field of ['start_date', 'expiry_date'] as const) {
+    if (body[field] !== undefined && typeof body[field] !== 'string') {
+      response.status(400).json({ error: `Invalid ${field.replace('_', ' ')}` });
+      return;
+    }
+  }
 
   if (typeof body.name === 'string') {
     updates.push('name = ?');
@@ -479,6 +484,44 @@ router.patch('/businesses/:id', async (request, response) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+    const hasSubscriptionUpdate =
+      typeof body.plan === 'string' && Boolean(body.plan.trim()) ||
+      typeof body.amount === 'number' ||
+      typeof body.start_date === 'string' ||
+      typeof body.expiry_date === 'string' ||
+      body.subscription_status === 'ACTIVE' ||
+      body.subscription_status === 'EXPIRED';
+    let currentSubscriptionDates: { start_date: string; expiry_date: string } | undefined;
+    if (hasSubscriptionUpdate) {
+      const [subscriptionRows] = await connection.execute<Array<RowDataPacket & {
+        start_date: string;
+        expiry_date: string;
+      }>>(
+        `SELECT DATE_FORMAT(start_date, '%Y-%m-%d') AS start_date,
+          DATE_FORMAT(expiry_date, '%Y-%m-%d') AS expiry_date
+         FROM subscriptions
+         WHERE business_id = ?
+         FOR UPDATE`,
+        [id]
+      );
+      currentSubscriptionDates = subscriptionRows[0];
+      if (!currentSubscriptionDates) {
+        await connection.rollback();
+        response.status(404).json({ error: 'Subscription not found' });
+        return;
+      }
+      const startDate = typeof body.start_date === 'string'
+        ? body.start_date
+        : currentSubscriptionDates.start_date;
+      const expiryDate = typeof body.expiry_date === 'string'
+        ? body.expiry_date
+        : currentSubscriptionDates.expiry_date;
+      if (!isValidSubscriptionPeriod(startDate, expiryDate)) {
+        await connection.rollback();
+        response.status(400).json({ error: 'Subscription dates must be valid and expiry must be on or after the start date' });
+        return;
+      }
+    }
     if (updates.length > 0) {
       await connection.execute(
         `UPDATE businesses SET ${updates.join(', ')} WHERE id = ?`,
@@ -496,19 +539,9 @@ router.patch('/businesses/:id', async (request, response) => {
       subscriptionUpdates.push('amount = ?');
       subscriptionValues.push(body.amount);
     }
-    if (typeof body.start_date === 'string' && typeof body.expiry_date === 'string' && body.expiry_date < body.start_date) {
-      await connection.rollback();
-      response.status(400).json({ error: 'Expiry date must be on or after the subscription start date' });
-      return;
-    }
     for (const field of ['start_date', 'expiry_date'] as const) {
       const date = body[field];
       if (typeof date === 'string') {
-        if (!isValidDate(date)) {
-          await connection.rollback();
-          response.status(400).json({ error: `Invalid ${field.replace('_', ' ')}` });
-          return;
-        }
         subscriptionUpdates.push(`${field} = ?`);
         subscriptionValues.push(date);
       }

@@ -1,3 +1,4 @@
+import '../db/testDatabaseGuard.js';
 import assert from 'node:assert/strict';
 import { createHash, randomBytes } from 'node:crypto';
 import { createServer } from 'node:http';

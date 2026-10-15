@@ -24,7 +24,7 @@ RewriteRule ^ - [L]
 
 # Serve the SPA shell for the published clean routes.
 RewriteRule ^$ index.html [L]
-RewriteRule ^websites(?:/.*)?$ index.html [L]
+RewriteRule ^websites/(?:admin|dashboard|demo-bakery|demo-salon|demo-jewellery)/?$ index.html [L]
 RewriteRule ^(?:business-consultant-noida|startup-consultant-delhi-ncr|website-development-company-gurugram|digital-marketing-agency-ghaziabad|business-strategy-consulting|business-planning|business-registration-compliance|website-app-development|branding-digital-marketing|business-growth-scaling|business-website|work|about|services|process|contact|why-choose-us)/?$ index.html [L]
 
 # Preserve a real 404 response for unknown paths while using the custom document.

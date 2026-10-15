@@ -36,11 +36,12 @@ export const trackConversion = (conversionType: 'whatsapp' | 'phone' | 'lead', p
       ? 'phone_call_click'
       : 'lead_form_click';
   const pagePath = window.location.pathname;
-  const landingPage = pagePath === '/business-website/' ? 'business_website' : 'general_site';
+  const isWebsiteOfferPage = pagePath === '/business-website/' || pagePath === '/websites/';
+  const landingPage = isWebsiteOfferPage ? 'business_website' : 'general_site';
 
   trackEvent(eventName, { ...params, page_path: pagePath, landing_page: landingPage });
 
-  if (pagePath === '/business-website/') {
+  if (isWebsiteOfferPage) {
     trackEvent(`website_offer_${eventName}`, { ...params, page_path: pagePath });
   }
 

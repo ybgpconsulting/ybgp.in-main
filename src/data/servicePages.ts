@@ -186,7 +186,7 @@ export const getServicePage = (slug: string) => SERVICE_PAGES.find((page) => pag
 
 export const ROUTE_METADATA = {
   home: {
-    title: 'Business Consultant in Noida & Delhi NCR | YBGP',
+    title: 'Business Growth & Strategy Consulting in Noida & Delhi NCR | YBGP',
     description: 'YBGP helps entrepreneurs, startups and businesses in Noida and Delhi NCR turn ideas into profitable businesses through strategy, planning, compliance, technology, branding and growth support.'
   },
   ...Object.fromEntries(

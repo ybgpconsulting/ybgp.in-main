@@ -12,7 +12,7 @@ server.on('error', (error) => {
 });
 
 server.listen(env.apiPort, () => {
-  console.info(`YBGP Websites API listening on port ${env.apiPort}`);
+  console.info(`YBGP Websites server listening on port ${env.apiPort}`);
 });
 
 const shutdown = (signal: NodeJS.Signals) => {

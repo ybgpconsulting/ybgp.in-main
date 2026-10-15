@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { normalizeSiteUrl } from './site.js';
 
 const readRequired = (name: string): string => {
   const value = process.env[name];
@@ -24,8 +25,13 @@ if (databasePassword === undefined) {
   throw new Error('Missing required environment variable: DB_PASSWORD');
 }
 
+const apiPort = process.env.PORT === undefined
+  ? readPort('API_PORT', 3001)
+  : readPort('PORT', 3001);
+
 export const env = Object.freeze({
-  apiPort: readPort('API_PORT', 3001),
+  apiPort,
+  siteUrl: normalizeSiteUrl(process.env.VITE_SITE_URL),
   database: Object.freeze({
     host: readRequired('DB_HOST'),
     port: readPort('DB_PORT', 3306),

@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
+import { env } from '../config/env.js';
 
 const router = Router();
 
@@ -64,7 +65,7 @@ interface SettingRow extends RowDataPacket {
   setting_value: string | null;
 }
 
-const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,79}$/i.test(value);
+const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,179}$/i.test(value);
 
 const normalizeBusiness = (row: BusinessRow) => ({
   id: row.id,
@@ -153,7 +154,7 @@ router.get('/websites/:slug', async (request, response) => {
   const seo = {
     title: settings.seo_title || `${business.name} | ${business.category}`,
     description: settings.seo_description || business.description || `Visit ${business.name} for ${business.category.toLowerCase()} offerings and contact information.`,
-    canonicalUrl: `https://www.ybgp.in/websites/${business.slug}`,
+    canonicalUrl: new URL(`websites/${business.slug}/`, env.siteUrl).href,
     ogTitle: settings.og_title || business.name,
     ogDescription: settings.og_description || business.description || business.category,
     ogImage: settings.og_image || '',

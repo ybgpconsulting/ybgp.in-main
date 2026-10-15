@@ -1,3 +1,4 @@
+import '../db/testDatabaseGuard.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
@@ -71,6 +72,29 @@ test('templates API lists active templates', async () => {
   assert.ok(Array.isArray(body.templates));
   assert.ok(body.templates.some((template) => template.slug === 'modern-business'));
   assert.ok(body.templates.some((template) => template.slug === 'food-bakery'));
+});
+
+test('server serves the built frontend and preserves API 404 responses', async () => {
+  const [homeResponse, websiteResponse, assetResponse, missingApiResponse] = await Promise.all([
+    request('/'),
+    request('/websites/demo-bakery'),
+    request('/favicon.svg'),
+    request('/api/route-that-does-not-exist'),
+  ]);
+
+  assert.equal(homeResponse.status, 200);
+  assert.match(homeResponse.headers.get('content-type') ?? '', /text\/html/);
+  assert.match(await homeResponse.text(), /<div id="root"><\/div>/);
+
+  assert.equal(websiteResponse.status, 200);
+  assert.match(websiteResponse.headers.get('content-type') ?? '', /text\/html/);
+  assert.match(await websiteResponse.text(), /assets\/index-[^"]+\.js/);
+
+  assert.equal(assetResponse.status, 200);
+  assert.match(assetResponse.headers.get('content-type') ?? '', /image\/svg\+xml/);
+
+  assert.equal(missingApiResponse.status, 404);
+  assert.match(missingApiResponse.headers.get('content-type') ?? '', /application\/json/);
 });
 
 test('public website API resolves seeded business data', async () => {

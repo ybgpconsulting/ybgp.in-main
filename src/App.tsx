@@ -9,6 +9,7 @@ import { WebsiteRoute } from './components/websites/WebsiteRoute';
 import { SITE_DATA } from './data/siteData';
 import { getServicePage, SECTION_ROUTES } from './data/servicePages';
 import { getProjectBySlug } from './data/projects';
+import { getSeoRoute } from './data/seo';
 
 const About = lazy(() => import('./components/About').then((module) => ({ default: module.About })));
 const Services = lazy(() => import('./components/Services').then((module) => ({ default: module.Services })));
@@ -37,7 +38,7 @@ export default function App() {
     if (project) {
       document.title = project.seo.title;
       document.head.querySelector('meta[name="description"]')?.setAttribute('content', project.seo.description);
-      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'index, follow');
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', getSeoRoute(`work/${project.slug}`).indexable ? 'index, follow' : 'noindex, follow');
       return;
     }
 

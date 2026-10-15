@@ -1,21 +1,17 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs/promises';
-import path from 'path';
-import { defineConfig } from 'vite';
-
-import {
-  ROUTE_METADATA,
-  ROUTE_SLUGS,
-  SECTION_ROUTES,
-  SERVICE_PAGES,
-} from './src/data/servicePages';
+import path from 'node:path';
+import { defineConfig, loadEnv } from 'vite';
+import { normalizeSiteUrl } from './server/config/site';
 import { PROJECTS } from './src/data/projects';
-
-import { cloudflare } from "@cloudflare/vite-plugin";
-
-const SITE_URL = 'https://www.ybgp.in/';
-const ORGANIZATION_ID = `${SITE_URL}#organization`;
+import {
+  INDEXABLE_SEO_ROUTES,
+  PRIVATE_SEO_ROUTES,
+  SEO_ROUTES,
+  getSeoRoute,
+} from './src/data/seo';
+import { ROUTE_SLUGS, SERVICE_PAGES } from './src/data/servicePages';
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
@@ -24,44 +20,27 @@ const escapeHtml = (value: string) => value
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
-const buildRouteJsonLd = (slug: string, url: string, description: string) => {
-  const servicePage = SERVICE_PAGES.find((page) => page.slug === slug);
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildRouteJsonLd = (slug: string, siteUrl: string) => {
+  const route = getSeoRoute(slug);
+  const url = new URL(route.canonicalPath.slice(1), siteUrl).href;
+  const organizationId = `${siteUrl}#organization`;
+  const service = SERVICE_PAGES.find((page) => page.slug === slug);
   const project = PROJECTS.find((item) => `work/${item.slug}` === slug);
   const isWebsiteOffer = slug === 'business-website';
-  const sectionPage = SECTION_ROUTES[slug as keyof typeof SECTION_ROUTES];
-  const pageName = servicePage?.name ?? project?.name ?? (isWebsiteOffer ? 'Business Website Design and Development' : sectionPage ? ROUTE_METADATA[slug as keyof typeof ROUTE_METADATA].title : 'YBGP');
-  const graph: Record<string, unknown>[] = [{
-    '@context': 'https://schema.org',
-    '@type': ['Organization', 'ProfessionalService'],
-    '@id': ORGANIZATION_ID,
-    name: 'YBGP - Your Business Growth Partner',
-    alternateName: 'YBGP',
-    url: SITE_URL,
-    logo: `${SITE_URL}logo.svg`,
-    telephone: '+919953270270',
-    email: 'info@ybgp.in',
-    founder: {
-      '@type': 'Person',
-      name: 'Shubhanshu Jain',
-      jobTitle: 'Business Growth Consultant'
-    },
-    areaServed: ['Noida', 'Delhi NCR', 'India'],
-    sameAs: [
-      'https://www.instagram.com/ybgp.consulting',
-      'https://www.linkedin.com/company/ybgp-consulting'
-    ]
-  }];
+  const graph: Record<string, unknown>[] = [];
 
-  if (servicePage || isWebsiteOffer || project) {
+  if (service || isWebsiteOffer) {
     graph.push({
       '@context': 'https://schema.org',
-      '@type': project ? 'CreativeWork' : 'Service',
-      '@id': `${url}#${project ? 'project' : 'service'}`,
-      name: pageName,
-      serviceType: project ? undefined : pageName,
-      description,
+      '@type': 'Service',
+      '@id': `${url}#service`,
+      name: route.heading,
+      serviceType: route.heading,
+      description: route.description,
       url,
-      provider: { '@id': ORGANIZATION_ID },
+      provider: { '@id': organizationId },
       areaServed: ['Noida', 'Delhi NCR', 'India'],
       ...(isWebsiteOffer ? {
         offers: {
@@ -69,21 +48,33 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
           priceCurrency: 'INR',
           price: '1999',
           url,
-          availability: 'https://schema.org/InStock'
-        }
+          availability: 'https://schema.org/InStock',
+        },
       } : {}),
-      ...(project ? { genre: project.category, about: project.industry } : {})
+    });
+  } else if (project) {
+    graph.push({
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      '@id': `${url}#project`,
+      name: project.name,
+      description: project.description,
+      url,
+      genre: project.category,
+      about: project.industry,
+      creator: { '@id': organizationId },
+      image: project.image ? new URL(project.image, siteUrl).href : undefined,
     });
   } else {
     graph.push({
       '@context': 'https://schema.org',
       '@type': 'WebPage',
       '@id': `${url}#webpage`,
-      name: pageName,
-      description,
+      name: route.heading,
+      description: route.description,
       url,
-      isPartOf: { '@id': SITE_URL },
-      about: { '@id': ORGANIZATION_ID }
+      isPartOf: { '@id': `${siteUrl}#website` },
+      about: { '@id': organizationId },
     });
   }
 
@@ -91,88 +82,153 @@ const buildRouteJsonLd = (slug: string, url: string, description: string) => {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: pageName, item: url }
-    ]
+      { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: route.heading, item: url },
+    ],
   });
 
   return JSON.stringify(graph).replace(/</g, '\\u003c');
 };
 
-const generateSeoRouteEntrypoints = () => ({
+const buildRouteHtml = (baseHtml: string, slug: string, siteUrl: string): string => {
+  const route = getSeoRoute(slug);
+  const canonicalUrl = new URL(route.canonicalPath.slice(1), siteUrl).href;
+  let html = baseHtml
+    .replace(/__SITE_URL__/g, siteUrl)
+    .replace(/<title>.*?<\/title>/is, `<title>${escapeHtml(route.title)}</title>`)
+    .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${escapeHtml(route.description)}" />`)
+    .replace(/<meta\s+name="robots"[^>]*>/i, `<meta name="robots" content="${route.indexable ? 'index, follow' : 'noindex, follow'}" />`)
+    .replace(/<meta\s+property="og:title"[^>]*>/i, `<meta property="og:title" content="${escapeHtml(route.title)}" />`)
+    .replace(/<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${escapeHtml(route.description)}" />`)
+    .replace(/<meta\s+property="og:url"[^>]*>/i, `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`)
+    .replace(/<meta\s+name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${escapeHtml(route.title)}" />`)
+    .replace(/<meta\s+name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${escapeHtml(route.description)}" />`)
+    .replace(/<meta\s+name="twitter:url"[^>]*>/i, `<meta name="twitter:url" content="${escapeHtml(canonicalUrl)}" />`)
+    .replace(/<link\s+rel="canonical"[^>]*>/i, `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`)
+    .replace(/<link\s+rel="alternate"\s+href="[^"]*"\s+hreflang="en-in"\s*\/?>/i, '');
+
+  if (slug !== 'home') {
+    html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '');
+    if (route.indexable) {
+      html = html.replace('</head>', `<script type="application/ld+json">${buildRouteJsonLd(slug, siteUrl)}</script>\n  </head>`);
+    }
+  }
+
+  const rootMarkup = route.indexable
+    ? `<main aria-label="${escapeHtml(route.heading)}" style="max-width:72rem;margin:8rem auto 3rem;padding:1.5rem"><h1>${escapeHtml(route.heading)}</h1><p>${escapeHtml(route.content)}</p><nav aria-label="Primary"><a href="/">Home</a> · <a href="/services/">Services</a> · <a href="/work/">Work</a> · <a href="/contact/">Contact</a></nav></main>`
+    : '';
+  return html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${rootMarkup}</div>`);
+};
+
+const buildPrivateHtml = (
+  baseHtml: string,
+  route: typeof PRIVATE_SEO_ROUTES[number],
+  siteUrl: string
+): string => {
+  const routeHtml = buildRouteHtml(baseHtml, 'home', siteUrl)
+    .replace(/<title>.*?<\/title>/is, `<title>${escapeHtml(route.title)}</title>`)
+    .replace(/<meta\s+name="robots"[^>]*>/i, '<meta name="robots" content="noindex, nofollow" />')
+    .replace(/<meta\s+name="description"[^>]*>/i, '')
+    .replace(/<meta\s+property="og:title"[^>]*>/i, '')
+    .replace(/<meta\s+property="og:description"[^>]*>/i, '')
+    .replace(/<meta\s+property="og:url"[^>]*>/i, '')
+    .replace(/<meta\s+name="twitter:title"[^>]*>/i, '')
+    .replace(/<meta\s+name="twitter:description"[^>]*>/i, '')
+    .replace(/<meta\s+name="twitter:url"[^>]*>/i, '')
+    .replace(/<link\s+rel="canonical"[^>]*>/i, '')
+    .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '');
+  const isDashboard = route.path.endsWith('/admin') || route.path.endsWith('/dashboard');
+  const heading = isDashboard
+    ? ''
+    : `<main><h1>${escapeHtml(route.title.replace(' | YBGP', ''))}</h1><p>Website design example by YBGP. This demonstration is not a customer website.</p></main>`;
+  return routeHtml.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${heading}</div>`);
+};
+
+const replaceCanonicalApacheRules = (content: string, siteUrl: string): string => {
+  const host = new URL(siteUrl).host;
+  const apexHost = host.replace(/^www\./i, '');
+  const acceptedHosts = host.toLowerCase() === apexHost.toLowerCase()
+    ? `^${escapeRegex(host)}(?::[0-9]+)?$`
+    : `^(?:${escapeRegex(apexHost)}|${escapeRegex(host)})(?::[0-9]+)?$`;
+  const canonicalBlock = [
+    '# Canonicalize only the production domain; leave staging hostnames independent.',
+    `RewriteCond %{HTTP_HOST} ${acceptedHosts} [NC]`,
+    'RewriteCond %{HTTPS} !=on [OR]',
+    `RewriteCond %{HTTP_HOST} !^${escapeRegex(host)}(?::443)?$ [NC]`,
+    `RewriteRule ^ https://${host}%{REQUEST_URI} [R=301,L,NE]`,
+  ].join('\n');
+
+  return content.replace(
+    /# Canonicalize only the production domain; leave staging hostnames independent\.[\s\S]*?RewriteRule \^ https:\/\/[^%\r\n]+%\{REQUEST_URI\} \[R=301,L,NE\]/,
+    canonicalBlock
+  );
+};
+
+const generateSeoRouteEntrypoints = (siteUrl: string) => ({
   name: 'generate-seo-route-entrypoints',
+  transformIndexHtml(html: string) {
+    return html.replace(/__SITE_URL__/g, siteUrl);
+  },
   async writeBundle(options: { dir?: string }, bundle: Record<string, unknown>) {
     if (!Object.prototype.hasOwnProperty.call(bundle, 'index.html')) return;
 
-    const outputDirectory = options.dir ?? path.resolve(__dirname, 'dist');
+    const outputDirectory = options.dir ?? path.resolve(process.cwd(), 'dist');
     const indexPath = path.join(outputDirectory, 'index.html');
     await fs.access(indexPath);
+    const baseHtml = await fs.readFile(indexPath, 'utf8');
 
-    const buildHtmlForRoute = (html: string, slug: string) => {
-      const routeMeta = ROUTE_METADATA[slug as keyof typeof ROUTE_METADATA] ?? ROUTE_METADATA.home;
-      const url = slug === 'home' ? 'https://www.ybgp.in/' : `https://www.ybgp.in/${slug}/`;
-      const title = escapeHtml(routeMeta.title);
-      const description = escapeHtml(routeMeta.description);
-      const routeJsonLd = slug === 'home'
-        ? null
-        : buildRouteJsonLd(slug, url, routeMeta.description);
+    await Promise.all(SEO_ROUTES
+      .filter((route) => route.slug !== 'home')
+      .map(async (route) => {
+        const directory = path.join(outputDirectory, ...route.slug.split('/'));
+        await fs.mkdir(directory, { recursive: true });
+        await fs.writeFile(path.join(directory, 'index.html'), buildRouteHtml(baseHtml, route.slug, siteUrl));
+      }));
 
-      const routeHtml = html
-        .replace(/<title>.*?<\/title>/is, `<title>${title}</title>`)
-        .replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${description}" />`)
-        .replace(/<meta\s+property="og:title"[^>]*>/i, `<meta property="og:title" content="${title}" />`)
-        .replace(/<meta\s+property="og:description"[^>]*>/i, `<meta property="og:description" content="${description}" />`)
-        .replace(/<meta\s+property="og:url"[^>]*>/i, `<meta property="og:url" content="${url}" />`)
-        .replace(/<meta\s+name="twitter:title"[^>]*>/i, `<meta name="twitter:title" content="${title}" />`)
-        .replace(/<meta\s+name="twitter:description"[^>]*>/i, `<meta name="twitter:description" content="${description}" />`)
-        .replace(/<meta\s+name="twitter:url"[^>]*>/i, `<meta name="twitter:url" content="${url}" />`)
-        .replace(/<link\s+rel="canonical"[^>]*>/i, `<link rel="canonical" href="${url}" />`);
+    await Promise.all(PRIVATE_SEO_ROUTES.map(async (route) => {
+      const directory = path.join(outputDirectory, ...route.path.split('/'));
+      await fs.mkdir(directory, { recursive: true });
+      await fs.writeFile(path.join(directory, 'index.html'), buildPrivateHtml(baseHtml, route, siteUrl));
+    }));
 
-      return routeJsonLd
-        ? routeHtml
-          .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/gi, '')
-          .replace('</head>', `<script type="application/ld+json">${routeJsonLd}</script>\n  </head>`)
-        : routeHtml;
-    };
-
-    const baseIndex = await fs.readFile(indexPath, 'utf8');
-    const homeHtml = buildHtmlForRoute(baseIndex, 'home');
-    await fs.writeFile(indexPath, homeHtml);
-
-    const publishedRoutePattern = ROUTE_SLUGS
-      .filter((slug) => slug !== 'home')
-      .join('|');
     const htaccessPath = path.join(outputDirectory, '.htaccess');
-    const htaccess = await fs.readFile(htaccessPath, 'utf8');
-    const htaccessLines = htaccess.split(/\r?\n/);
+    const htaccessLines = (await fs.readFile(htaccessPath, 'utf8')).split(/\r?\n/);
+    const routePattern = ROUTE_SLUGS
+      .filter((slug) => slug !== 'home')
+      .map((slug) => slug.split('/').map(escapeRegex).join('/'))
+      .join('|');
     const routeRuleIndex = htaccessLines.findIndex((line) =>
       line.startsWith('RewriteRule ^(?:') && line.endsWith(' index.html [L]')
     );
-    if (routeRuleIndex === -1) {
-      throw new Error('Could not update the published-route rule in .htaccess');
+    if (routeRuleIndex === -1) throw new Error('Could not update published routes in .htaccess');
+    htaccessLines[routeRuleIndex] = `RewriteRule ^(?:${routePattern})/?$ index.html [L]`;
+    const htaccess = replaceCanonicalApacheRules(htaccessLines.join('\n'), siteUrl);
+    if (!htaccess.includes(`https://${new URL(siteUrl).host}%{REQUEST_URI}`)) {
+      throw new Error('Could not update the canonical host redirect in .htaccess');
     }
-    htaccessLines[routeRuleIndex] = `RewriteRule ^(?:${publishedRoutePattern})/?$ index.html [L]`;
-    const updatedHtaccess = htaccessLines.join('\n');
-    await fs.writeFile(htaccessPath, updatedHtaccess);
+    await fs.writeFile(htaccessPath, htaccess);
 
-    await Promise.all(
-      ROUTE_SLUGS.filter((slug) => slug !== 'home').map(async (slug) => {
-        const routeDirectory = path.join(outputDirectory, slug);
-        await fs.mkdir(routeDirectory, { recursive: true });
-        const routeHtml = buildHtmlForRoute(baseIndex, slug);
-        await fs.writeFile(path.join(routeDirectory, 'index.html'), routeHtml);
-      })
-    );
-
-    const lastModified = new Date().toISOString().slice(0, 10);
-    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url>\n    <loc>https://www.ybgp.in/</loc>\n    <lastmod>${lastModified}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>1.0</priority>\n  </url>\n${ROUTE_SLUGS.filter((slug) => slug !== 'home').map((slug) => `  <url>\n    <loc>https://www.ybgp.in/${slug}/</loc>\n    <lastmod>${lastModified}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.9</priority>\n  </url>`).join('\n')}\n</urlset>\n`;
+    const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${INDEXABLE_SEO_ROUTES.map((route) => {
+      const url = new URL(route.canonicalPath.slice(1), siteUrl).href;
+      return `  <url><loc>${escapeHtml(url)}</loc></url>`;
+    }).join('\n')}\n</urlset>\n`;
     await fs.writeFile(path.join(outputDirectory, 'sitemap.xml'), sitemapXml);
+    await fs.writeFile(
+      path.join(outputDirectory, 'robots.txt'),
+      `User-agent: *\nAllow: /\nDisallow: /404.html\n\nSitemap: ${new URL('sitemap.xml', siteUrl).href}\n`
+    );
   },
 });
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const environment = loadEnv(mode, process.cwd(), '');
+  const siteUrl = normalizeSiteUrl(environment.VITE_SITE_URL);
+
   return {
-    plugins: [react(), tailwindcss(), generateSeoRouteEntrypoints(), cloudflare()],
+    define: {
+      __SITE_URL__: JSON.stringify(siteUrl),
+    },
+    plugins: [react(), tailwindcss(), generateSeoRouteEntrypoints(siteUrl)],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
