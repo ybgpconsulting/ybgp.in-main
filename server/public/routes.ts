@@ -67,6 +67,19 @@ interface SettingRow extends RowDataPacket {
 
 const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,179}$/i.test(value);
 
+const safeParseJson = (value: unknown) => {
+  if (!value) return null;
+  if (typeof value === 'object') return value;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 const normalizeBusiness = (row: BusinessRow) => ({
   id: row.id,
   name: row.name,
@@ -81,7 +94,7 @@ const normalizeBusiness = (row: BusinessRow) => ({
   google_maps_url: row.google_maps_url,
   instagram_url: row.instagram_url,
   facebook_url: row.facebook_url,
-  business_hours: row.business_hours ? JSON.parse(row.business_hours) : null,
+  business_hours: safeParseJson(row.business_hours),
   status: row.status,
   created_at: row.created_at,
   updated_at: row.updated_at,

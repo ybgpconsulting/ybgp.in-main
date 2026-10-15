@@ -211,8 +211,12 @@ router.patch('/me', async (request, response) => {
     values.set(field, body[field].trim());
   }
 
-  if (!values.get('name') || !values.get('category')) {
-    response.status(400).json({ error: 'Business name and category are required' });
+  if (values.has('name') && !values.get('name')) {
+    response.status(400).json({ error: 'Business name cannot be empty' });
+    return;
+  }
+  if (values.has('category') && !values.get('category')) {
+    response.status(400).json({ error: 'Category cannot be empty' });
     return;
   }
   if (values.has('pincode') && values.get('pincode') && !/^\d{4,10}$/.test(values.get('pincode')!)) {

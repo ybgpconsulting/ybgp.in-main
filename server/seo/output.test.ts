@@ -113,6 +113,7 @@ test('robots, canonical redirects, and important metadata assets are valid', asy
   assert.match(robots, new RegExp(`Sitemap: ${siteOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/sitemap\\.xml`));
   const host = new URL(siteOrigin).host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   assert.match(htaccess, new RegExp(`RewriteRule \\^ https://${host}%\\{REQUEST_URI\\} \\[R=301,L,NE\\]`));
+  assert.match(htaccess, /RewriteRule \^websites\/\[a-z0-9\]\[a-z0-9-\]\{1,179\}\/dashboard\/\?\$ index\.html \[L,NC\]/);
   assert.doesNotMatch(htaccess, /RewriteRule \^websites\(\?:\/\.\*\)/);
   assert.match(htaccess, /ErrorDocument 404 \/404\.html/);
   assert.match(sitemap, new RegExp(siteOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));

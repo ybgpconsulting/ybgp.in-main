@@ -66,6 +66,8 @@ const normalizeSlug = (value: string): string => value
   .replace(/^-+|-+$/g, '')
   .slice(0, 180) || 'business';
 
+const reservedSlugs = new Set(['admin', 'dashboard']);
+
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const isValidOptionalHttpUrl = (value: string): boolean => {
   if (!value) return true;
@@ -257,6 +259,10 @@ router.post('/businesses', async (request, response) => {
     response.status(400).json({ error: 'Slug must be at least 2 characters' });
     return;
   }
+  if (reservedSlugs.has(slug)) {
+    response.status(400).json({ error: `Slug "${slug}" is reserved. Please choose a different slug.` });
+    return;
+  }
   if (pincode && !/^\d{4,10}$/.test(pincode)) {
     response.status(400).json({ error: 'Pincode must contain 4 to 10 digits' });
     return;
@@ -439,9 +445,15 @@ router.patch('/businesses/:id', async (request, response) => {
     updates.push('address = ?');
     values.push(body.address.trim() || null);
   }
+  let requestedSlug: string | null = null;
   if (typeof body.slug === 'string') {
     const slug = normalizeSlug(body.slug);
     if (slug.length >= 2) {
+      if (reservedSlugs.has(slug)) {
+        response.status(400).json({ error: `Slug "${slug}" is reserved. Please choose a different slug.` });
+        return;
+      }
+      requestedSlug = slug;
       updates.push('slug = ?');
       values.push(slug);
     }
@@ -519,6 +531,17 @@ router.patch('/businesses/:id', async (request, response) => {
       if (!isValidSubscriptionPeriod(startDate, expiryDate)) {
         await connection.rollback();
         response.status(400).json({ error: 'Subscription dates must be valid and expiry must be on or after the start date' });
+        return;
+      }
+    }
+    if (requestedSlug) {
+      const [existing] = await connection.execute<RowDataPacket[]>(
+        'SELECT id FROM businesses WHERE slug = ? AND id != ? LIMIT 1',
+        [requestedSlug, id]
+      );
+      if (existing[0]) {
+        await connection.rollback();
+        response.status(409).json({ error: `Slug "${requestedSlug}" is already in use. Please choose a different slug.` });
         return;
       }
     }

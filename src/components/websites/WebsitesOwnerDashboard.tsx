@@ -92,9 +92,22 @@ export function WebsitesOwnerDashboard() {
 
   useEffect(() => { void load(); }, [load]);
 
+  const basePath = typeof window !== 'undefined'
+    ? window.location.pathname.replace(/\/+$/, '') || '/websites/dashboard'
+    : '/websites/dashboard';
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const requested = new URLSearchParams(window.location.search).get('section');
+      setSection(sections.some((item) => item.id === requested) ? requested as Section : 'overview');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
   const goTo = (next: Section) => {
     setSection(next);
-    const url = next === 'overview' ? '/websites/dashboard' : `/websites/dashboard?section=${next}`;
+    const url = next === 'overview' ? basePath : `${basePath}?section=${next}`;
     window.history.pushState({}, '', url);
     if (next === 'overview') void load();
   };
@@ -176,6 +189,10 @@ function Overview({
   settings: Record<string, string>;
 }) {
   const links: Section[] = ['profile', 'products', 'categories', 'gallery', 'enquiries', 'settings', 'seo'];
+  const basePath = typeof window !== 'undefined'
+    ? window.location.pathname.replace(/\/+$/, '') || '/websites/dashboard'
+    : '/websites/dashboard';
+
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -202,7 +219,7 @@ function Overview({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {links.map((id) => {
             const item = sections.find((entry) => entry.id === id)!;
-            return <a key={id} href={`/websites/dashboard?section=${id}`} className="rounded-2xl border border-[#e8e2d7] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><span className="block font-semibold">{item.label}</span><span className="mt-1 block text-xs leading-5 text-[#758078]">{item.detail}</span></a>;
+            return <a key={id} href={`${basePath}?section=${id}`} className="rounded-2xl border border-[#e8e2d7] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><span className="block font-semibold">{item.label}</span><span className="mt-1 block text-xs leading-5 text-[#758078]">{item.detail}</span></a>;
           })}
         </div>
       </section>

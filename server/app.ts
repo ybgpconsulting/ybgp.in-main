@@ -46,6 +46,17 @@ app.get('/api/health/db', async (_request, response) => {
   }
 });
 
+app.get('/websites/:slug/dashboard', (request, response, next) => {
+  const slug = request.params.slug;
+  if (slug === 'admin' || slug === 'dashboard' || !/^[a-z0-9][a-z0-9-]{1,179}$/i.test(slug)) {
+    response.status(404).sendFile(resolve(frontendDirectory, '404.html'));
+    return;
+  }
+  response.sendFile(resolve(frontendDirectory, 'index.html'), (error) => {
+    if (error) next(error);
+  });
+});
+
 app.get('/websites/:slug', async (request, response, next) => {
   const slug = request.params.slug;
   if (slug === 'admin' || slug === 'dashboard') {

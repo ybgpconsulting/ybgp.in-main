@@ -29,7 +29,9 @@ export default function App() {
   const project = projectSlug ? getProjectBySlug(projectSlug) : null;
   const websiteRouteSlug = routeSlug.startsWith('websites/') ? routeSlug.replace(/^websites\//, '') : null;
   const isWebsitesAdmin = routeSlug === 'websites/admin';
-  const isWebsitesDashboard = routeSlug === 'websites/dashboard';
+  const isWebsitesDashboard = routeSlug === 'websites/dashboard' ||
+    (/^websites\/[a-z0-9][a-z0-9-]{1,179}\/dashboard$/i.test(routeSlug) &&
+     !/^websites\/(?:admin|dashboard)\/dashboard$/i.test(routeSlug));
   const isHome = routeSlug === '' || routeSlug === 'index.html';
   const isWebsitesPage = routeSlug === 'websites' || routeSlug === 'business-website';
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
