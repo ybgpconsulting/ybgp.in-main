@@ -15,7 +15,20 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     },
   });
 
-  const payload = await response.json().catch(() => ({})) as { error?: string } & T;
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.toLowerCase().includes('json')) {
+    throw new Error(response.ok
+      ? 'The API returned a non-JSON response. The Node.js API may be unavailable.'
+      : `Request failed (${response.status})`);
+  }
+
+  let payload: { error?: string } & T;
+  try {
+    payload = await response.json() as { error?: string } & T;
+  } catch {
+    throw new Error('The API returned invalid JSON.');
+  }
+
   if (!response.ok) {
     throw new Error(payload.error || `Request failed (${response.status})`);
   }

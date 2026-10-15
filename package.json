@@ -12,7 +12,7 @@
     "start": "node build/server/index.js",
     "db:migrate": "tsx server/db/migrate.ts",
     "db:seed": "tsx server/db/seed.ts",
-    "test:unit": "tsx --test server/admin/dates.test.ts",
+    "test:unit": "tsx --test server/admin/dates.test.ts src/components/websites/shared.test.ts",
     "test:seo": "npm run build && tsx --test server/seo/html.test.ts server/seo/output.test.ts",
     "test:auth": "tsx --test server/auth/auth.test.ts",
     "build": "vite build",

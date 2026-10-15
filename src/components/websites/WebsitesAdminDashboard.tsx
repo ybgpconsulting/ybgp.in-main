@@ -110,6 +110,7 @@ export function WebsitesAdminDashboard() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [needsLogin, setNeedsLogin] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [formMode, setFormMode] = useState<FormMode>(null);
@@ -125,12 +126,17 @@ export function WebsitesAdminDashboard() {
         apiRequest<{ businesses: BusinessSummary[] }>('/api/admin/businesses'),
         apiRequest<{ templates: Template[] }>('/api/templates'),
       ]);
+      if (!Array.isArray(businessPayload.businesses) || !Array.isArray(templatePayload.templates)) {
+        throw new Error('The admin API returned incomplete data.');
+      }
       setBusinesses(businessPayload.businesses);
       setTemplates(templatePayload.templates);
       setNeedsLogin(false);
+      setLoadFailed(false);
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : 'Unable to load admin data';
       setNeedsLogin(message.includes('401') || message.toLowerCase().includes('authentication'));
+      setLoadFailed(true);
       setError(message);
     } finally {
       setIsLoading(false);
@@ -291,7 +297,7 @@ export function WebsitesAdminDashboard() {
           eyebrow="YBGP Websites · Operations"
           title="Admin dashboard"
           description="Manage business websites, owners, publishing and subscriptions from one workspace."
-          action={<div className="flex flex-wrap gap-2"><SignOutButton /><a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate}>＋ Create business</button></div>}
+          action={<div className="flex flex-wrap gap-2">{!isLoading && !needsLogin && !loadFailed ? <SignOutButton /> : null}<a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate} disabled={isLoading || needsLogin || loadFailed}>＋ Create business</button></div>}
         />
 
         {notice ? <div className="mb-5"><Notice kind="success">{notice}</Notice></div> : null}
@@ -299,6 +305,12 @@ export function WebsitesAdminDashboard() {
 
         {needsLogin ? (
           <AccessPanel onAuthenticated={() => { setNeedsLogin(false); void load(); }} />
+        ) : loadFailed ? (
+          <section className="rounded-2xl border border-[#e8e2d7] bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-bold">Admin data is unavailable</h2>
+            <p className="mt-2 text-sm leading-6 text-[#68746c]">The dashboard could not load its API data. Check that the Node.js application and database are available, then retry.</p>
+            <button className={`${secondaryButtonClassName} mt-4`} onClick={() => void load()} disabled={isLoading}>{isLoading ? 'Retrying…' : 'Retry'}</button>
+          </section>
         ) : (
           <>
             <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
