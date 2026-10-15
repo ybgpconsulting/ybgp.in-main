@@ -5,7 +5,6 @@ import { Footer } from './components/Footer';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { WebsitesAdminDashboard } from './components/websites/WebsitesAdminDashboard';
 import { WebsitesOwnerDashboard } from './components/websites/WebsitesOwnerDashboard';
-import { PublicWebsiteRenderer } from './components/websites/PublicWebsiteRenderer';
 import { WebsiteRoute } from './components/websites/WebsiteRoute';
 import { SITE_DATA } from './data/siteData';
 import { getServicePage, SECTION_ROUTES } from './data/servicePages';
@@ -30,7 +29,6 @@ export default function App() {
   const websiteRouteSlug = routeSlug.startsWith('websites/') ? routeSlug.replace(/^websites\//, '') : null;
   const isWebsitesAdmin = routeSlug === 'websites/admin';
   const isWebsitesDashboard = routeSlug === 'websites/dashboard';
-  const demoWebsiteSlug = websiteRouteSlug && ['demo-bakery', 'demo-salon', 'demo-jewellery'].includes(websiteRouteSlug) ? websiteRouteSlug : null;
   const isHome = routeSlug === '' || routeSlug === 'index.html';
   const isWebsitesPage = routeSlug === 'websites' || routeSlug === 'business-website';
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
@@ -43,18 +41,13 @@ export default function App() {
       return;
     }
 
-    if (demoWebsiteSlug) {
-      document.title = 'Demo Business Website | YBGP Websites';
-      document.head.querySelector('meta[name="description"]')?.setAttribute('content', 'A sample business website created with the YBGP Websites V1 product flow.');
-      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-      return;
-    }
-
     if (isWebsitesAdmin || isWebsitesDashboard) {
       document.title = isWebsitesAdmin ? 'Websites Admin | YBGP' : 'Website Dashboard | YBGP';
       document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
       return;
     }
+
+    if (websiteRouteSlug) return;
 
     if (sectionPage) {
       document.title = sectionPage.title;
@@ -66,7 +59,7 @@ export default function App() {
 
     document.title = 'Page Not Found | YBGP';
     document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-  }, [demoWebsiteSlug, isWebsitesAdmin, isWebsitesDashboard, isHome, sectionPage, servicePage, project]);
+  }, [isWebsitesAdmin, isWebsitesDashboard, isHome, sectionPage, servicePage, project, websiteRouteSlug]);
 
   if (project) {
     const handleOpenConsultation = () => {
@@ -99,12 +92,8 @@ export default function App() {
     return <WebsitesOwnerDashboard />;
   }
 
-  if (demoWebsiteSlug) {
-    return <WebsiteRoute slug={demoWebsiteSlug} />;
-  }
-
   if (websiteRouteSlug && !isWebsitesAdmin && !isWebsitesDashboard) {
-    return <PublicWebsiteRenderer slug={websiteRouteSlug} />;
+    return <WebsiteRoute slug={websiteRouteSlug} />;
   }
 
   if (sectionPage) {

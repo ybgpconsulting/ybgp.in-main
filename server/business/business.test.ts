@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
 import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
+import type { RowDataPacket } from 'mysql2';
 import app from '../app.js';
 import { SESSION_COOKIE_NAME } from '../auth/session.js';
 import { pool } from '../db/pool.js';
@@ -85,6 +86,54 @@ test('public website API resolves seeded business data', async () => {
   assert.equal(body.business?.name, 'Aroma & Crumb');
   assert.ok(Array.isArray(body.categories));
   assert.ok(Array.isArray(body.products));
+});
+
+test('reserved demo slugs resolve database tenants before the demo fallback', async () => {
+  const reservedSlugs = ['demo-bakery', 'demo-salon', 'demo-jewellery'];
+  const [existingRows] = await pool.execute<Array<RowDataPacket & { slug: string }>>(
+    `SELECT slug FROM businesses WHERE slug IN (${reservedSlugs.map(() => '?').join(', ')})`,
+    reservedSlugs
+  );
+  const existingSlugs = new Set(existingRows.map((row) => row.slug));
+  const slug = reservedSlugs.find((reservedSlug) => !existingSlugs.has(reservedSlug));
+  assert.ok(slug, 'Test requires at least one reserved demo slug to be unused');
+
+  const adminCookie = (await login('admin@ybgp.local', demoPassword)).cookie;
+  const ownerEmail = `reserved-demo-${Date.now()}@example.test`;
+  createdEmails.push(ownerEmail);
+  createdSlugs.push(slug);
+
+  const createResponse = await request('/api/admin/businesses', {
+    method: 'POST',
+    cookie: adminCookie,
+    body: {
+      name: 'Database-backed Demo Bakery Tenant',
+      slug,
+      category: 'Bakery',
+      description: 'Tenant content must take precedence over the curated demo.',
+      template_slug: 'food-bakery',
+      owner_name: 'Reserved Demo Owner',
+      owner_email: ownerEmail,
+      owner_password: 'StrongPass!123',
+      published: true,
+      status: 'ACTIVE',
+    },
+  });
+  assert.equal(createResponse.status, 201);
+
+  const tenantResponse = await request(`/api/public/websites/${slug}`);
+  assert.equal(tenantResponse.status, 200);
+  const tenant = await tenantResponse.json() as {
+    business: { name: string; slug: string; description: string };
+  };
+  assert.equal(tenant.business.slug, slug);
+  assert.equal(tenant.business.name, 'Database-backed Demo Bakery Tenant');
+  assert.equal(tenant.business.description, 'Tenant content must take precedence over the curated demo.');
+
+  await pool.execute('DELETE FROM businesses WHERE slug = ?', [slug]);
+
+  const missingTenantResponse = await request(`/api/public/websites/${slug}`);
+  assert.equal(missingTenantResponse.status, 404);
 });
 
 test('admin can create a business and duplicate slug is rejected', async () => {
@@ -214,11 +263,13 @@ test('owners can atomically update only their own profile, contact, location and
 
   const ownerA = (await login(tenants[0].email, 'StrongPass!123')).cookie;
   const ownerB = (await login(tenants[1].email, 'StrongPass!123')).cookie;
+  const forgedBusinessId = Number(businessIds[1]);
+  assert.ok(Number.isSafeInteger(forgedBusinessId));
   const updateResponse = await request('/api/business/me', {
     method: 'PATCH',
     cookie: ownerA,
     body: {
-      business_id: tenants[1].slug,
+      business_id: forgedBusinessId,
       name: 'Contact A Updated',
       category: 'Services',
       description: 'Updated owner profile',
