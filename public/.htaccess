@@ -3,10 +3,16 @@ DirectoryIndex index.html
 
 RewriteEngine On
 
-# Keep the public site on its canonical HTTPS www host.
+# Canonicalize only the production domain; leave staging hostnames independent.
+RewriteCond %{HTTP_HOST} ^(?:www\.)?ybgp\.in(?::[0-9]+)?$ [NC]
 RewriteCond %{HTTPS} !=on [OR]
-RewriteCond %{HTTP_HOST} !^www\.ybgp\.in$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.ybgp\.in(?::443)?$ [NC]
 RewriteRule ^ https://www.ybgp.in%{REQUEST_URI} [R=301,L,NE]
+
+# Keep Hostinger temporary domains on HTTPS without redirecting them to production.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+\.hostingersite\.com)(?::[0-9]+)?$ [NC]
+RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
 
 # Consolidate retired consultant-location URLs into the primary Noida page.
 RewriteRule ^(?:business-consultant-in-noida|business-consultant-delhi|business-consultant-gurugram|business-consultant-ghaziabad)/?$ /business-consultant-noida/ [R=301,L,NE]
