@@ -66,7 +66,7 @@ npm run build
 
 The frontend build is generated in `dist/`. Build the API separately with `npm run server:build`; the Node server entrypoint is `npm run server:start`.
 
-For a Node-hosted deployment, install dependencies, run `npm run build:hostinger`, and start the app with `npm start`. Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in the host's environment. The server listens on Hostinger's assigned `PORT` when present, or falls back to `API_PORT` (default `3001`) for local use.
+For a Node-hosted deployment, `npm install` automatically runs `npm run build:hostinger` after installing dependencies, generating both `dist/` and `build/server/index.js`; Hostinger does not need a separate build command. Start the app with `npm start`. The project npm config includes development dependencies because Vite and TypeScript are needed during this install-time build, even when the host sets `NODE_ENV=production`. Set `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, and `DB_PASSWORD` in the host's environment. The server listens on Hostinger's assigned `PORT` when present, or falls back to `API_PORT` (default `3001`) for local use.
 
 ## Hostinger deployment
 

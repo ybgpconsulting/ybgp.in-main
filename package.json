@@ -7,6 +7,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "server:dev": "tsx watch server/index.ts",
     "server:build": "tsc -p server/tsconfig.json",
+    "postinstall": "npm run build:hostinger",
     "server:start": "node build/server/index.js",
     "start": "node build/server/index.js",
     "db:migrate": "tsx server/db/migrate.ts",
@@ -38,5 +39,9 @@
     "tsx": "^4.23.15",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
   }
 }
