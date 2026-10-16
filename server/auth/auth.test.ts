@@ -21,6 +21,9 @@ let ownerBBusinessId: string;
 let adminCookie: string;
 let ownerACookie: string;
 let ownerBCookie: string;
+let credentialAdminId: string;
+let credentialAdminEmail: string;
+const credentialAdminPassword = 'Initial-test-admin-password-27!';
 
 interface IdRow extends RowDataPacket {
   id: string;
@@ -81,6 +84,13 @@ before(async () => {
   ownerABusinessId = adminBusiness.id;
   ownerBBusinessId = ownerBBusiness.id;
 
+  credentialAdminEmail = `credential-test-${randomBytes(8).toString('hex')}@example.test`;
+  const [credentialAdminInsert] = await pool.execute(
+    'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, "SUPER_ADMIN")',
+    ['Credential test admin', credentialAdminEmail, await hashPassword(credentialAdminPassword)]
+  );
+  credentialAdminId = String((credentialAdminInsert as { insertId: number }).insertId);
+
   server = createServer(app);
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -96,6 +106,7 @@ after(async () => {
       pool.execute('DELETE FROM sessions WHERE id = ?', [sessionHash])
     )
   );
+  await pool.execute('DELETE FROM users WHERE id = ?', [credentialAdminId]);
   await new Promise<void>((resolve, reject) => {
     server.close((error) => error ? reject(error) : resolve());
   });
@@ -114,12 +125,17 @@ test('hashPassword uses a unique salted scrypt hash and verifyPassword checks it
 });
 
 test('unauthenticated current-user and protected requests return 401', async () => {
-  const [me, admin] = await Promise.all([
+  const [me, admin, credentials] = await Promise.all([
     request('/api/auth/me'),
     request('/api/auth/test/admin'),
+    request('/api/auth/credentials', {
+      method: 'POST',
+      body: { current_password: 'current', new_email: 'admin@example.test', new_password: 'new-password-long-enough' },
+    }),
   ]);
   assert.equal(me.status, 401);
   assert.equal(admin.status, 401);
+  assert.equal(credentials.status, 401);
 });
 
 test('valid SUPER_ADMIN login sets a secure HttpOnly session and returns a safe user object', async () => {
@@ -160,6 +176,11 @@ test('valid BUSINESS_OWNER login succeeds without granting an admin role', async
   assert.equal((await request('/api/auth/test/admin?role=SUPER_ADMIN&user_id=1', {
     cookie: ownerACookie,
   })).status, 403);
+  assert.equal((await request('/api/auth/credentials', {
+    method: 'POST',
+    cookie: ownerACookie,
+    body: { current_password: demoPassword, new_email: 'new-admin@example.test', new_password: 'new-admin-password-27!' },
+  })).status, 403);
 });
 
 test('wrong password and unknown email return the same generic 401 response', async () => {
@@ -199,6 +220,74 @@ test('authenticated /me returns only the server-loaded user fields', async () =>
   assert.equal(response.status, 200);
   assert.deepEqual(Object.keys(body.user as object).sort(), ['email', 'id', 'name', 'role']);
   assert.equal(JSON.stringify(body).includes(adminCookie.split('=')[1]), false);
+});
+
+test('credential changes reject invalid passwords, incorrect current password, and duplicate email', async () => {
+  const credentialLogin = await login(credentialAdminEmail, credentialAdminPassword);
+  const invalidPassword = await request('/api/auth/credentials', {
+    method: 'POST',
+    cookie: credentialLogin.cookie,
+    body: {
+      current_password: credentialAdminPassword,
+      new_email: 'new-admin@example.test',
+      new_password: 'too-short',
+    },
+  });
+  const wrongCurrentPassword = await request('/api/auth/credentials', {
+    method: 'POST',
+    cookie: credentialLogin.cookie,
+    body: {
+      current_password: 'incorrect-current-password',
+      new_email: 'new-admin@example.test',
+      new_password: 'Updated-test-admin-password-39!',
+    },
+  });
+  const duplicateEmail = await request('/api/auth/credentials', {
+    method: 'POST',
+    cookie: credentialLogin.cookie,
+    body: {
+      current_password: credentialAdminPassword,
+      new_email: 'admin@ybgp.local',
+      new_password: 'Updated-test-admin-password-39!',
+    },
+  });
+
+  assert.equal(invalidPassword.status, 400);
+  assert.equal(wrongCurrentPassword.status, 401);
+  assert.deepEqual(await wrongCurrentPassword.json(), { error: 'Current password is incorrect' });
+  assert.equal(duplicateEmail.status, 409);
+  assert.deepEqual(await duplicateEmail.json(), { error: 'That email address is already in use' });
+  assert.equal((await request('/api/auth/me', { cookie: credentialLogin.cookie })).status, 200);
+});
+
+test('SUPER_ADMIN can change credentials after current-password verification and all sessions are revoked', async () => {
+  const initialLogin = await login(credentialAdminEmail, credentialAdminPassword);
+  const otherSession = await login(credentialAdminEmail, credentialAdminPassword);
+  const newEmail = `updated-${randomBytes(8).toString('hex')}@example.test`;
+  const newPassword = 'Updated-test-admin-password-39!';
+  const update = await request('/api/auth/credentials', {
+    method: 'POST',
+    cookie: initialLogin.cookie,
+    body: {
+      current_password: credentialAdminPassword,
+      new_email: newEmail,
+      new_password: newPassword,
+    },
+  });
+
+  assert.equal(update.status, 200);
+  assert.deepEqual(await update.json(), {
+    success: true,
+    message: 'Credentials updated. Sign in again with your new email and password.',
+  });
+  assert.match(update.headers.get('set-cookie') ?? '', /(?:Max-Age=0|Expires=Thu, 01 Jan 1970)/i);
+  assert.equal((await request('/api/auth/me', { cookie: initialLogin.cookie })).status, 401);
+  assert.equal((await request('/api/auth/me', { cookie: otherSession.cookie })).status, 401);
+  assert.equal((await login(credentialAdminEmail, credentialAdminPassword)).response.status, 401);
+
+  const updatedLogin = await login(newEmail, newPassword);
+  assert.equal(updatedLogin.response.status, 200);
+  assert.equal((updatedLogin.body.user as Record<string, unknown>).email, newEmail);
 });
 
 test('SUPER_ADMIN passes admin authorization', async () => {

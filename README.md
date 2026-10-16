@@ -41,7 +41,7 @@ These credentials are for local development only. The seed stores salted scrypt 
 
 ## Authentication API
 
-After running the migrations and development seed, start the Express API with `npm run server:dev`. Authentication uses the `ybgp_session` HTTP-only cookie and server-side MySQL sessions with a seven-day lifetime. The API provides `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`. In non-production environments, `/api/auth/test/*` routes are enabled only to exercise role and business ownership authorization; they are not product APIs.
+After running the migrations and development seed, start the Express API with `npm run server:dev`. Authentication uses the `ybgp_session` HTTP-only cookie and server-side MySQL sessions with a seven-day lifetime. The API provides `POST /api/auth/login`, `GET /api/auth/me`, and `POST /api/auth/logout`. A signed-in super admin can change their email and password from the admin dashboard's **Change login** action; the request verifies the current password, requires a password of at least 12 characters, and revokes all existing sessions. In non-production environments, `/api/auth/test/*` routes are enabled only to exercise role and business ownership authorization; they are not product APIs.
 
 Run the authentication integration tests against the migrated and seeded local test database with `npm run test:auth`. The tests use the local demo accounts documented above and roll back direct database security probes.
 

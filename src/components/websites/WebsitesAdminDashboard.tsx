@@ -117,6 +117,7 @@ export function WebsitesAdminDashboard() {
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessSummary | null>(null);
   const [form, setForm] = useState<FormValues>(emptyForm);
   const [busy, setBusy] = useState(false);
+  const [showCredentialForm, setShowCredentialForm] = useState(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -297,7 +298,7 @@ export function WebsitesAdminDashboard() {
           eyebrow="YBGP Websites · Operations"
           title="Admin dashboard"
           description="Manage business websites, owners, publishing and subscriptions from one workspace."
-          action={<div className="flex flex-wrap gap-2">{!isLoading && !needsLogin && !loadFailed ? <SignOutButton /> : null}<a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate} disabled={isLoading || needsLogin || loadFailed}>＋ Create business</button></div>}
+          action={<div className="flex flex-wrap gap-2">{!isLoading && !needsLogin && !loadFailed ? <><button className={secondaryButtonClassName} onClick={() => setShowCredentialForm(true)}>Change login</button><SignOutButton /></> : null}<a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate} disabled={isLoading || needsLogin || loadFailed}>＋ Create business</button></div>}
         />
 
         {notice ? <div className="mb-5"><Notice kind="success">{notice}</Notice></div> : null}
@@ -484,7 +485,67 @@ export function WebsitesAdminDashboard() {
           </section>
         </div>
       ) : null}
+      {showCredentialForm ? <AdminCredentialForm onClose={() => setShowCredentialForm(false)} /> : null}
     </main>
+  );
+}
+
+function AdminCredentialForm({ onClose }: { onClose: () => void }) {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const updateCredentials = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    try {
+      await apiRequest('/api/auth/credentials', {
+        method: 'POST',
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_email: newEmail,
+          new_password: newPassword,
+        }),
+      });
+      window.location.reload();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Unable to update admin credentials');
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#12221b]/55 p-3 sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose(); }}>
+      <section role="dialog" aria-modal="true" aria-labelledby="credential-dialog-title" className="mx-auto my-8 max-w-lg rounded-2xl bg-[#fbfaf7] shadow-2xl">
+        <div className="flex items-start justify-between border-b border-[#e8e2d7] px-5 py-4">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d7723]">Admin account</p>
+            <h2 id="credential-dialog-title" className="mt-1 text-2xl font-bold">Change login credentials</h2>
+          </div>
+          <button className="rounded-full px-3 py-2 text-lg text-[#68746c] hover:bg-[#eeeae1]" onClick={onClose} disabled={busy} aria-label="Close">×</button>
+        </div>
+        <form onSubmit={updateCredentials} className="space-y-4 px-5 py-5">
+          <p className="text-sm leading-6 text-[#68746c]">Changing credentials signs out all active sessions. You will need to sign in again.</p>
+          <Field label="Current password" value={currentPassword} onChange={setCurrentPassword} type="password" required maxLength={1024} autoComplete="current-password" />
+          <Field label="New admin email" value={newEmail} onChange={setNewEmail} type="email" required maxLength={254} autoComplete="email" />
+          <Field label="New password (at least 12 characters)" value={newPassword} onChange={setNewPassword} type="password" required minLength={12} maxLength={1024} autoComplete="new-password" />
+          <Field label="Confirm new password" value={confirmPassword} onChange={setConfirmPassword} type="password" required minLength={12} maxLength={1024} autoComplete="new-password" />
+          {error ? <Notice>{error}</Notice> : null}
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <button type="button" className={secondaryButtonClassName} onClick={onClose} disabled={busy}>Cancel</button>
+            <button className={buttonClassName} disabled={busy}>{busy ? 'Updating…' : 'Update credentials'}</button>
+          </div>
+        </form>
+      </section>
+    </div>
   );
 }
 

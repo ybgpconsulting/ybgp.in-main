@@ -55,6 +55,8 @@ export function Field({
   max,
   step,
   autoComplete,
+  minLength,
+  maxLength,
   inputMode,
   readOnly = false,
 }: {
@@ -68,6 +70,8 @@ export function Field({
   max?: string;
   step?: string;
   autoComplete?: string;
+  minLength?: number;
+  maxLength?: number;
   inputMode?: 'none' | 'text' | 'tel' | 'url' | 'email' | 'numeric' | 'decimal' | 'search';
   readOnly?: boolean;
 }) {
@@ -84,6 +88,8 @@ export function Field({
         max={max}
         step={step}
         autoComplete={autoComplete}
+        minLength={minLength}
+        maxLength={maxLength}
         inputMode={inputMode}
         readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
