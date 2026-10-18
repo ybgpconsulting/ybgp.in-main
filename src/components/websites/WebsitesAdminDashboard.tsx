@@ -14,7 +14,7 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
-import { getWebsiteTemplateDesign } from './templateDesigns';
+import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign } from './templateDesigns';
 
 interface BusinessSummary {
   id: string;
@@ -423,34 +423,18 @@ export function WebsitesAdminDashboard() {
                               <input className="sr-only" type="radio" name="template" value={template.slug} required checked={form.template_slug === template.slug} onChange={() => updateField('template_slug', template.slug)} />
                               <span className="flex items-center justify-between"><strong>{template.name}</strong><span className="text-xs font-semibold text-[#9d7723]">{form.template_slug === template.slug ? 'Selected' : 'Select'}</span></span>
                               <span className="mt-2 block text-sm leading-5 text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
-                              <span className={`relative mt-4 flex h-24 overflow-hidden rounded-xl p-2 ${design === 'food' ? 'bg-[#f4e5d8]' : design === 'salon' ? 'bg-[#eee5e1]' : design === 'jewellery' ? 'bg-[#211e1b]' : 'bg-[#e5eee8]'}`} aria-hidden="true">
-                                {design === 'modern' ? (
-                                  <>
-                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#0E2B22]" />
-                                    <span className="absolute bottom-2 left-2 top-7 w-[43%] rounded-md bg-[#c4d7ca]" />
-                                    <span className="absolute bottom-2 right-2 top-7 w-[43%] rounded-md bg-gradient-to-br from-[#769381] to-[#294a38]" />
-                                  </>
-                                ) : design === 'food' ? (
-                                  <>
-                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#754b39]" />
-                                    <span className="absolute bottom-2 left-2 top-7 w-[62%] rounded-md bg-[#c9825e]" />
-                                    <span className="absolute bottom-2 right-2 top-7 w-[29%] rounded-md bg-[#f8cfa9]" />
-                                  </>
-                                ) : design === 'salon' ? (
-                                  <>
-                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#8f5c54]" />
-                                    <span className="absolute inset-x-[28%] bottom-2 top-7 rounded-full bg-[#cba99e]" />
-                                  </>
-                                ) : (
-                                  <>
-                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#c5a77e]" />
-                                    <span className="absolute bottom-2 left-2 top-7 w-[43%] rounded-md bg-[#51463c]" />
-                                    <span className="absolute bottom-2 right-2 top-7 w-[43%] rounded-md bg-gradient-to-br from-[#9d7655] to-[#332b25]" />
-                                  </>
-                                )}
+                              <span className="relative mt-4 block h-40 overflow-hidden rounded-xl bg-[#f4f5f2]" aria-hidden="true">
+                                <iframe
+                                  title={`${template.name} live storefront preview`}
+                                  src={`/websites/${getWebsiteTemplateDemoSlug(template.slug)}`}
+                                  loading="lazy"
+                                  tabIndex={-1}
+                                  className="pointer-events-none absolute left-0 top-0 border-0"
+                                  style={{ width: '400%', height: '640px', transform: 'scale(0.25)', transformOrigin: 'top left' }}
+                                />
                               </span>
                               <span className="mt-3 block text-xs font-semibold text-[#526158]">
-                                {design === 'food' ? 'Warm editorial · product-led' : design === 'salon' ? 'Soft, centered · appointment-led' : design === 'jewellery' ? 'Dark editorial · luxury showcase' : 'Fresh split hero · versatile'}
+                                {design === 'food' ? 'Warm editorial · product-led' : design === 'salon' ? 'Soft, centered · appointment-led' : design === 'jewellery' ? 'Dark editorial · luxury showcase' : 'Fresh split hero · versatile'} · live preview
                               </span>
                             </label>
                           );
@@ -460,6 +444,7 @@ export function WebsitesAdminDashboard() {
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                       <span className="font-semibold text-[#526158]">Explore storefront demos:</span>
                       {[
+                        ['Modern', 'demo-modern'],
                         ['Bakery', 'demo-bakery'],
                         ['Salon', 'demo-salon'],
                         ['Jewellery', 'demo-jewellery'],

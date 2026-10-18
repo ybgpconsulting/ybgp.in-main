@@ -95,6 +95,7 @@ export const PRIVATE_SEO_ROUTES = [
   { path: 'websites/demo-bakery', title: 'Aroma & Crumb Bakery Website Demo | YBGP' },
   { path: 'websites/demo-salon', title: 'Maison Gloss Salon Website Demo | YBGP' },
   { path: 'websites/demo-jewellery', title: 'Silver Elara Jewellery Website Demo | YBGP' },
+  { path: 'websites/demo-modern', title: 'Willow & Stone Modern Business Website Demo | YBGP' },
 ] as const;
 
 export const getSectionRoute = (slug: string) =>

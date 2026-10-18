@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { getWebsiteTemplateDesign } from './templateDesigns.js';
+import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign } from './templateDesigns.js';
+import { getDemoWebsite } from './demoWebsites.js';
 
 test('each active business template uses a distinct storefront design', () => {
   const designs = [
@@ -15,4 +16,14 @@ test('each active business template uses a distinct storefront design', () => {
 
 test('unknown template slugs safely fall back to the modern storefront', () => {
   assert.equal(getWebsiteTemplateDesign('future-template'), 'modern');
+});
+
+test('each active template preview uses a demo storefront with the matching template', () => {
+  const templateSlugs = ['modern-business', 'food-bakery', 'salon-studio', 'jewellery-boutique'];
+
+  for (const templateSlug of templateSlugs) {
+    const demo = getDemoWebsite(getWebsiteTemplateDemoSlug(templateSlug));
+    assert.ok(demo);
+    assert.equal(demo.template.slug, templateSlug);
+  }
 });

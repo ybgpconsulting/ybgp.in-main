@@ -49,7 +49,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     const controller = new AbortController();
     const loadWebsite = async () => {
       if (initialData) {
+        setData(initialData);
         setLoading(false);
+        setError(null);
         return;
       }
       setLoading(true);

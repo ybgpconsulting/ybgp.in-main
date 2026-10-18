@@ -1,15 +1,14 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PublicWebsiteRenderer, type BusinessWebsiteResponse } from './PublicWebsiteRenderer';
-
-const BusinessWebsitePage = lazy(() => import('../BusinessWebsitePage').then((module) => ({ default: module.BusinessWebsitePage })));
-const showcaseSlugs = ['demo-bakery', 'demo-salon', 'demo-jewellery'];
+import { getDemoWebsite } from './demoWebsites';
 
 export function WebsiteRoute({ slug }: { slug: string }) {
-  const [state, setState] = useState<'checking' | 'tenant' | 'showcase' | 'unavailable'>('checking');
+  const [state, setState] = useState<'checking' | 'tenant' | 'unavailable'>('checking');
   const [tenant, setTenant] = useState<BusinessWebsiteResponse | null>(null);
-  const isShowcaseSlug = showcaseSlugs.includes(slug);
+  const demo = getDemoWebsite(slug);
 
   useEffect(() => {
+    if (demo) return;
     setState('checking');
     setTenant(null);
     const controller = new AbortController();
@@ -25,37 +24,26 @@ export function WebsiteRoute({ slug }: { slug: string }) {
           return;
         }
 
-        if (!controller.signal.aborted) {
-          setState(isShowcaseSlug && (response.status === 404 || response.status >= 500) ? 'showcase' : 'unavailable');
-        }
+        if (!controller.signal.aborted) setState('unavailable');
       } catch {
-        if (!controller.signal.aborted) {
-          setState(isShowcaseSlug ? 'showcase' : 'unavailable');
-        }
+        if (!controller.signal.aborted) setState('unavailable');
       }
     };
     void resolveRoute();
     return () => controller.abort();
-  }, [isShowcaseSlug, slug]);
+  }, [demo, slug]);
 
   useEffect(() => {
-    if (state === 'showcase') {
-      document.title = 'Demo Business Website | YBGP Websites';
-      document.head.querySelector('meta[name="description"]')?.setAttribute('content', 'A sample business website created with the YBGP Websites V1 product flow.');
-      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-    } else if (state === 'tenant') {
-      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'index, follow');
-    }
-  }, [state]);
+    if (demo || state === 'tenant') document.head.querySelector('meta[name="robots"]')?.setAttribute('content', demo ? 'noindex' : 'index, follow');
+  }, [demo, state]);
+
+  if (demo) return <PublicWebsiteRenderer slug={slug} initialData={demo} />;
 
   if (state === 'checking') {
     return <main className="grid min-h-screen place-items-center bg-[#f7f5f2] text-[#0E2B22]"><p role="status">Loading website…</p></main>;
   }
   if (state === 'tenant' && tenant) {
     return <PublicWebsiteRenderer slug={slug} initialData={tenant} />;
-  }
-  if (state === 'showcase') {
-    return <ShowcaseFallback slug={slug} />;
   }
   return (
     <main className="grid min-h-screen place-items-center bg-[#f7f5f2] px-4 text-[#0E2B22]">
@@ -67,8 +55,4 @@ export function WebsiteRoute({ slug }: { slug: string }) {
       </div>
     </main>
   );
-}
-
-function ShowcaseFallback({ slug }: { slug: string }) {
-  return <Suspense fallback={<div className="min-h-screen bg-white" />}><BusinessWebsitePage demoSlug={slug} /></Suspense>;
 }
