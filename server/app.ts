@@ -15,6 +15,17 @@ const app = express();
 const frontendDirectory = resolve(process.cwd(), 'dist');
 const showcaseSlugs = new Set(['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery']);
 
+const safeErrorDetails = (error: unknown): Record<string, string | number> => {
+  const details: Record<string, string | number> = {};
+  if (error instanceof Error) details.name = error.name;
+  if (typeof error !== 'object' || error === null) return details;
+
+  if ('code' in error && typeof error.code === 'string') details.code = error.code;
+  if ('errno' in error && typeof error.errno === 'number') details.errno = error.errno;
+  if ('sqlState' in error && typeof error.sqlState === 'string') details.sqlState = error.sqlState;
+  return details;
+};
+
 interface TenantSeoRow extends RowDataPacket {
   name: string;
   category: string;
@@ -41,7 +52,7 @@ app.get('/api/health/db', async (_request, response) => {
     await pool.query('SELECT 1');
     response.json({ status: 'ok', database: 'connected' });
   } catch (error) {
-    console.error('Database health check failed');
+    console.error('Database health check failed', safeErrorDetails(error));
     response.status(503).json({ status: 'error', database: 'unavailable' });
   }
 });
@@ -170,12 +181,16 @@ app.use((request, response, next) => {
   });
 });
 
-app.use((error: unknown, _request: express.Request, response: express.Response, _next: express.NextFunction) => {
+app.use((error: unknown, request: express.Request, response: express.Response, _next: express.NextFunction) => {
   if (error instanceof SyntaxError) {
     response.status(400).json({ error: 'Invalid JSON request body' });
     return;
   }
-  console.error('Unhandled API error');
+  console.error('Unhandled API error', {
+    method: request.method,
+    path: request.path,
+    ...safeErrorDetails(error),
+  });
   response.status(500).json({ error: 'Internal server error' });
 });
 
