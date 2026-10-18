@@ -112,6 +112,9 @@ export function BusinessProfileManager({
       linkedin_url: settings.linkedin_url ?? '',
       google_business_url: settings.google_business_url ?? '',
       other_social_url: settings.other_social_url ?? '',
+      tiktok_url: settings.tiktok_url ?? '',
+      x_url: settings.x_url ?? '',
+      pinterest_url: settings.pinterest_url ?? '',
       city: settings.city ?? '',
       pincode: settings.pincode ?? '',
     });
@@ -147,6 +150,9 @@ export function BusinessProfileManager({
       ['LinkedIn', form.linkedin_url],
       ['Google Business', form.google_business_url],
       ['Other social link', form.other_social_url],
+      ['TikTok', form.tiktok_url],
+      ['X', form.x_url],
+      ['Pinterest', form.pinterest_url],
     ]) {
       if (!value) continue;
       try {
@@ -180,6 +186,9 @@ export function BusinessProfileManager({
           linkedin_url: form.linkedin_url,
           google_business_url: form.google_business_url,
           other_social_url: form.other_social_url,
+          tiktok_url: form.tiktok_url,
+          x_url: form.x_url,
+          pinterest_url: form.pinterest_url,
         }),
       });
       setSuccess('Business profile saved. Your public website is updated.');
@@ -220,6 +229,9 @@ export function BusinessProfileManager({
           <Field label="LinkedIn URL" value={form.linkedin_url ?? ''} onChange={(value) => update('linkedin_url', value)} type="url" />
           <Field label="Google Business URL" value={form.google_business_url ?? ''} onChange={(value) => update('google_business_url', value)} type="url" />
           <Field label="Other social link" value={form.other_social_url ?? ''} onChange={(value) => update('other_social_url', value)} type="url" />
+          <Field label="TikTok URL" value={form.tiktok_url ?? ''} onChange={(value) => update('tiktok_url', value)} type="url" />
+          <Field label="X URL" value={form.x_url ?? ''} onChange={(value) => update('x_url', value)} type="url" />
+          <Field label="Pinterest URL" value={form.pinterest_url ?? ''} onChange={(value) => update('pinterest_url', value)} type="url" />
         </FormSection>
         <TextAreaField label="Business description" value={form.description ?? ''} onChange={(value) => update('description', value)} />
         {error ? <Notice>{error}</Notice> : null}

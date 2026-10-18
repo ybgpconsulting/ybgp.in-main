@@ -34,6 +34,9 @@ interface BusinessRow extends RowDataPacket {
   linkedin_url: string | null;
   google_business_url: string | null;
   other_social_url: string | null;
+  tiktok_url: string | null;
+  x_url: string | null;
+  pinterest_url: string | null;
   status: 'ACTIVE' | 'INACTIVE';
   template_id: string;
   created_at: string;
@@ -138,6 +141,9 @@ router.get('/businesses', async (_request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'linkedin_url') AS linkedin_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'google_business_url') AS google_business_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'other_social_url') AS other_social_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'tiktok_url') AS tiktok_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'x_url') AS x_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pinterest_url') AS pinterest_url,
       b.status,
       b.template_id,
       b.created_at,
@@ -189,6 +195,9 @@ router.get('/businesses/:id', async (request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'linkedin_url') AS linkedin_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'google_business_url') AS google_business_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'other_social_url') AS other_social_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'tiktok_url') AS tiktok_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'x_url') AS x_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pinterest_url') AS pinterest_url,
       b.status,
       b.template_id,
       b.created_at,
@@ -241,6 +250,9 @@ router.post('/businesses', async (request, response) => {
   const linkedin = typeof body.linkedin_url === 'string' ? body.linkedin_url.trim() : '';
   const googleBusiness = typeof body.google_business_url === 'string' ? body.google_business_url.trim() : '';
   const otherSocial = typeof body.other_social_url === 'string' ? body.other_social_url.trim() : '';
+  const tiktok = typeof body.tiktok_url === 'string' ? body.tiktok_url.trim() : '';
+  const x = typeof body.x_url === 'string' ? body.x_url.trim() : '';
+  const pinterest = typeof body.pinterest_url === 'string' ? body.pinterest_url.trim() : '';
   const googleMaps = typeof body.google_maps_url === 'string' ? body.google_maps_url.trim() : '';
   const youtube = typeof body.youtube_url === 'string' ? body.youtube_url.trim() : '';
   const city = typeof body.city === 'string' ? body.city.trim() : '';
@@ -280,7 +292,7 @@ router.post('/businesses', async (request, response) => {
     response.status(400).json({ error: 'Phone and WhatsApp numbers must contain 7 to 15 digits' });
     return;
   }
-  if (![googleMaps, instagram, facebook, youtube, linkedin, googleBusiness, otherSocial].every(isValidOptionalHttpUrl)) {
+  if (![googleMaps, instagram, facebook, youtube, linkedin, googleBusiness, otherSocial, tiktok, x, pinterest].every(isValidOptionalHttpUrl)) {
     response.status(400).json({ error: 'Location and social links must be valid http or https URLs' });
     return;
   }
@@ -370,6 +382,9 @@ router.post('/businesses', async (request, response) => {
       google_business_url: googleBusiness,
       linkedin_url: linkedin,
       other_social_url: otherSocial,
+      tiktok_url: tiktok,
+      x_url: x,
+      pinterest_url: pinterest,
     }).filter(([, value]) => value);
     for (const [key, value] of settings) {
       await connection.execute(
@@ -484,7 +499,7 @@ router.patch('/businesses/:id', async (request, response) => {
     values.push(body.google_maps_url.trim() || null);
   }
 
-  const socialUrlFields = ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const;
+  const socialUrlFields = ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const;
   for (const field of socialUrlFields) {
     if (typeof body[field] === 'string' && !isValidOptionalHttpUrl(body[field].trim())) {
       response.status(400).json({ error: `${field.replaceAll('_', ' ')} must be a valid http or https URL` });
@@ -582,7 +597,7 @@ router.patch('/businesses/:id', async (request, response) => {
       subscriptionUpdates.push('status = ?');
       subscriptionValues.push(body.subscription_status);
     }
-    const businessSettingFields = ['address', 'phone', 'whatsapp', 'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'];
+    const businessSettingFields = ['address', 'phone', 'whatsapp', 'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'];
     if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string')) {
       await connection.rollback();
       response.status(400).json({ error: 'No valid fields to update' });
@@ -602,7 +617,7 @@ router.patch('/businesses/:id', async (request, response) => {
     if (typeof body.address === 'string') settingsToSave.push(['contact_address', body.address.trim() || null]);
     if (typeof body.phone === 'string') settingsToSave.push(['call_phone', body.phone.trim() || null]);
     if (typeof body.whatsapp === 'string') settingsToSave.push(['whatsapp', body.whatsapp.trim() || null]);
-    for (const field of ['city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const) {
+    for (const field of ['city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const) {
       if (typeof body[field] === 'string') settingsToSave.push([field, body[field].trim() || null]);
     }
     for (const [key, value] of settingsToSave) {

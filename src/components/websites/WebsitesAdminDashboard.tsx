@@ -35,6 +35,9 @@ interface BusinessSummary {
   linkedin_url: string | null;
   google_business_url: string | null;
   other_social_url: string | null;
+  tiktok_url: string | null;
+  x_url: string | null;
+  pinterest_url: string | null;
   template_name: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
@@ -82,6 +85,9 @@ const emptyForm = (): FormValues => ({
   linkedin_url: '',
   google_business_url: '',
   other_social_url: '',
+  tiktok_url: '',
+  x_url: '',
+  pinterest_url: '',
   template_slug: '',
   owner_name: '',
   owner_email: '',
@@ -178,6 +184,9 @@ export function WebsitesAdminDashboard() {
       linkedin_url: business.linkedin_url ?? '',
       google_business_url: business.google_business_url ?? '',
       other_social_url: business.other_social_url ?? '',
+      tiktok_url: business.tiktok_url ?? '',
+      x_url: business.x_url ?? '',
+      pinterest_url: business.pinterest_url ?? '',
       plan: business.plan ?? 'YBGP Websites',
       amount: business.amount ?? '1999',
       start_date: business.start_date?.slice(0, 10) ?? today(),
@@ -255,6 +264,9 @@ export function WebsitesAdminDashboard() {
             linkedin_url: form.linkedin_url,
             google_business_url: form.google_business_url,
             other_social_url: form.other_social_url,
+            tiktok_url: form.tiktok_url,
+            x_url: form.x_url,
+            pinterest_url: form.pinterest_url,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -411,6 +423,9 @@ export function WebsitesAdminDashboard() {
                     <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
                     <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
                     <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
+                    <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" />
+                    <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
+                    <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
                   </FormSection>
                   <section>
                     <h3 className="font-bold">Choose a template</h3>
@@ -501,6 +516,9 @@ export function WebsitesAdminDashboard() {
                       <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
                       <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
                       <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
+                      <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" />
+                      <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
+                      <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
                     </FormSection>
                   ) : null}
                 </>

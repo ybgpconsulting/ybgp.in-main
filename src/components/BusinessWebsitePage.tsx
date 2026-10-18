@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowRight, Check, ChevronRight, Images, Link2, MapPin, Menu, MessageCircle, Share2, Smartphone, X } from 'lucide-react';
 import { SITE_DATA } from '../data/siteData';
+import { SocialBrandIcon, type SocialPlatform } from './websites/SocialBrandIcon';
 
 const websiteOfferMessage = 'Hi YBGP, I am interested in getting my business website for ₹1,999/year. Please share the details.';
 const websiteOfferUrl = `https://wa.me/${SITE_DATA.phoneRaw}?text=${encodeURIComponent(websiteOfferMessage)}`;
@@ -110,6 +111,8 @@ type DemoBusiness = {
   category: string;
   seoTitle: string;
   summary: string;
+  location: { label: string; query: string };
+  openingHours: string;
   hero: {
     eyebrow: string;
     title: string;
@@ -139,42 +142,44 @@ const demoBusinesses: Record<string, DemoBusiness> = {
     template: 'modern',
     templateName: 'Modern Business',
     name: 'Northline Studio',
-    category: 'Business & digital consulting',
-    seoTitle: 'Northline Studio | Modern Business Demo',
-    summary: 'Clear thinking, thoughtful design, and practical support to help your business move forward.',
+    category: 'Business strategy & digital consulting',
+    seoTitle: 'Northline Studio | Business Strategy & Consulting Demo',
+    summary: 'An independent consulting studio in Noida helping local businesses find clarity, improve their digital presence, and grow with confidence.',
+    location: { label: 'Noida, Uttar Pradesh, India · By appointment', query: 'Noida, Uttar Pradesh, India' },
+    openingHours: 'Monday – Friday · 9:30 AM – 6:00 PM · By appointment',
     hero: {
-      eyebrow: 'Independent business studio',
-      title: 'Good work starts with a clear direction.',
-      description: 'We help ambitious local businesses turn big ideas into confident, practical next steps.',
+      eyebrow: 'Independent consulting studio · Noida',
+      title: 'Make your next business move with confidence.',
+      description: 'Northline Studio brings strategy, thoughtful design, and practical digital support together for ambitious small businesses.',
       primaryCta: 'Start a conversation',
-      image: '/work-nextq.png',
-      alt: 'A modern digital product and business experience'
+      image: '/demo-sites/modern/workspace.jpg',
+      alt: 'A bright, contemporary studio meeting space'
     },
     highlights: [
-      { title: 'Strategy & direction', subtitle: 'Find clarity in your next move with practical, thoughtful advice.', image: '/work-cortek-enterprises.png', alt: 'A business project delivered with a clear plan' },
-      { title: 'Digital experiences', subtitle: 'Make your services easier to understand and your business easier to find.', image: '/work-nextq.png', alt: 'A polished digital experience designed around business needs' },
-      { title: 'Brand foundations', subtitle: 'Build a consistent presence that feels unmistakably like your business.', image: '/work-ybgp.png', alt: 'A distinct identity applied across a business website' },
-      { title: 'Ongoing support', subtitle: 'A trusted partner to help you keep making progress as you grow.', image: '/work-freshera-foods.png', alt: 'A growing business connecting with its customers' }
+      { title: 'Business strategy', subtitle: 'Turn a big ambition into a practical plan, clear priorities, and measurable next steps.', image: '/demo-sites/modern/meeting.jpg', alt: 'A collaborative team discussion around a work table' },
+      { title: 'Digital experiences', subtitle: 'Make your services easier to understand, trust, and find online.', image: '/demo-sites/modern/workspace.jpg', alt: 'A calm and light-filled modern workspace' },
+      { title: 'Brand foundations', subtitle: 'Create a consistent identity and message that feels unmistakably yours.', image: '/demo-sites/modern/studio.jpg', alt: 'A considered contemporary studio interior' },
+      { title: 'Growth support', subtitle: 'Get a trusted partner to help you make progress as your business evolves.', image: '/demo-sites/modern/team.jpg', alt: 'A small team sharing ideas during a planning session' }
     ],
     story: {
-      eyebrow: 'A little about us',
-      title: 'Thoughtful work. Clear communication. Progress you can see.',
-      description: 'Northline Studio brings strategy, design, and practical support together in one place. We take time to understand your business, then make a focused plan that helps you move forward with confidence.',
-      image: '/work-cortek-enterprises.png',
-      alt: 'A business project taking shape through thoughtful planning',
-      points: ['Advice grounded in your goals', 'Clear steps from idea to launch', 'A personal, collaborative approach'],
-      cta: 'Meet the studio'
+      eyebrow: 'About Northline',
+      title: 'Good advice starts by understanding your business.',
+      description: 'Northline Studio is a sample independent consulting practice based in Noida. We work alongside founders and small teams to understand what is holding them back, decide what matters next, and shape a clear plan they can put into action.',
+      image: '/demo-sites/modern/team.jpg',
+      alt: 'A small team working together in a bright studio',
+      points: ['Straightforward, founder-friendly advice', 'A clear plan with practical next steps', 'Collaborative support from idea to launch'],
+      cta: 'How we work'
     },
     bestsellers: [
-      { name: 'Business Clarity Session', image: '/work-cortek-enterprises.png', alt: 'A consulting project with a clear business direction', description: 'A focused working session to find your priorities and map the next steps.', price: 'From ₹1,500' },
-      { name: 'Website & Brand Review', image: '/work-nextq.png', alt: 'A considered review of a business website', description: 'Practical recommendations to make your online presence work harder.', price: 'From ₹2,500' },
-      { name: 'Growth Partner', image: '/work-ybgp.png', alt: 'A long-term partnership supporting business growth', description: 'Ongoing guidance and hands-on support, shaped around your goals.', price: 'By consultation' }
+      { name: 'Business Clarity Session', image: '/demo-sites/modern/meeting.jpg', alt: 'A strategy conversation between business partners', description: 'A focused session to clarify your priorities and agree on useful next steps.', price: 'From ₹4,500' },
+      { name: 'Digital Presence Review', image: '/demo-sites/modern/workspace.jpg', alt: 'A clean workspace prepared for a digital business review', description: 'A practical review of your website, messaging, and customer journey.', price: 'From ₹7,500' },
+      { name: 'Ongoing Growth Partner', image: '/demo-sites/modern/studio.jpg', alt: 'A quiet, contemporary setting for focused consulting work', description: 'Regular strategic support shaped around your team and business goals.', price: 'By consultation' }
     ],
     gallery: [
-      { image: '/work-nextq.png', alt: 'A refined digital experience for a growing business' },
-      { image: '/work-cortek-enterprises.png', alt: 'A business project developed with care' },
-      { image: '/work-ybgp.png', alt: 'A consistent business identity across digital touchpoints' },
-      { image: '/work-freshera-foods.png', alt: 'A customer-focused brand and website' }
+      { image: '/demo-sites/modern/workspace.jpg', alt: 'A bright studio ready for a planning session' },
+      { image: '/demo-sites/modern/meeting.jpg', alt: 'Colleagues exchanging ideas around a table' },
+      { image: '/demo-sites/modern/team.jpg', alt: 'A team collaborating on a shared project' },
+      { image: '/demo-sites/modern/studio.jpg', alt: 'A refined, modern consulting studio' }
     ],
     finalCta: {
       title: 'Ready to make your next move?',
@@ -190,6 +195,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
     category: 'Bakery & gifting studio',
     seoTitle: 'Aroma & Crumb | Artisan Bakery Demo',
     summary: 'Custom cakes, handcrafted desserts and thoughtful gifting for every celebration.',
+    location: { label: 'Bandra West, Mumbai, Maharashtra · Sample location', query: 'Bandra West, Mumbai, Maharashtra' },
+    openingHours: 'Tuesday – Sunday · 9:00 AM – 8:00 PM',
     hero: {
       eyebrow: 'Artisan Bakery & Gifting',
       title: 'Freshly baked moments, made to be remembered.',
@@ -240,6 +247,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
     category: 'Salon & wellness studio',
     seoTitle: 'Maison Gloss | Salon & Wellness Demo',
     summary: 'Thoughtful beauty experiences designed around your style, confidence and wellbeing.',
+    location: { label: 'Koregaon Park, Pune, Maharashtra · Sample location', query: 'Koregaon Park, Pune, Maharashtra' },
+    openingHours: 'Tuesday – Sunday · 10:00 AM – 7:00 PM · By appointment',
     hero: {
       eyebrow: 'Salon & Wellness Studio',
       title: 'Beauty, refined.',
@@ -290,6 +299,8 @@ const demoBusinesses: Record<string, DemoBusiness> = {
     category: 'Jewellery boutique',
     seoTitle: 'Silver Elara | Jewellery Boutique Demo',
     summary: 'Timeless pieces crafted for celebrations, milestones and everyday elegance.',
+    location: { label: 'C-Scheme, Jaipur, Rajasthan · Sample location', query: 'C-Scheme, Jaipur, Rajasthan' },
+    openingHours: 'Monday – Saturday · 11:00 AM – 8:00 PM',
     hero: {
       eyebrow: 'Fine Jewellery & Gifting',
       title: 'Details worth remembering.',
@@ -371,6 +382,8 @@ const SectionEyebrow: React.FC<{ label: string; accent: string }> = ({ label, ac
 
 const demoWhatsappUrl = (businessName: string, action: string) =>
   `https://wa.me/919953270270?text=${encodeURIComponent(`Hi, I'd like to ${action} at ${businessName}.`)}`;
+
+const previewSocialPlatforms: SocialPlatform[] = ['instagram', 'facebook', 'youtube', 'linkedin', 'tiktok', 'x', 'pinterest'];
 
 const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThemes)[keyof typeof demoThemes] }> = ({ business, theme }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -681,13 +694,40 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
             </a>
           </div>
         </section>
+
+        <section className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 lg:px-10">
+          <div className="grid overflow-hidden border" style={{ borderColor: theme.border, background: theme.panel }}>
+            <div className="grid gap-8 p-6 sm:p-9 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <SectionEyebrow label="Visit or get in touch" accent={theme.label} />
+                <h2 className="mt-3 font-heading text-3xl font-semibold">We would love to hear from you.</h2>
+                <p className="mt-3 text-sm leading-6" style={{ color: theme.muted }}>{business.name} is a sample business website. Replace the sample details and connect your own channels before launch.</p>
+                <div className="mt-6 space-y-4 text-sm">
+                  <div className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0" style={{ color: theme.accentStrong }} /><div><p className="font-semibold">Location</p><p className="mt-1" style={{ color: theme.muted }}>{business.location.label}</p></div></div>
+                  <div className="flex gap-3"><span className="mt-0.5 text-base" style={{ color: theme.accentStrong }}>◷</span><div><p className="font-semibold">Opening hours</p><p className="mt-1" style={{ color: theme.muted }}>{business.openingHours}</p></div></div>
+                </div>
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(business.location.query)}`} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}><MapPin aria-hidden="true" size={17} />Find us on Google Maps</a>
+                <div className="mt-8 border-t pt-5" style={{ borderColor: theme.border }}>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: theme.label }}>Social profiles</p>
+                  <div className="mt-3 flex flex-wrap gap-2" aria-label="Social profile examples">
+                    {previewSocialPlatforms.map((platform) => <span key={platform} title={`${platform} profile link`} className="inline-flex h-10 w-10 items-center justify-center rounded-full border" style={{ color: theme.accentDark, borderColor: theme.border }}><SocialBrandIcon platform={platform} size={18} /></span>)}
+                  </div>
+                  <p className="mt-2 text-xs" style={{ color: theme.muted }}>Add your profile URLs in the website dashboard to make these official brand icons clickable.</p>
+                </div>
+              </div>
+              <div className="min-h-[300px] overflow-hidden bg-[#e9ece8]">
+                <iframe title={`Map showing the sample ${business.location.query} location`} src={`https://www.google.com/maps?q=${encodeURIComponent(business.location.query)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="h-full min-h-[300px] w-full border-0" />
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t" style={{ background: theme.panel, borderColor: theme.border }}>
         <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-4 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
           <div>
             <p className="font-heading text-lg font-semibold" style={{ color: theme.accentDark }}>{business.name}</p>
-            <p className="mt-1 text-xs" style={{ color: theme.muted }}>{business.category} · Open Mon–Sat, 10am–7pm</p>
+            <p className="mt-1 text-xs" style={{ color: theme.muted }}>{business.category} · {business.location.query}</p>
           </div>
           <nav aria-label={`${business.name} footer navigation`} className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium" style={{ color: theme.muted }}>
             {navItems.slice(1, 5).map((item) => <a key={item.href} href={item.href} className="hover:underline">{item.label}</a>)}
@@ -784,7 +824,7 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-8 xl:grid-cols-4">
             <a href="/websites/demo-modern/" aria-label="Open live demo: Willow & Stone Studio, modern business" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
-              <div className="relative aspect-[16/10] overflow-hidden bg-[#e5eee8]"><img src="/work-nextq.png" alt="A polished digital experience for a growing business" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#294a38]">Live demo</span></div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#e5eee8]"><img src="/demo-sites/modern/workspace.jpg" alt="A bright, contemporary studio meeting space" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#294a38]">Live demo</span></div>
               <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Northline Studio</h3><p className="mt-1 text-sm text-[#68746C]">Modern business</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
             <a href="/websites/demo-bakery/" aria-label="Open live demo: Aroma & Crumb, bakery and gifting" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Facebook, Instagram, Link2, Linkedin, MapPin, Navigation, Youtube } from 'lucide-react';
+import { Link2, MapPin, Navigation } from 'lucide-react';
+import { SocialBrandIcon, type SocialPlatform } from './SocialBrandIcon';
 import { getWebsiteTemplateDesign } from './templateDesigns';
 
 export interface BusinessWebsiteResponse {
@@ -113,15 +114,21 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const directionsUrl = explicitMapsUrl || (locationQuery
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`
     : '');
+  const mapEmbedUrl = locationQuery
+    ? `https://www.google.com/maps?q=${encodeURIComponent(locationQuery)}&output=embed`
+    : '';
   const ctaText = settings.cta_text || 'Contact us';
   const ctaUrl = safeUrl(settings.cta_url) || (whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : phone ? `tel:${phone}` : email ? `mailto:${email}` : '#contact');
   const socialLinks = [
-    { name: 'Instagram', url: business.instagram_url, icon: Instagram },
-    { name: 'Facebook', url: business.facebook_url, icon: Facebook },
-    { name: 'YouTube', url: settings.youtube_url, icon: Youtube },
-    { name: 'LinkedIn', url: settings.linkedin_url, icon: Linkedin },
+    { name: 'Instagram', url: business.instagram_url, platform: 'instagram' as SocialPlatform },
+    { name: 'Facebook', url: business.facebook_url, platform: 'facebook' as SocialPlatform },
+    { name: 'YouTube', url: settings.youtube_url, platform: 'youtube' as SocialPlatform },
+    { name: 'LinkedIn', url: settings.linkedin_url, platform: 'linkedin' as SocialPlatform },
+    { name: 'TikTok', url: settings.tiktok_url, platform: 'tiktok' as SocialPlatform },
+    { name: 'X', url: settings.x_url, platform: 'x' as SocialPlatform },
+    { name: 'Pinterest', url: settings.pinterest_url, platform: 'pinterest' as SocialPlatform },
     { name: 'Google Business', url: settings.google_business_url, icon: MapPin },
-    { name: 'Other social link', url: settings.other_social_url, icon: Link2 },
+    { name: 'Other link', url: settings.other_social_url, icon: Link2 },
   ].map((item) => ({ ...item, url: safeExternalUrl(item.url) }))
     .filter((item) => Boolean(item.url));
   const heroImage = gallery
@@ -139,7 +146,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           <nav className={`hidden items-center gap-5 text-sm sm:flex ${salonLayout ? 'text-[#6e5651]' : 'text-white/80'}`}>
             <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#offerings">Offerings</a>
             {gallery.length ? <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#gallery">Gallery</a> : null}
-            {address ? <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#contact">Contact</a> : null}
+            {address || phone || whatsapp || email ? <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#contact">Contact</a> : null}
           </nav>
           <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-bold shadow-sm sm:text-sm ${jewelleryLayout ? 'bg-[#c5a77e] text-[#211a13]' : foodLayout ? 'bg-[#f4e2d3] text-[#603b2c]' : salonLayout ? 'bg-[#8f5c54] text-white' : 'bg-white text-[#183629]'}`}>{ctaText}</a>
         </div>
@@ -154,6 +161,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <div className="mt-7 flex flex-wrap gap-3">
               {phone ? <a href={`tel:${phone}`} className={`rounded-full px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'bg-[#c5a77e] text-[#211a13]' : 'bg-[#8f5c54] text-white'}`}>Call {phone}</a> : null}
               {whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className={`rounded-full px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'border border-[#c5a77e]/60 text-[#e8d3b1]' : 'bg-white text-[#8f5c54]'}`}>WhatsApp</a> : null}
+              {email ? <a href={`mailto:${email}`} className="rounded-full border border-current/20 px-5 py-3 text-sm font-bold">Email us</a> : null}
+              {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full border border-current/20 px-5 py-3 text-sm font-bold">Directions</a> : null}
             </div>
           </div>
           <div className={`relative min-h-[280px] overflow-hidden ${jewelleryLayout ? 'bg-[#2b2722]' : 'bg-[#d9c4bc]'}`}>
@@ -173,6 +182,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                 <div className="mt-7 flex flex-wrap gap-3">
                   {phone ? <a href={`tel:${phone}`} className="rounded-full bg-[#173629] px-5 py-3 text-sm font-bold text-white">Call {phone}</a> : null}
                   {whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className={`rounded-full px-5 py-3 text-sm font-bold ${foodLayout ? 'bg-[#a45e3e] text-white' : 'bg-white text-[#173629]'}`}>WhatsApp</a> : null}
+                  {email ? <a href={`mailto:${email}`} className="rounded-full border border-[#173629]/20 px-5 py-3 text-sm font-bold text-[#173629]">Email us</a> : null}
+                  {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#173629]/20 px-5 py-3 text-sm font-bold text-[#173629]">Directions</a> : null}
                 </div>
               </div>
               <div className={`relative flex min-h-60 items-center justify-center overflow-hidden p-8 ${foodLayout ? 'bg-gradient-to-br from-[#c9825e] to-[#754b39]' : 'rounded-[1.5rem] bg-gradient-to-br from-[#6f9680] to-[#294a38]'}`}>
@@ -217,15 +228,26 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         </section>
       ) : null}
 
+      {business.description ? (
+        <section id="about" className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+          <div className={`grid gap-6 p-6 sm:p-9 lg:grid-cols-[0.65fr_1.35fr] lg:items-center ${jewelleryLayout ? 'bg-[#e8dfd3]' : foodLayout ? 'bg-[#f0e2d6]' : salonLayout ? 'bg-[#f0e5df]' : 'bg-[#e5eee8]'}`}>
+            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d7723]">A little about us</p><h2 className="mt-2 text-3xl font-extrabold">{business.name}</h2><p className="mt-2 text-sm font-medium opacity-70">{business.category}</p></div>
+            <p className="max-w-3xl whitespace-pre-line text-base leading-7 opacity-80">{business.description}</p>
+          </div>
+        </section>
+      ) : null}
+
       <footer id="contact" className={`${jewelleryLayout ? 'bg-[#171411]' : foodLayout ? 'bg-[#3f2d24]' : salonLayout ? 'bg-[#3c2e2b]' : 'bg-[#10271d]'} px-4 py-10 text-white sm:px-6`}>
         <div className="mx-auto grid max-w-6xl gap-7 sm:grid-cols-2">
           <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><Navigation aria-hidden="true" size={17} />Get Directions</a> : null}{settings.working_hours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{settings.working_hours}</p> : null}</div>
           <div className="flex flex-col gap-3 sm:items-end">
             {phone ? <a href={`tel:${phone}`} className="text-sm text-white/85">Call: {phone}</a> : null}
             {email ? <a href={`mailto:${email}`} className="text-sm text-white/85">{email}</a> : null}
-            <div className="flex flex-wrap gap-3">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name} title={social.name} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition hover:bg-white/10"><social.icon aria-hidden="true" size={19} /></a>)}</div>
+            {whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><SocialBrandIcon platform="whatsapp" size={18} />Message on WhatsApp</a> : null}
+            {socialLinks.length ? <div className="mt-2 flex flex-wrap gap-3" aria-label="Social media links">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name} title={social.name} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition hover:bg-white/10">{social.platform ? <SocialBrandIcon platform={social.platform} /> : social.icon ? <social.icon aria-hidden="true" size={19} /> : null}</a>)}</div> : null}
           </div>
         </div>
+        {mapEmbedUrl ? <div className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-2xl border border-white/15 bg-white/5"><div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d3bb78]">Find us</p><p className="mt-1 text-sm text-white/75">{address || locationQuery}</p></div>{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20"><Navigation aria-hidden="true" size={16} />Open in Google Maps</a> : null}</div><iframe title={`Map to ${business.name}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="h-64 w-full border-0" /></div> : null}
         <div className="mx-auto mt-8 max-w-6xl border-t border-white/10 pt-4 text-xs text-white/45">© {new Date().getFullYear()} {business.name}. Powered by YBGP Websites.</div>
       </footer>
     </main>

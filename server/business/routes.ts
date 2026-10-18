@@ -199,6 +199,9 @@ router.patch('/me', async (request, response) => {
     'linkedin_url',
     'google_business_url',
     'other_social_url',
+    'tiktok_url',
+    'x_url',
+    'pinterest_url',
   ] as const;
   const stringFields = [...businessFields, ...settingFields];
   const values = new Map<string, string>();
@@ -234,7 +237,7 @@ router.patch('/me', async (request, response) => {
     }
   }
 
-  for (const field of ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url'] as const) {
+  for (const field of ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const) {
     const value = values.get(field) ?? '';
     if (!value) continue;
     try {

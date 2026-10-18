@@ -369,6 +369,9 @@ test('owners can atomically update only their own profile, contact, location and
       linkedin_url: 'https://linkedin.com/company/contact-a',
       google_business_url: '',
       other_social_url: 'https://example.test/contact-a',
+      tiktok_url: 'https://tiktok.com/@contact-a',
+      x_url: 'https://x.com/contact-a',
+      pinterest_url: 'https://pinterest.com/contact-a',
     },
   });
   assert.equal(updateResponse.status, 200);
@@ -402,6 +405,9 @@ test('owners can atomically update only their own profile, contact, location and
   assert.equal(publicA.settings.youtube_url, 'https://youtube.com/@contact-a');
   assert.equal(publicA.settings.linkedin_url, 'https://linkedin.com/company/contact-a');
   assert.equal(publicA.settings.other_social_url, 'https://example.test/contact-a');
+  assert.equal(publicA.settings.tiktok_url, 'https://tiktok.com/@contact-a');
+  assert.equal(publicA.settings.x_url, 'https://x.com/contact-a');
+  assert.equal(publicA.settings.pinterest_url, 'https://pinterest.com/contact-a');
   assert.equal(publicB.business.address, null);
   assert.equal(publicB.business.google_maps_url, null);
   assert.equal(publicB.business.instagram_url, null);
@@ -419,15 +425,21 @@ test('owners can atomically update only their own profile, contact, location and
       whatsapp: '+919876543211',
       instagram_url: 'https://instagram.com/contact-b',
       linkedin_url: 'https://linkedin.com/company/contact-b',
+      tiktok_url: 'https://tiktok.com/@contact-b',
+      x_url: 'https://x.com/contact-b',
+      pinterest_url: 'https://pinterest.com/contact-b',
     },
   });
   assert.equal(adminUpdateResponse.status, 200);
   const adminListResponse = await request('/api/admin/businesses', { cookie: adminCookie });
   assert.equal(adminListResponse.status, 200);
-  const adminList = await adminListResponse.json() as { businesses: Array<{ id: string; city: string; linkedin_url: string }> };
+  const adminList = await adminListResponse.json() as { businesses: Array<{ id: string; city: string; linkedin_url: string; tiktok_url: string; x_url: string; pinterest_url: string }> };
   const adminBusinessB = adminList.businesses.find((business) => business.id === businessIds[1]);
   assert.equal(adminBusinessB?.city, 'Mumbai');
   assert.equal(adminBusinessB?.linkedin_url, 'https://linkedin.com/company/contact-b');
+  assert.equal(adminBusinessB?.tiktok_url, 'https://tiktok.com/@contact-b');
+  assert.equal(adminBusinessB?.x_url, 'https://x.com/contact-b');
+  assert.equal(adminBusinessB?.pinterest_url, 'https://pinterest.com/contact-b');
 
   const updatedPublicBResponse = await request(`/api/public/websites/${tenants[1].slug}`);
   const updatedPublicB = await updatedPublicBResponse.json() as {
@@ -442,6 +454,9 @@ test('owners can atomically update only their own profile, contact, location and
   assert.equal(updatedPublicB.business.instagram_url, 'https://instagram.com/contact-b');
   assert.equal(updatedPublicB.settings.city, 'Mumbai');
   assert.equal(updatedPublicB.settings.linkedin_url, 'https://linkedin.com/company/contact-b');
+  assert.equal(updatedPublicB.settings.tiktok_url, 'https://tiktok.com/@contact-b');
+  assert.equal(updatedPublicB.settings.x_url, 'https://x.com/contact-b');
+  assert.equal(updatedPublicB.settings.pinterest_url, 'https://pinterest.com/contact-b');
 
   const ownerBUpdate = await request('/api/business/me', {
     method: 'PATCH',
@@ -461,6 +476,9 @@ test('owners can atomically update only their own profile, contact, location and
       linkedin_url: '',
       google_business_url: '',
       other_social_url: '',
+      tiktok_url: '',
+      x_url: '',
+      pinterest_url: '',
     },
   });
   assert.equal(ownerBUpdate.status, 200);
@@ -483,6 +501,9 @@ test('owners can atomically update only their own profile, contact, location and
       linkedin_url: '',
       google_business_url: '',
       other_social_url: '',
+      tiktok_url: '',
+      x_url: '',
+      pinterest_url: '',
     },
   });
   assert.equal(invalidUrlResponse.status, 400);
