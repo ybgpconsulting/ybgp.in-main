@@ -13,7 +13,7 @@ import { renderTenantHtml } from './seo/html.js';
 
 const app = express();
 const frontendDirectory = resolve(process.cwd(), 'dist');
-const showcaseSlugs = new Set(['demo-bakery', 'demo-salon', 'demo-jewellery']);
+const showcaseSlugs = new Set(['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery']);
 
 interface TenantSeoRow extends RowDataPacket {
   name: string;

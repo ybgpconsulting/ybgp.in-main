@@ -1,16 +1,21 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { PublicWebsiteRenderer, type BusinessWebsiteResponse } from './PublicWebsiteRenderer';
-import { getDemoWebsite } from './demoWebsites';
+
+const BusinessWebsitePage = lazy(() => import('../BusinessWebsitePage').then((module) => ({ default: module.BusinessWebsitePage })));
+const showcaseSlugs = ['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery'];
 
 export function WebsiteRoute({ slug }: { slug: string }) {
-  const [state, setState] = useState<'checking' | 'tenant' | 'unavailable'>('checking');
+  const [state, setState] = useState<'checking' | 'tenant' | 'showcase' | 'unavailable'>('checking');
   const [tenant, setTenant] = useState<BusinessWebsiteResponse | null>(null);
-  const demo = getDemoWebsite(slug);
+  const isShowcaseSlug = showcaseSlugs.includes(slug);
 
   useEffect(() => {
-    if (demo) return;
     setState('checking');
     setTenant(null);
+    if (isShowcaseSlug) {
+      setState('showcase');
+      return;
+    }
     const controller = new AbortController();
     const resolveRoute = async () => {
       try {
@@ -31,13 +36,19 @@ export function WebsiteRoute({ slug }: { slug: string }) {
     };
     void resolveRoute();
     return () => controller.abort();
-  }, [demo, slug]);
+  }, [isShowcaseSlug, slug]);
 
   useEffect(() => {
-    if (demo || state === 'tenant') document.head.querySelector('meta[name="robots"]')?.setAttribute('content', demo ? 'noindex' : 'index, follow');
-  }, [demo, state]);
+    if (state === 'showcase') {
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
+    } else if (state === 'tenant') {
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'index, follow');
+    }
+  }, [state]);
 
-  if (demo) return <PublicWebsiteRenderer slug={slug} initialData={demo} />;
+  if (state === 'showcase') {
+    return <Suspense fallback={<div className="min-h-screen bg-white" />}><BusinessWebsitePage demoSlug={slug} /></Suspense>;
+  }
 
   if (state === 'checking') {
     return <main className="grid min-h-screen place-items-center bg-[#f7f5f2] text-[#0E2B22]"><p role="status">Loading website…</p></main>;

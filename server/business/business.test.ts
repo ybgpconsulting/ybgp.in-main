@@ -73,14 +73,17 @@ test('templates API lists active templates', async () => {
   assert.equal(response.status, 200);
   const body = await response.json() as { templates?: Array<{ slug: string }> };
   assert.ok(Array.isArray(body.templates));
-  assert.ok(body.templates.some((template) => template.slug === 'modern-business'));
-  assert.ok(body.templates.some((template) => template.slug === 'food-bakery'));
+  assert.deepEqual(
+    body.templates.map((template) => template.slug).sort(),
+    ['modern-business', 'food-bakery', 'salon-studio', 'jewellery-boutique'].sort()
+  );
 });
 
 test('server serves the built frontend and preserves API 404 responses', async () => {
-  const [homeResponse, websiteResponse, assetResponse, missingApiResponse] = await Promise.all([
+  const [homeResponse, websiteResponse, modernDemoResponse, assetResponse, missingApiResponse] = await Promise.all([
     request('/'),
     request('/websites/demo-bakery'),
+    request('/websites/demo-modern'),
     request('/favicon.svg'),
     request('/api/route-that-does-not-exist'),
   ]);
@@ -92,6 +95,9 @@ test('server serves the built frontend and preserves API 404 responses', async (
   assert.equal(websiteResponse.status, 200);
   assert.match(websiteResponse.headers.get('content-type') ?? '', /text\/html/);
   assert.match(await websiteResponse.text(), /assets\/index-[^"]+\.js/);
+
+  assert.equal(modernDemoResponse.status, 200);
+  assert.match(modernDemoResponse.headers.get('content-type') ?? '', /text\/html/);
 
   assert.equal(assetResponse.status, 200);
   assert.match(assetResponse.headers.get('content-type') ?? '', /image\/svg\+xml/);

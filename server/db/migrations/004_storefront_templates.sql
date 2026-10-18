@@ -6,4 +6,5 @@ VALUES
   ('Jewellery Boutique', 'jewellery-boutique', 'A refined, dark editorial layout for jewellery and premium boutiques.', NULL, 'ACTIVE')
 ON DUPLICATE KEY UPDATE
   name = VALUES(name),
-  description = VALUES(description);
+  description = VALUES(description),
+  status = 'ACTIVE';

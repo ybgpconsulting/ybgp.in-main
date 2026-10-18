@@ -21,6 +21,22 @@ const websiteSteps = [
 ];
 
 const demoThemes = {
+  modern: {
+    pageBg: '#f4f7f4',
+    panel: '#ffffff',
+    panelStrong: '#e7eee8',
+    headerSurface: 'rgba(255,255,255,0.82)',
+    text: '#192c23',
+    muted: '#52685b',
+    accent: '#799783',
+    accentSoft: '#e4eee6',
+    accentDark: '#183629',
+    accentStrong: '#294a38',
+    border: '#dce6de',
+    label: '#587464',
+    heroOverlay: 'linear-gradient(90deg, rgba(22,44,34,0.76), rgba(22,44,34,0.12))',
+    cta: '#183629'
+  },
   bakery: {
     pageBg: '#f9f1ea',
     panel: '#fffaf6',
@@ -88,7 +104,7 @@ type DemoProduct = {
 
 type DemoBusiness = {
   slug: string;
-  template: 'bakery' | 'salon' | 'jewellery';
+  template: 'modern' | 'bakery' | 'salon' | 'jewellery';
   templateName: string;
   name: string;
   category: string;
@@ -118,6 +134,54 @@ type DemoBusiness = {
 };
 
 const demoBusinesses: Record<string, DemoBusiness> = {
+  'demo-modern': {
+    slug: 'demo-modern',
+    template: 'modern',
+    templateName: 'Modern Business',
+    name: 'Northline Studio',
+    category: 'Business & digital consulting',
+    seoTitle: 'Northline Studio | Modern Business Demo',
+    summary: 'Clear thinking, thoughtful design, and practical support to help your business move forward.',
+    hero: {
+      eyebrow: 'Independent business studio',
+      title: 'Good work starts with a clear direction.',
+      description: 'We help ambitious local businesses turn big ideas into confident, practical next steps.',
+      primaryCta: 'Start a conversation',
+      image: '/work-nextq.png',
+      alt: 'A modern digital product and business experience'
+    },
+    highlights: [
+      { title: 'Strategy & direction', subtitle: 'Find clarity in your next move with practical, thoughtful advice.', image: '/work-cortek-enterprises.png', alt: 'A business project delivered with a clear plan' },
+      { title: 'Digital experiences', subtitle: 'Make your services easier to understand and your business easier to find.', image: '/work-nextq.png', alt: 'A polished digital experience designed around business needs' },
+      { title: 'Brand foundations', subtitle: 'Build a consistent presence that feels unmistakably like your business.', image: '/work-ybgp.png', alt: 'A distinct identity applied across a business website' },
+      { title: 'Ongoing support', subtitle: 'A trusted partner to help you keep making progress as you grow.', image: '/work-freshera-foods.png', alt: 'A growing business connecting with its customers' }
+    ],
+    story: {
+      eyebrow: 'A little about us',
+      title: 'Thoughtful work. Clear communication. Progress you can see.',
+      description: 'Northline Studio brings strategy, design, and practical support together in one place. We take time to understand your business, then make a focused plan that helps you move forward with confidence.',
+      image: '/work-cortek-enterprises.png',
+      alt: 'A business project taking shape through thoughtful planning',
+      points: ['Advice grounded in your goals', 'Clear steps from idea to launch', 'A personal, collaborative approach'],
+      cta: 'Meet the studio'
+    },
+    bestsellers: [
+      { name: 'Business Clarity Session', image: '/work-cortek-enterprises.png', alt: 'A consulting project with a clear business direction', description: 'A focused working session to find your priorities and map the next steps.', price: 'From ₹1,500' },
+      { name: 'Website & Brand Review', image: '/work-nextq.png', alt: 'A considered review of a business website', description: 'Practical recommendations to make your online presence work harder.', price: 'From ₹2,500' },
+      { name: 'Growth Partner', image: '/work-ybgp.png', alt: 'A long-term partnership supporting business growth', description: 'Ongoing guidance and hands-on support, shaped around your goals.', price: 'By consultation' }
+    ],
+    gallery: [
+      { image: '/work-nextq.png', alt: 'A refined digital experience for a growing business' },
+      { image: '/work-cortek-enterprises.png', alt: 'A business project developed with care' },
+      { image: '/work-ybgp.png', alt: 'A consistent business identity across digital touchpoints' },
+      { image: '/work-freshera-foods.png', alt: 'A customer-focused brand and website' }
+    ],
+    finalCta: {
+      title: 'Ready to make your next move?',
+      description: 'Tell us where you want to go. We will help you find a clear, practical way to get there.',
+      button: 'Talk to our team'
+    }
+  },
   'demo-bakery': {
     slug: 'demo-bakery',
     template: 'bakery',
@@ -310,14 +374,16 @@ const demoWhatsappUrl = (businessName: string, action: string) =>
 
 const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThemes)[keyof typeof demoThemes] }> = ({ business, theme }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isModern = business.template === 'modern';
   const isBakery = business.template === 'bakery';
   const isSalon = business.template === 'salon';
   const isJewellery = business.template === 'jewellery';
-  const collectionId = isSalon ? 'services' : 'collections';
+  const isService = isSalon || isModern;
+  const collectionId = isService ? 'services' : 'collections';
   const primaryAction = isBakery
     ? { href: demoWhatsappUrl(business.name, 'place an order'), external: true, label: 'Order on WhatsApp' }
-    : isSalon
-      ? { href: demoWhatsappUrl(business.name, 'book an appointment'), external: true, label: 'Book Appointment' }
+    : isService
+      ? { href: demoWhatsappUrl(business.name, isSalon ? 'book an appointment' : 'discuss a project'), external: true, label: isSalon ? 'Book Appointment' : 'Start a conversation' }
       : { href: '#collections', external: false, label: 'Explore Collection' };
   const navItems = isBakery
     ? [
@@ -328,14 +394,14 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         { label: 'Gallery', href: '#gallery' },
         { label: 'Order', href: '#contact' }
       ]
-    : isSalon
+    : isService
       ? [
           { label: 'Home', href: '#home' },
-          { label: 'Services', href: '#services' },
-          { label: 'Most booked', href: '#bestsellers' },
-          { label: 'The studio', href: '#about' },
+          { label: isModern ? 'What we do' : 'Services', href: '#services' },
+          { label: isModern ? 'Ways to work together' : 'Most booked', href: '#bestsellers' },
+          { label: isModern ? 'Our approach' : 'The studio', href: '#about' },
           { label: 'Gallery', href: '#gallery' },
-          { label: 'Book', href: '#contact' }
+          { label: isModern ? 'Contact' : 'Book', href: '#contact' }
         ]
       : [
           { label: 'Home', href: '#home' },
@@ -345,7 +411,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
           { label: 'Gallery', href: '#gallery' },
           { label: 'Enquire', href: '#contact' }
         ];
-  const whatsappUrl = demoWhatsappUrl(business.name, isSalon ? 'book an appointment' : isBakery ? 'place an order' : 'ask about a piece');
+  const whatsappUrl = demoWhatsappUrl(business.name, isSalon ? 'book an appointment' : isModern ? 'discuss a project' : isBakery ? 'place an order' : 'ask about a piece');
   const headerAction = isJewellery
     ? { href: whatsappUrl, external: true, label: 'WhatsApp Us' }
     : primaryAction;
@@ -427,7 +493,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
               <p className="mt-10 text-xs font-medium uppercase tracking-[0.2em] text-white/75">Small batches · baked fresh · made to share</p>
             </div>
           </section>
-        ) : isSalon ? (
+        ) : isService ? (
           <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
             <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{business.hero.eyebrow}</p>
@@ -438,13 +504,44 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
                   {business.hero.primaryCta} <ArrowRight className="h-4 w-4" />
                 </a>
                 <a href="#services" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
-                  Explore services
+                  {isModern ? 'Explore what we do' : 'Explore services'}
                 </a>
               </div>
-              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>Considered care · expert hands · time for you</div>
+              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>{isModern ? 'Clear thinking · considered design · practical support' : 'Considered care · expert hands · time for you'}</div>
             </div>
             <div className="order-1 h-[330px] overflow-hidden sm:h-[440px] lg:order-2 lg:h-[650px]">
-              <img src={business.hero.image} alt={business.hero.alt} className="h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+              {isModern ? (
+                <div role="img" aria-label={business.hero.alt} className="relative h-full overflow-hidden bg-[#dce9df]">
+                  <div aria-hidden="true" className="absolute -right-20 -top-24 h-80 w-80 rounded-full bg-[#b8cfbd]/70 blur-2xl" />
+                  <div aria-hidden="true" className="absolute -bottom-20 -left-16 h-72 w-72 rounded-full bg-[#eadbb2]/65 blur-2xl" />
+                  <div className="absolute left-[8%] top-[15%] w-[82%] overflow-hidden rounded-2xl border border-white/80 bg-white/95 shadow-[0_28px_70px_rgba(24,54,41,0.14)] sm:left-[12%] sm:top-[18%]">
+                    <div className="flex items-center justify-between border-b border-[#e6ece7] px-5 py-4">
+                      <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#294a38]">Northline Studio</span>
+                      <span className="rounded-full bg-[#e9f1eb] px-3 py-1 text-[10px] font-semibold text-[#587464]">Project overview</span>
+                    </div>
+                    <div className="grid gap-5 p-5 sm:grid-cols-[1fr_0.8fr] sm:p-7">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8d7026]">A clear way forward</p>
+                        <p className="mt-3 max-w-xs font-heading text-2xl font-semibold leading-tight text-[#183629] sm:text-3xl">Make your next move with confidence.</p>
+                        <div className="mt-5 h-2 w-4/5 rounded-full bg-[#e6ece7]" />
+                        <div className="mt-2 h-2 w-3/5 rounded-full bg-[#edf1ed]" />
+                        <div className="mt-5 inline-flex rounded-full bg-[#183629] px-4 py-2 text-xs font-semibold text-white">Explore our services</div>
+                      </div>
+                      <div className="flex flex-col justify-center gap-3">
+                        {['Strategy & direction', 'Digital experiences', 'Ongoing support'].map((service, index) => (
+                          <div key={service} className="flex items-center gap-3 rounded-xl border border-[#e6ece7] p-3">
+                            <span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${index === 1 ? 'bg-[#f4ecd9] text-[#8d7026]' : 'bg-[#e9f1eb] text-[#294a38]'}`}>0{index + 1}</span>
+                            <span className="text-xs font-semibold text-[#52685b]">{service}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <span className="absolute bottom-[11%] right-[8%] rounded-full border border-white/80 bg-white/90 px-4 py-2 text-xs font-semibold text-[#294a38] shadow-md">Thoughtful work, made personal</span>
+                </div>
+              ) : (
+                <img src={business.hero.image} alt={business.hero.alt} className="h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+              )}
             </div>
           </section>
         ) : (
@@ -469,21 +566,21 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
 
         <section id={collectionId} className="scroll-mt-24 mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
           <div className={`mb-8 ${isJewellery ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
-            <SectionEyebrow label={isSalon ? 'The Maison Gloss menu' : isBakery ? 'From the counter' : 'The Elara collection'} accent={theme.label} />
+            <SectionEyebrow label={isSalon ? 'The Maison Gloss menu' : isModern ? 'What we do' : isBakery ? 'From the counter' : 'The Elara collection'} accent={theme.label} />
             <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
-              {isBakery ? 'A little something for every kind of gathering.' : isSalon ? 'Care that starts with listening.' : 'Pieces with presence. Made for your own story.'}
+              {isBakery ? 'A little something for every kind of gathering.' : isSalon ? 'Care that starts with listening.' : isModern ? 'The right support for your next step.' : 'Pieces with presence. Made for your own story.'}
             </h2>
             <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.summary}</p>
           </div>
 
-          <div className={`grid gap-5 ${isBakery ? 'sm:grid-cols-2 xl:grid-cols-4' : isSalon ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
+          <div className={`grid gap-5 ${isBakery ? 'sm:grid-cols-2 xl:grid-cols-4' : isService ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
             {business.highlights.map((item, index) => (
-              <article key={item.title} className={`${isSalon ? 'group' : isBakery ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={isBakery ? { background: theme.panel, borderColor: theme.border } : !isSalon ? { borderColor: theme.border } : undefined}>
-                <div className={`overflow-hidden ${isBakery ? 'h-[260px] sm:h-[300px]' : isSalon ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
+              <article key={item.title} className={`${isService ? 'group' : isBakery ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={isBakery ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
+                <div className={`overflow-hidden ${isBakery ? 'h-[260px] sm:h-[300px]' : isService ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
                   <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
                 </div>
-                <div className={`${isBakery ? 'p-5' : isSalon ? 'pt-5' : 'pt-4'}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.label }}>{isSalon ? `0${index + 1} / ${business.category}` : item.title}</p>
+                <div className={`${isBakery ? 'p-5' : isService ? 'pt-5' : 'pt-4'}`}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.label }}>{isService ? `0${index + 1} / ${business.category}` : item.title}</p>
                   <h3 className="mt-2 font-heading text-xl font-semibold sm:text-2xl" style={{ color: theme.accentDark }}>{item.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed" style={{ color: theme.muted }}>{item.subtitle}</p>
                 </div>
@@ -503,11 +600,11 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
                 <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{business.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
             </div>
-          ) : isSalon ? (
+          ) : isService ? (
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
               <div className="relative">
                 <img src={business.story.image} alt={business.story.alt} className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
-                <span className="absolute bottom-4 left-4 max-w-[240px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>A softer kind of salon day.</span>
+                <span className="absolute bottom-4 left-4 max-w-[240px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>{isModern ? 'Thoughtful work, made personal.' : 'A softer kind of salon day.'}</span>
               </div>
               <div className="max-w-xl py-3 lg:py-10">
                 <SectionEyebrow label={business.story.eyebrow} accent={theme.label} />
@@ -535,10 +632,10 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         <section id="bestsellers" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
-              <SectionEyebrow label={isSalon ? 'Most requested' : isBakery ? 'Customer favourites' : 'A few beloved pieces'} accent={theme.label} />
-              <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{isSalon ? 'The appointments guests return for.' : isBakery ? 'The ones that disappear first.' : 'The signatures that stay with you.'}</h2>
+              <SectionEyebrow label={isSalon ? 'Most requested' : isModern ? 'Ways to work together' : isBakery ? 'Customer favourites' : 'A few beloved pieces'} accent={theme.label} />
+              <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{isSalon ? 'The appointments guests return for.' : isModern ? 'Focused support, built around you.' : isBakery ? 'The ones that disappear first.' : 'The signatures that stay with you.'}</h2>
             </div>
-            <a href="#contact" className="inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{isSalon ? 'Book a visit' : isBakery ? 'Order a favourite' : 'Ask about a piece'} <ArrowRight className="h-4 w-4" /></a>
+            <a href="#contact" className="inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{isSalon ? 'Book a visit' : isModern ? 'Talk through your goals' : isBakery ? 'Order a favourite' : 'Ask about a piece'} <ArrowRight className="h-4 w-4" /></a>
           </div>
           <div className={`grid gap-5 ${isBakery ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
             {business.bestsellers.map((item) => (
@@ -560,12 +657,12 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
 
         <section id="gallery" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
           <div className={`mb-8 ${isJewellery ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
-            <SectionEyebrow label={isSalon ? 'Inside the studio' : isBakery ? 'A peek behind the counter' : 'Details in their own light'} accent={theme.label} />
-            <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{isSalon ? 'A little of the Maison Gloss feeling.' : isBakery ? 'Made, dressed and shared with care.' : 'A closer look at the little things.'}</h2>
+            <SectionEyebrow label={isSalon ? 'Inside the studio' : isModern ? 'Selected work' : isBakery ? 'A peek behind the counter' : 'Details in their own light'} accent={theme.label} />
+            <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">{isSalon ? 'A little of the Maison Gloss feeling.' : isModern ? 'A few things we are proud to have shaped.' : isBakery ? 'Made, dressed and shared with care.' : 'A closer look at the little things.'}</h2>
           </div>
-          <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${isBakery ? 'lg:grid-cols-4' : isSalon ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+          <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${isBakery ? 'lg:grid-cols-4' : isService ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
             {business.gallery.map((item, index) => (
-              <figure key={item.image} className={`${isBakery && index === 0 ? 'col-span-2 row-span-2' : ''} ${isSalon && index === 0 ? 'col-span-2 lg:col-span-1 lg:row-span-2' : ''} ${!isBakery && !isSalon && (index === 1 || index === 4) ? 'row-span-2' : ''} overflow-hidden`}>
+              <figure key={item.image} className={`${isBakery && index === 0 ? 'col-span-2 row-span-2' : ''} ${isService && index === 0 ? 'col-span-2 lg:col-span-1 lg:row-span-2' : ''} ${!isBakery && !isService && (index === 1 || index === 4) ? 'row-span-2' : ''} overflow-hidden`}>
                 <img src={item.image} alt={item.alt} className={`h-full w-full object-cover ${isBakery && index === 0 ? 'min-h-[300px] sm:min-h-[360px]' : 'min-h-[160px] sm:min-h-[220px] lg:min-h-[260px]'}`} loading="lazy" />
               </figure>
             ))}
@@ -575,7 +672,7 @@ const DemoStorefront: React.FC<{ business: DemoBusiness; theme: (typeof demoThem
         <section id="contact" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
           <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${isJewellery ? 'bg-[#171411] text-white' : ''}`} style={!isJewellery ? { background: theme.panelStrong } : undefined}>
             <div className="max-w-2xl">
-              <SectionEyebrow label={isSalon ? 'Make a little time for you' : isBakery ? 'Tell us what you are celebrating' : 'A piece, chosen personally'} accent={isJewellery ? '#c5a77e' : theme.label} />
+              <SectionEyebrow label={isSalon ? 'Make a little time for you' : isModern ? 'Your next step starts here' : isBakery ? 'Tell us what you are celebrating' : 'A piece, chosen personally'} accent={isJewellery ? '#c5a77e' : theme.label} />
               <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{business.finalCta.title}</h2>
               <p className="mt-3 text-base leading-relaxed" style={{ color: isJewellery ? 'rgba(255,255,255,0.68)' : theme.muted }}>{business.finalCta.description}</p>
             </div>
@@ -615,7 +712,9 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
   }, [demoBusiness]);
 
   if (demoBusiness) {
-    const theme = demoBusiness.template === 'bakery'
+    const theme = demoBusiness.template === 'modern'
+      ? demoThemes.modern
+      : demoBusiness.template === 'bakery'
       ? demoThemes.bakery
       : demoBusiness.template === 'salon'
         ? demoThemes.salon
@@ -685,8 +784,8 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:mt-8 xl:grid-cols-4">
             <a href="/websites/demo-modern/" aria-label="Open live demo: Willow & Stone Studio, modern business" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
-              <div className="relative grid aspect-[16/10] place-items-center overflow-hidden bg-gradient-to-br from-[#dfeae2] via-[#f4f7f4] to-[#c4d7ca]"><span className="rounded-2xl border border-white/80 bg-white/80 px-5 py-3 text-sm font-semibold text-[#294a38] shadow-sm">A website that works for your business</span><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#604330]">Live demo</span></div>
-              <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Willow &amp; Stone Studio</h3><p className="mt-1 text-sm text-[#68746C]">Modern business</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#e5eee8]"><img src="/work-nextq.png" alt="A polished digital experience for a growing business" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#294a38]">Live demo</span></div>
+              <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Northline Studio</h3><p className="mt-1 text-sm text-[#68746C]">Modern business</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
             <a href="/websites/demo-bakery/" aria-label="Open live demo: Aroma & Crumb, bakery and gifting" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
               <div className="relative aspect-[16/10] overflow-hidden bg-[#F2E6D9]"><img src="/demo-sites/bakery/hero.jpg" alt="A freshly decorated celebration cake from the Aroma & Crumb bakery demo" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#604330]">Live demo</span></div>

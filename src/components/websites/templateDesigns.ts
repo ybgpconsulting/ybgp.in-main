@@ -11,7 +11,7 @@ const templateDesigns: Record<string, WebsiteTemplateDesign> = {
   'jewellery-boutique': 'jewellery',
 };
 
-const templateDemoSlugs: Record<string, string> = {
+export const templateDemoSlugs: Record<string, string> = {
   'modern-business': 'demo-modern',
   'food-bakery': 'demo-bakery',
   'salon-studio': 'demo-salon',

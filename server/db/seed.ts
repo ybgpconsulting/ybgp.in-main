@@ -1,5 +1,6 @@
 import type { RowDataPacket } from 'mysql2';
 import { hashPassword } from '../auth/password.js';
+import { WEBSITE_TEMPLATES } from '../templates/catalog.js';
 import { pool } from './pool.js';
 
 const demoPassword = 'Ybgp-Dev-Only-6cV9-Qm2X!Local';
@@ -28,29 +29,6 @@ interface BusinessSeed {
   settings: Array<{ key: string; value: string }>;
   enquiry: { name: string; phone: string; message: string };
 }
-
-const templates = [
-  {
-    name: 'Modern Business',
-    slug: 'modern-business',
-    description: 'A clean, flexible layout for local, professional and service businesses.',
-  },
-  {
-    name: 'Food / Bakery',
-    slug: 'food-bakery',
-    description: 'A warm, product-led layout for bakeries, cafes and food businesses.',
-  },
-  {
-    name: 'Salon & Wellness',
-    slug: 'salon-studio',
-    description: 'A calm, editorial layout for salons, spas and wellness studios.',
-  },
-  {
-    name: 'Jewellery Boutique',
-    slug: 'jewellery-boutique',
-    description: 'A refined, dark editorial layout for jewellery and premium boutiques.',
-  },
-] as const;
 
 const businesses: BusinessSeed[] = [
   {
@@ -178,7 +156,7 @@ const seed = async (): Promise<void> => {
   try {
     await connection.beginTransaction();
 
-    for (const template of templates) {
+    for (const template of WEBSITE_TEMPLATES) {
       await connection.execute(
         `INSERT INTO templates (name, slug, description, preview_image, status)
          VALUES (?, ?, ?, NULL, 'ACTIVE')
@@ -201,7 +179,7 @@ const seed = async (): Promise<void> => {
     );
 
     const templateIds = new Map<string, number>();
-    for (const template of templates) {
+    for (const template of WEBSITE_TEMPLATES) {
       const templateSlug = template.slug;
       templateIds.set(
         templateSlug,

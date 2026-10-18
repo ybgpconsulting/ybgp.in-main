@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import app from './app.js';
 import { env } from './config/env.js';
 import { pool } from './db/pool.js';
+import { ensureWebsiteTemplateCatalog } from './templates/catalog.js';
 
 const server = createServer(app);
 let shuttingDown = false;
@@ -11,8 +12,16 @@ server.on('error', (error) => {
   process.exitCode = 1;
 });
 
-server.listen(env.apiPort, () => {
-  console.info(`YBGP Websites server listening on port ${env.apiPort}`);
+const startServer = async (): Promise<void> => {
+  await ensureWebsiteTemplateCatalog();
+  server.listen(env.apiPort, () => {
+    console.info(`YBGP Websites server listening on port ${env.apiPort}`);
+  });
+};
+
+void startServer().catch((error: unknown) => {
+  console.error('Failed to initialize the website template catalog:', error);
+  process.exitCode = 1;
 });
 
 const shutdown = (signal: NodeJS.Signals) => {
