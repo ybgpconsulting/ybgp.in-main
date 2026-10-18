@@ -12,16 +12,11 @@ server.on('error', (error) => {
   process.exitCode = 1;
 });
 
-const startServer = async (): Promise<void> => {
-  await ensureWebsiteTemplateCatalog();
-  server.listen(env.apiPort, () => {
-    console.info(`YBGP Websites server listening on port ${env.apiPort}`);
+server.listen(env.apiPort, () => {
+  console.info(`YBGP Websites server listening on port ${env.apiPort}`);
+  void ensureWebsiteTemplateCatalog().catch((error: unknown) => {
+    console.error('Failed to initialize the website template catalog:', error);
   });
-};
-
-void startServer().catch((error: unknown) => {
-  console.error('Failed to initialize the website template catalog:', error);
-  process.exitCode = 1;
 });
 
 const shutdown = (signal: NodeJS.Signals) => {
