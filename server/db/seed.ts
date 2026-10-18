@@ -29,6 +29,29 @@ interface BusinessSeed {
   enquiry: { name: string; phone: string; message: string };
 }
 
+const templates = [
+  {
+    name: 'Modern Business',
+    slug: 'modern-business',
+    description: 'A clean, flexible layout for local, professional and service businesses.',
+  },
+  {
+    name: 'Food / Bakery',
+    slug: 'food-bakery',
+    description: 'A warm, product-led layout for bakeries, cafes and food businesses.',
+  },
+  {
+    name: 'Salon & Wellness',
+    slug: 'salon-studio',
+    description: 'A calm, editorial layout for salons, spas and wellness studios.',
+  },
+  {
+    name: 'Jewellery Boutique',
+    slug: 'jewellery-boutique',
+    description: 'A refined, dark editorial layout for jewellery and premium boutiques.',
+  },
+] as const;
+
 const businesses: BusinessSeed[] = [
   {
     slug: 'aroma-and-crumb',
@@ -155,26 +178,17 @@ const seed = async (): Promise<void> => {
   try {
     await connection.beginTransaction();
 
-    await connection.execute(
-      `INSERT INTO templates (name, slug, description, preview_image, status)
-       VALUES (?, ?, ?, ?, 'ACTIVE')
-       ON DUPLICATE KEY UPDATE
-         name = VALUES(name),
-         description = VALUES(description),
-         preview_image = VALUES(preview_image),
-         status = VALUES(status)`,
-      ['Modern Business', 'modern-business', 'Clean template for service and local businesses.', null]
-    );
-    await connection.execute(
-      `INSERT INTO templates (name, slug, description, preview_image, status)
-       VALUES (?, ?, ?, ?, 'ACTIVE')
-       ON DUPLICATE KEY UPDATE
-         name = VALUES(name),
-         description = VALUES(description),
-         preview_image = VALUES(preview_image),
-         status = VALUES(status)`,
-      ['Food / Bakery', 'food-bakery', 'Product-focused template for bakeries and food businesses.', null]
-    );
+    for (const template of templates) {
+      await connection.execute(
+        `INSERT INTO templates (name, slug, description, preview_image, status)
+         VALUES (?, ?, ?, NULL, 'ACTIVE')
+         ON DUPLICATE KEY UPDATE
+           name = VALUES(name),
+           description = VALUES(description),
+           status = VALUES(status)`,
+        [template.name, template.slug, template.description]
+      );
+    }
 
     await connection.execute(
       `INSERT INTO users (name, email, password_hash, role)
@@ -187,7 +201,8 @@ const seed = async (): Promise<void> => {
     );
 
     const templateIds = new Map<string, number>();
-    for (const templateSlug of ['modern-business', 'food-bakery']) {
+    for (const template of templates) {
+      const templateSlug = template.slug;
       templateIds.set(
         templateSlug,
         await getId(connection, 'SELECT id FROM templates WHERE slug = ?', [templateSlug], `template ${templateSlug}`)

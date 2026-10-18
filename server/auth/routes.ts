@@ -1,10 +1,13 @@
-import { Router } from 'express';
+import { Router, type Request, type Response } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { hashPassword, verifyPassword } from './password.js';
 import {
+  clearLegacySessionCookie,
   clearSessionCookie,
   createSession,
+  getLegacySessionId,
+  getRoleSessionId,
   getSessionId,
   invalidateSession,
   isProduction,
@@ -14,6 +17,7 @@ import {
   requireAuth,
   requireBusinessAccess,
   requireRole,
+  requireRoleAuth,
   type AuthenticatedUser,
   type UserRole,
 } from './middleware.js';
@@ -38,7 +42,11 @@ const userResponse = (user: AuthenticatedUser) => ({
   role: user.role,
 });
 
-router.post('/login', async (request, response) => {
+const handleLogin = async (
+  request: Request,
+  response: Response,
+  expectedRole?: UserRole
+): Promise<void> => {
   const body: unknown = request.body;
   if (
     !isRecord(body) ||
@@ -54,6 +62,15 @@ router.post('/login', async (request, response) => {
 
   const email = body.email.trim().toLowerCase();
   const password = body.password;
+  const requestedRole = expectedRole ?? body.role;
+  if (requestedRole !== undefined && requestedRole !== 'SUPER_ADMIN' && requestedRole !== 'BUSINESS_OWNER') {
+    response.status(400).json({ error: 'Invalid account type' });
+    return;
+  }
+  if (expectedRole && body.role !== undefined && body.role !== expectedRole) {
+    response.status(400).json({ error: 'Invalid account type' });
+    return;
+  }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     response.status(400).json({ error: 'Email and password are required' });
     return;
@@ -68,12 +85,16 @@ router.post('/login', async (request, response) => {
     ? await verifyPassword(password, user.password_hash)
     : (await hashPassword(password), false);
 
-  if (!user || !passwordIsValid) {
+  if (!user || !passwordIsValid || requestedRole !== undefined && user.role !== requestedRole) {
     response.status(401).json({ error: 'Invalid email or password' });
     return;
   }
 
-  const session = await createSession(user.id, getSessionId(request));
+  const session = await createSession(
+    user.id,
+    getRoleSessionId(request, user.role),
+    getLegacySessionId(request)
+  );
   const authenticatedUser: AuthenticatedUser = {
     id: user.id,
     name: user.name,
@@ -81,15 +102,27 @@ router.post('/login', async (request, response) => {
     role: user.role,
   };
 
-  setSessionCookie(response, session.sessionId, session.expiresAt);
+  setSessionCookie(response, session.sessionId, session.expiresAt, user.role);
   response.status(200).json({ user: userResponse(authenticatedUser) });
-});
+};
+
+router.post('/login', (request, response) => handleLogin(request, response));
+router.post('/admin/login', (request, response) => handleLogin(request, response, 'SUPER_ADMIN'));
+router.post('/business/login', (request, response) => handleLogin(request, response, 'BUSINESS_OWNER'));
 
 router.get('/me', requireAuth, (request, response) => {
   response.json({ user: userResponse(request.user!) });
 });
 
-router.post('/credentials', requireAuth, requireRole('SUPER_ADMIN'), async (request, response) => {
+router.get('/admin/me', requireRoleAuth('SUPER_ADMIN'), (request, response) => {
+  response.json({ user: userResponse(request.user!) });
+});
+
+router.get('/business/me', requireRoleAuth('BUSINESS_OWNER'), (request, response) => {
+  response.json({ user: userResponse(request.user!) });
+});
+
+router.post('/credentials', requireRoleAuth('SUPER_ADMIN'), async (request, response) => {
   const body: unknown = request.body;
   if (
     !isRecord(body) ||
@@ -147,15 +180,31 @@ router.post('/credentials', requireAuth, requireRole('SUPER_ADMIN'), async (requ
     connection.release();
   }
 
-  clearSessionCookie(response);
+  clearSessionCookie(response, 'SUPER_ADMIN');
+  clearLegacySessionCookie(response);
   response.json({ success: true, message: 'Credentials updated. Sign in again with your new email and password.' });
 });
 
-router.post('/logout', async (request, response) => {
-  await invalidateSession(getSessionId(request));
-  clearSessionCookie(response);
+const handleLogout = async (
+  request: Request,
+  response: Response,
+  expectedRole?: UserRole
+): Promise<void> => {
+  const body: unknown = request.body;
+  const role = expectedRole ?? (isRecord(body) ? body.role : undefined);
+  if (role !== 'SUPER_ADMIN' && role !== 'BUSINESS_OWNER') {
+    response.status(400).json({ error: 'A session role is required' });
+    return;
+  }
+  await invalidateSession(getSessionId(request, role));
+  clearSessionCookie(response, role);
+  clearLegacySessionCookie(response);
   response.json({ success: true });
-});
+};
+
+router.post('/logout', (request, response) => handleLogout(request, response));
+router.post('/admin/logout', (request, response) => handleLogout(request, response, 'SUPER_ADMIN'));
+router.post('/business/logout', (request, response) => handleLogout(request, response, 'BUSINESS_OWNER'));
 
 if (!isProduction()) {
   router.get('/test/admin', requireAuth, requireRole('SUPER_ADMIN'), (_request, response) => {

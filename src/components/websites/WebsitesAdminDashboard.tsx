@@ -14,6 +14,7 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
+import { getWebsiteTemplateDesign } from './templateDesigns';
 
 interface BusinessSummary {
   id: string;
@@ -96,7 +97,7 @@ const emptyForm = (): FormValues => ({
 
 const isExpired = (business: BusinessSummary) => {
   if (business.subscription_status === 'EXPIRED') return true;
-  return Boolean(business.expiry_date && new Date(business.expiry_date).getTime() < Date.now());
+  return Boolean(business.expiry_date && business.expiry_date.slice(0, 10) < today());
 };
 
 const isExpiringSoon = (business: BusinessSummary) => {
@@ -298,14 +299,14 @@ export function WebsitesAdminDashboard() {
           eyebrow="YBGP Websites · Operations"
           title="Admin dashboard"
           description="Manage business websites, owners, publishing and subscriptions from one workspace."
-          action={<div className="flex flex-wrap gap-2">{!isLoading && !needsLogin && !loadFailed ? <><button className={secondaryButtonClassName} onClick={() => setShowCredentialForm(true)}>Change login</button><SignOutButton /></> : null}<a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate} disabled={isLoading || needsLogin || loadFailed}>＋ Create business</button></div>}
+          action={<div className="flex flex-wrap gap-2">{!isLoading && !needsLogin && !loadFailed ? <><button className={secondaryButtonClassName} onClick={() => setShowCredentialForm(true)}>Change login</button><SignOutButton role="SUPER_ADMIN" /></> : null}<a href="/websites" className={secondaryButtonClassName}>Product page</a><button className={buttonClassName} onClick={openCreate} disabled={isLoading || needsLogin || loadFailed}>＋ Create business</button></div>}
         />
 
         {notice ? <div className="mb-5"><Notice kind="success">{notice}</Notice></div> : null}
         {error && !needsLogin ? <div className="mb-5"><Notice>{error}</Notice></div> : null}
 
         {needsLogin ? (
-          <AccessPanel onAuthenticated={() => { setNeedsLogin(false); void load(); }} />
+          <AccessPanel role="SUPER_ADMIN" onAuthenticated={() => { setNeedsLogin(false); void load(); }} />
         ) : loadFailed ? (
           <section className="rounded-2xl border border-[#e8e2d7] bg-white p-6 shadow-sm">
             <h2 className="text-lg font-bold">Admin data is unavailable</h2>
@@ -415,16 +416,59 @@ export function WebsitesAdminDashboard() {
                     <h3 className="font-bold">Choose a template</h3>
                     {templates.length === 0 ? <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p> : (
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {templates.map((template) => (
-                          <label key={template.id} className={`cursor-pointer rounded-2xl border p-4 transition ${form.template_slug === template.slug ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/10' : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f]'}`}>
-                            <input className="sr-only" type="radio" name="template" value={template.slug} required checked={form.template_slug === template.slug} onChange={() => updateField('template_slug', template.slug)} />
-                            <span className="flex items-center justify-between"><strong>{template.name}</strong><span className="text-xs font-semibold text-[#9d7723]">{form.template_slug === template.slug ? 'Selected' : 'Select'}</span></span>
-                            <span className="mt-2 block text-sm leading-5 text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
-                            <span className={`mt-4 block h-14 rounded-xl ${template.slug === 'food-bakery' ? 'bg-gradient-to-r from-[#f6dfca] via-[#c77753] to-[#7f4935]' : 'bg-gradient-to-r from-[#dce9e1] via-[#729080] to-[#0E2B22]'}`} aria-hidden="true" />
-                          </label>
-                        ))}
+                        {templates.map((template) => {
+                          const design = getWebsiteTemplateDesign(template.slug);
+                          return (
+                            <label key={template.id} className={`cursor-pointer rounded-2xl border p-4 transition ${form.template_slug === template.slug ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/10' : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f]'}`}>
+                              <input className="sr-only" type="radio" name="template" value={template.slug} required checked={form.template_slug === template.slug} onChange={() => updateField('template_slug', template.slug)} />
+                              <span className="flex items-center justify-between"><strong>{template.name}</strong><span className="text-xs font-semibold text-[#9d7723]">{form.template_slug === template.slug ? 'Selected' : 'Select'}</span></span>
+                              <span className="mt-2 block text-sm leading-5 text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
+                              <span className={`relative mt-4 flex h-24 overflow-hidden rounded-xl p-2 ${design === 'food' ? 'bg-[#f4e5d8]' : design === 'salon' ? 'bg-[#eee5e1]' : design === 'jewellery' ? 'bg-[#211e1b]' : 'bg-[#e5eee8]'}`} aria-hidden="true">
+                                {design === 'modern' ? (
+                                  <>
+                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#0E2B22]" />
+                                    <span className="absolute bottom-2 left-2 top-7 w-[43%] rounded-md bg-[#c4d7ca]" />
+                                    <span className="absolute bottom-2 right-2 top-7 w-[43%] rounded-md bg-gradient-to-br from-[#769381] to-[#294a38]" />
+                                  </>
+                                ) : design === 'food' ? (
+                                  <>
+                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#754b39]" />
+                                    <span className="absolute bottom-2 left-2 top-7 w-[62%] rounded-md bg-[#c9825e]" />
+                                    <span className="absolute bottom-2 right-2 top-7 w-[29%] rounded-md bg-[#f8cfa9]" />
+                                  </>
+                                ) : design === 'salon' ? (
+                                  <>
+                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#8f5c54]" />
+                                    <span className="absolute inset-x-[28%] bottom-2 top-7 rounded-full bg-[#cba99e]" />
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="absolute inset-x-2 top-2 h-2 rounded-full bg-[#c5a77e]" />
+                                    <span className="absolute bottom-2 left-2 top-7 w-[43%] rounded-md bg-[#51463c]" />
+                                    <span className="absolute bottom-2 right-2 top-7 w-[43%] rounded-md bg-gradient-to-br from-[#9d7655] to-[#332b25]" />
+                                  </>
+                                )}
+                              </span>
+                              <span className="mt-3 block text-xs font-semibold text-[#526158]">
+                                {design === 'food' ? 'Warm editorial · product-led' : design === 'salon' ? 'Soft, centered · appointment-led' : design === 'jewellery' ? 'Dark editorial · luxury showcase' : 'Fresh split hero · versatile'}
+                              </span>
+                            </label>
+                          );
+                        })}
                       </div>
                     )}
+                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+                      <span className="font-semibold text-[#526158]">Explore storefront demos:</span>
+                      {[
+                        ['Bakery', 'demo-bakery'],
+                        ['Salon', 'demo-salon'],
+                        ['Jewellery', 'demo-jewellery'],
+                      ].map(([label, slug]) => (
+                        <a key={slug} href={`/websites/${slug}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]">
+                          {label}
+                        </a>
+                      ))}
+                    </div>
                   </section>
                   <FormSection title="Business owner">
                     <Field label="Owner name" value={form.owner_name} onChange={(value) => updateField('owner_name', value)} required autoComplete="name" />

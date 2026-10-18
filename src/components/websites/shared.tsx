@@ -138,7 +138,13 @@ export function SelectField({
   );
 }
 
-export function AccessPanel({ onAuthenticated }: { onAuthenticated: () => void }) {
+export function AccessPanel({
+  role,
+  onAuthenticated,
+}: {
+  role: 'SUPER_ADMIN' | 'BUSINESS_OWNER';
+  onAuthenticated: () => void;
+}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -149,7 +155,7 @@ export function AccessPanel({ onAuthenticated }: { onAuthenticated: () => void }
     setBusy(true);
     setError('');
     try {
-      await apiRequest('/api/auth/login', {
+      await apiRequest(role === 'SUPER_ADMIN' ? '/api/auth/admin/login' : '/api/auth/business/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
@@ -175,14 +181,16 @@ export function AccessPanel({ onAuthenticated }: { onAuthenticated: () => void }
   );
 }
 
-export function SignOutButton() {
+export function SignOutButton({ role }: { role: 'SUPER_ADMIN' | 'BUSINESS_OWNER' }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const signOut = async () => {
     setBusy(true);
     setError('');
     try {
-      await apiRequest('/api/auth/logout', { method: 'POST' });
+      await apiRequest(role === 'SUPER_ADMIN' ? '/api/auth/admin/logout' : '/api/auth/business/logout', {
+        method: 'POST',
+      });
       window.location.reload();
     } catch (requestError) {
       setBusy(false);

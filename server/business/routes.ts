@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
-import { requireAuth } from '../auth/middleware.js';
+import { requireRoleAuth } from '../auth/middleware.js';
 
 const router = Router();
 
-router.use(requireAuth);
+router.use(requireRoleAuth('BUSINESS_OWNER'));
 
 interface BusinessRow extends RowDataPacket {
   id: string;
@@ -123,7 +123,8 @@ const getBusiness = async (businessId: string): Promise<BusinessRow | null> => {
       b.updated_at,
       t.name AS template_name,
       s.plan,
-      s.status AS subscription_status,
+      CASE WHEN s.status = 'EXPIRED' OR s.expiry_date < UTC_DATE()
+        THEN 'EXPIRED' ELSE s.status END AS subscription_status,
       s.expiry_date
      FROM businesses b
      LEFT JOIN templates t ON t.id = b.template_id

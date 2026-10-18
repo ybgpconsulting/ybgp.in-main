@@ -119,6 +119,7 @@ router.get('/websites/:slug', async (request, response) => {
      INNER JOIN templates t ON t.id = b.template_id
      LEFT JOIN subscriptions s ON s.business_id = b.id
      WHERE b.slug = ? AND b.status = 'ACTIVE'
+       AND s.status = 'ACTIVE' AND s.expiry_date >= UTC_DATE()
      LIMIT 1`,
     [slug]
   );

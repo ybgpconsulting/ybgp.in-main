@@ -51,6 +51,12 @@ const sections: Array<{ id: Section; label: string; detail: string }> = [
   { id: 'seo', label: 'SEO', detail: 'Search and social previews' },
 ];
 
+const effectiveSubscriptionStatus = (business: BusinessSummary) =>
+  business.subscription_status === 'EXPIRED' ||
+  Boolean(business.expiry_date && business.expiry_date.slice(0, 10) < new Date().toISOString().slice(0, 10))
+    ? 'EXPIRED'
+    : business.subscription_status || '—';
+
 export function WebsitesOwnerDashboard() {
   const [snapshot, setSnapshot] = useState<OwnerSnapshot | null>(null);
   const [counts, setCounts] = useState({ products: 0, categories: 0, gallery: 0, enquiries: 0 });
@@ -117,7 +123,7 @@ export function WebsitesOwnerDashboard() {
   }
 
   if (needsLogin) {
-    return <main className="min-h-screen bg-[#f7f6f2] px-4 py-12"><AccessPanel onAuthenticated={() => void load()} /></main>;
+    return <main className="min-h-screen bg-[#f7f6f2] px-4 py-12"><AccessPanel role="BUSINESS_OWNER" onAuthenticated={() => void load()} /></main>;
   }
 
   if (!snapshot) {
@@ -126,7 +132,7 @@ export function WebsitesOwnerDashboard() {
         <div className="mx-auto max-w-xl rounded-2xl border border-[#e6dfd1] bg-white p-6">
           <h1 className="text-2xl font-bold text-[#0E2B22]">Your website dashboard</h1>
           <div className="mt-4"><Notice>{error || 'No business is linked to this account.'}</Notice></div>
-          <div className="mt-5 flex flex-wrap gap-2"><SignOutButton /><a href="/websites" className={secondaryButtonClassName}>Back to YBGP Websites</a></div>
+          <div className="mt-5 flex flex-wrap gap-2"><SignOutButton role="BUSINESS_OWNER" /><a href="/websites" className={secondaryButtonClassName}>Back to YBGP Websites</a></div>
         </div>
       </main>
     );
@@ -149,7 +155,7 @@ export function WebsitesOwnerDashboard() {
           eyebrow="YBGP Websites · Owner workspace"
           title={business.name}
           description={`Manage your ${business.category.toLowerCase()} website and keep your business information up to date.`}
-          action={<div className="flex flex-wrap gap-2"><SignOutButton /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
+          action={<div className="flex flex-wrap gap-2"><SignOutButton role="BUSINESS_OWNER" /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
         />
 
         <div className="grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
@@ -198,7 +204,7 @@ function Overview({
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <MetricCard label="Website status" value={business.status === 'ACTIVE' ? 'Published' : 'Draft'} />
         <MetricCard label="Template" value={business.template_name || '—'} />
-        <MetricCard label="Subscription" value={business.subscription_status || '—'} hint={business.plan || 'YBGP Websites'} />
+        <MetricCard label="Subscription" value={effectiveSubscriptionStatus(business)} hint={business.plan || 'YBGP Websites'} />
         <MetricCard label="Expiry" value={formatDate(business.expiry_date)} />
       </div>
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">

@@ -76,6 +76,12 @@ app.get('/websites/:slug', async (request, response, next) => {
         (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_image' LIMIT 1) AS og_image
        FROM businesses b
        WHERE b.slug = ? AND b.status = 'ACTIVE'
+         AND EXISTS (
+           SELECT 1 FROM subscriptions s
+           WHERE s.business_id = b.id
+             AND s.status = 'ACTIVE'
+             AND s.expiry_date >= UTC_DATE()
+         )
        LIMIT 1`,
       [slug]
     );
@@ -126,9 +132,12 @@ app.get('/websites/:slug', async (request, response, next) => {
 app.get('/sitemap.xml', async (_request, response, next) => {
   try {
     const [rows] = await pool.execute<Array<RowDataPacket & { slug: string }>>(
-      `SELECT slug FROM businesses
-       WHERE status = 'ACTIVE'
-       ORDER BY slug`
+      `SELECT b.slug FROM businesses b
+       INNER JOIN subscriptions s ON s.business_id = b.id
+       WHERE b.status = 'ACTIVE'
+         AND s.status = 'ACTIVE'
+         AND s.expiry_date >= UTC_DATE()
+       ORDER BY b.slug`
     );
     const sitemapPath = resolve(frontendDirectory, 'sitemap.xml');
     const sitemap = await readFile(sitemapPath, 'utf8');

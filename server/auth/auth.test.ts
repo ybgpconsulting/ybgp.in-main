@@ -8,7 +8,7 @@ import type { Server } from 'node:http';
 import type { RowDataPacket } from 'mysql2';
 import app from '../app.js';
 import { hashPassword, verifyPassword } from './password.js';
-import { SESSION_COOKIE_NAME } from './session.js';
+import { ADMIN_SESSION_COOKIE_NAME, OWNER_SESSION_COOKIE_NAME, SESSION_COOKIE_NAME } from './session.js';
 import { pool } from '../db/pool.js';
 
 const demoPassword = 'Ybgp-Dev-Only-6cV9-Qm2X!Local';
@@ -45,21 +45,66 @@ const request = (
   ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
 });
 
+test('admin and owner sessions coexist and remain isolated on protected routes', async () => {
+  const adminLogin = await login('admin@ybgp.local', demoPassword);
+  const ownerLogin = await login('owner@aroma-crumb.demo.test', demoPassword);
+  const combinedCookies = `${adminLogin.cookie}; ${ownerLogin.cookie}`;
+  const [adminResponse, ownerResponse, wrongRoleResponse, adminMe, ownerMe] = await Promise.all([
+    request('/api/admin/businesses', { cookie: combinedCookies }),
+    request('/api/business/me', { cookie: combinedCookies }),
+    request('/api/admin/businesses', { cookie: ownerLogin.cookie }),
+    request('/api/auth/admin/me', { cookie: combinedCookies }),
+    request('/api/auth/business/me', { cookie: combinedCookies }),
+  ]);
+
+  assert.equal(adminResponse.status, 200);
+  assert.equal(ownerResponse.status, 200);
+  assert.equal(wrongRoleResponse.status, 401);
+  assert.equal(((await adminMe.json()) as { user: { role: string } }).user.role, 'SUPER_ADMIN');
+  assert.equal(((await ownerMe.json()) as { user: { role: string } }).user.role, 'BUSINESS_OWNER');
+
+  const ownerLogout = await request('/api/auth/business/logout', {
+    method: 'POST',
+    cookie: combinedCookies,
+  });
+  assert.equal(ownerLogout.status, 200);
+  assert.equal((await request('/api/business/me', { cookie: combinedCookies })).status, 401);
+  assert.equal((await request('/api/admin/businesses', { cookie: combinedCookies })).status, 200);
+
+  const refreshedOwnerLogin = await login('owner@aroma-crumb.demo.test', demoPassword);
+  const refreshedCombinedCookies = `${adminLogin.cookie}; ${refreshedOwnerLogin.cookie}`;
+  const adminLogout = await request('/api/auth/admin/logout', {
+    method: 'POST',
+    cookie: refreshedCombinedCookies,
+  });
+  assert.equal(adminLogout.status, 200);
+  assert.equal((await request('/api/admin/businesses', { cookie: refreshedCombinedCookies })).status, 401);
+  assert.equal((await request('/api/business/me', { cookie: refreshedCombinedCookies })).status, 200);
+});
+
 const login = async (email: string, password: string): Promise<{
   response: Response;
   body: Record<string, unknown>;
   cookie: string;
   sessionId: string;
 }> => {
-  const response = await request('/api/auth/login', {
+  const expectedRole = email.includes('owner@') || email.includes('demo.test')
+    ? 'BUSINESS_OWNER'
+    : 'SUPER_ADMIN';
+  const response = await request(expectedRole === 'SUPER_ADMIN'
+    ? '/api/auth/admin/login'
+    : '/api/auth/business/login', {
     method: 'POST',
     body: { email, password },
   });
   const body = await response.json() as Record<string, unknown>;
   const setCookie = response.headers.get('set-cookie') ?? '';
-  const cookie = setCookie.split(';', 1)[0] ?? '';
-  const prefix = `${SESSION_COOKIE_NAME}=`;
-  assert.ok(cookie.startsWith(prefix), 'Successful login should set the session cookie');
+  const cookieName = expectedRole === 'BUSINESS_OWNER'
+    ? OWNER_SESSION_COOKIE_NAME
+    : ADMIN_SESSION_COOKIE_NAME;
+  const cookie = setCookie.match(new RegExp(`${cookieName}=[a-f\\d]{64}`))?.[0] ?? '';
+  const prefix = `${cookieName}=`;
+  assert.ok(cookie.startsWith(prefix), 'Successful login should set the role-specific session cookie');
   const sessionId = cookie.slice(prefix.length);
   createdSessionHashes.add(hashSession(sessionId));
   return { response, body, cookie, sessionId };
@@ -180,7 +225,7 @@ test('valid BUSINESS_OWNER login succeeds without granting an admin role', async
     method: 'POST',
     cookie: ownerACookie,
     body: { current_password: demoPassword, new_email: 'new-admin@example.test', new_password: 'new-admin-password-27!' },
-  })).status, 403);
+  })).status, 401);
 });
 
 test('wrong password and unknown email return the same generic 401 response', async () => {
@@ -212,6 +257,16 @@ test('login validates email and password lengths', async () => {
   });
   assert.equal(malformedEmail.status, 400);
   assert.equal(oversizedPassword.status, 400);
+  const wrongRole = await request('/api/auth/login', {
+    method: 'POST',
+    body: { email: 'owner@aroma-crumb.demo.test', password: demoPassword, role: 'SUPER_ADMIN' },
+  });
+  assert.equal(wrongRole.status, 401);
+  const wrongAdminEndpoint = await request('/api/auth/admin/login', {
+    method: 'POST',
+    body: { email: 'owner@aroma-crumb.demo.test', password: demoPassword },
+  });
+  assert.equal(wrongAdminEndpoint.status, 401);
 });
 
 test('authenticated /me returns only the server-loaded user fields', async () => {
@@ -352,9 +407,42 @@ test('login regenerates and invalidates a presented old session', async () => {
   createdSessionHashes.add(hashSession(newSessionId));
 });
 
-test('logout invalidates server session and clears the cookie', async () => {
+test('role-specific login invalidates both existing role and legacy sessions', async () => {
+  const previousLogin = await login('admin@ybgp.local', demoPassword);
+  const legacySessionId = randomBytes(32).toString('hex');
+  const legacySessionHash = hashSession(legacySessionId);
+  createdSessionHashes.add(legacySessionHash);
+  const user = previousLogin.body.user as Record<string, unknown>;
+  const userId = user.id;
+  assert.ok(typeof userId === 'string');
+  await pool.execute(
+    'INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, UTC_TIMESTAMP(3) + INTERVAL 1 DAY)',
+    [legacySessionHash, userId]
+  );
+
+  const refreshed = await request('/api/auth/admin/login', {
+    method: 'POST',
+    cookie: `${previousLogin.cookie}; ${SESSION_COOKIE_NAME}=${legacySessionId}`,
+    body: { email: 'admin@ybgp.local', password: demoPassword },
+  });
+  const roleCookie = refreshed.headers.get('set-cookie')?.match(
+    new RegExp(`${ADMIN_SESSION_COOKIE_NAME}=[a-f\\d]{64}`)
+  )?.[0] ?? '';
+  const newSessionId = roleCookie.slice(`${ADMIN_SESSION_COOKIE_NAME}=`.length);
+  assert.equal(refreshed.status, 200);
+  assert.ok(newSessionId);
+  createdSessionHashes.add(hashSession(newSessionId));
+
+  assert.equal((await request('/api/auth/admin/me', { cookie: previousLogin.cookie })).status, 401);
+  assert.equal((await request('/api/auth/me', {
+    cookie: `${SESSION_COOKIE_NAME}=${legacySessionId}`,
+  })).status, 401);
+  assert.equal((await request('/api/auth/admin/me', { cookie: roleCookie })).status, 200);
+});
+
+test('owner logout invalidates only the owner session and clears its cookie', async () => {
   const loggedIn = await login('owner@maison-gloss.demo.test', demoPassword);
-  const logout = await request('/api/auth/logout', {
+  const logout = await request('/api/auth/business/logout', {
     method: 'POST',
     cookie: loggedIn.cookie,
   });
@@ -366,8 +454,10 @@ test('logout invalidates server session and clears the cookie', async () => {
   assert.equal(oldSession.status, 401);
 });
 
-test('logout is idempotent without a session', async () => {
-  const response = await request('/api/auth/logout', { method: 'POST' });
+test('role-specific logout is idempotent without a session', async () => {
+  const response = await request('/api/auth/business/logout', {
+    method: 'POST',
+  });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { success: true });
 });

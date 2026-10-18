@@ -2,12 +2,12 @@ import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { hashPassword } from '../auth/password.js';
-import { requireAuth, requireRole } from '../auth/middleware.js';
+import { requireRoleAuth } from '../auth/middleware.js';
 import { isValidSubscriptionPeriod } from './dates.js';
 
 const router = Router();
 
-router.use(requireAuth, requireRole('SUPER_ADMIN'));
+router.use(requireRoleAuth('SUPER_ADMIN'));
 
 interface TemplateRow extends RowDataPacket {
   id: string;
@@ -66,7 +66,13 @@ const normalizeSlug = (value: string): string => value
   .replace(/^-+|-+$/g, '')
   .slice(0, 180) || 'business';
 
-const reservedSlugs = new Set(['admin', 'dashboard']);
+const reservedSlugs = new Set([
+  'admin',
+  'dashboard',
+  'demo-bakery',
+  'demo-salon',
+  'demo-jewellery',
+]);
 
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const isValidOptionalHttpUrl = (value: string): boolean => {
@@ -95,8 +101,9 @@ const findTemplate = async (value: string | number | undefined): Promise<{ id: s
     return null;
   }
 
+  const lookupBySlug = typeof value === 'string' && !/^[0-9]+$/.test(value);
   const [rows] = await pool.execute<TemplateRow[]>(
-    value === 'modern-business' || value === 'food-bakery' || typeof value === 'string' && !/^[0-9]+$/.test(value)
+    lookupBySlug
       ? 'SELECT id, name, slug FROM templates WHERE slug = ? LIMIT 1'
       : 'SELECT id, name, slug FROM templates WHERE id = ? LIMIT 1',
     [value]
@@ -137,7 +144,8 @@ router.get('/businesses', async (_request, response) => {
       b.updated_at,
       t.name AS template_name,
       s.plan,
-      s.status AS subscription_status,
+      CASE WHEN s.status = 'EXPIRED' OR s.expiry_date < UTC_DATE()
+        THEN 'EXPIRED' ELSE s.status END AS subscription_status,
       s.amount,
       s.start_date,
       s.expiry_date,
@@ -187,7 +195,8 @@ router.get('/businesses/:id', async (request, response) => {
       b.updated_at,
       t.name AS template_name,
       s.plan,
-      s.status AS subscription_status,
+      CASE WHEN s.status = 'EXPIRED' OR s.expiry_date < UTC_DATE()
+        THEN 'EXPIRED' ELSE s.status END AS subscription_status,
       s.amount,
       s.start_date,
       s.expiry_date,

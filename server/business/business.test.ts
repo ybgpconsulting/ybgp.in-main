@@ -6,7 +6,7 @@ import type { AddressInfo } from 'node:net';
 import type { Server } from 'node:http';
 import type { RowDataPacket } from 'mysql2';
 import app from '../app.js';
-import { SESSION_COOKIE_NAME } from '../auth/session.js';
+import { ADMIN_SESSION_COOKIE_NAME, OWNER_SESSION_COOKIE_NAME } from '../auth/session.js';
 import { pool } from '../db/pool.js';
 
 const demoPassword = 'Ybgp-Dev-Only-6cV9-Qm2X!Local';
@@ -29,14 +29,17 @@ const request = (
 });
 
 const login = async (email: string, password: string): Promise<{ cookie: string }> => {
-  const response = await request('/api/auth/login', {
+  const response = await request(email === 'admin@ybgp.local'
+    ? '/api/auth/admin/login'
+    : '/api/auth/business/login', {
     method: 'POST',
     body: { email, password },
   });
   assert.equal(response.status, 200);
   const setCookie = response.headers.get('set-cookie') ?? '';
-  const cookie = setCookie.split(';', 1)[0] ?? '';
-  assert.ok(cookie.startsWith(`${SESSION_COOKIE_NAME}=`));
+  const cookieName = email === 'admin@ybgp.local' ? ADMIN_SESSION_COOKIE_NAME : OWNER_SESSION_COOKIE_NAME;
+  const cookie = setCookie.match(new RegExp(`${cookieName}=[a-f\\d]{64}`))?.[0] ?? '';
+  assert.ok(cookie.startsWith(`${cookieName}=`));
   return { cookie };
 };
 
@@ -110,6 +113,56 @@ test('public website API resolves seeded business data', async () => {
   assert.equal(body.business?.name, 'Aroma & Crumb');
   assert.ok(Array.isArray(body.categories));
   assert.ok(Array.isArray(body.products));
+});
+
+test('expired subscriptions pause tenant API, HTML and sitemap while owner/admin remain available', async () => {
+  const adminCookie = (await login('admin@ybgp.local', demoPassword)).cookie;
+  const ownerEmail = `expired-tenant-${Date.now()}@example.test`;
+  const slug = `expired-tenant-${Date.now()}`;
+  createdEmails.push(ownerEmail);
+  createdSlugs.push(slug);
+  const expiredDate = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  const startDate = `${Number(expiredDate.slice(0, 4)) - 1}${expiredDate.slice(4)}`;
+
+  const createResponse = await request('/api/admin/businesses', {
+    method: 'POST',
+    cookie: adminCookie,
+    body: {
+      name: 'Expired Subscription Test Tenant',
+      slug,
+      category: 'Test',
+      template_slug: 'modern-business',
+      owner_name: 'Expired Test Owner',
+      owner_email: ownerEmail,
+      owner_password: 'StrongPass!123',
+      published: true,
+      start_date: startDate,
+      expiry_date: expiredDate,
+      subscription_active: true,
+    },
+  });
+  assert.equal(createResponse.status, 201);
+
+  const [publicApi, websiteHtml, sitemap] = await Promise.all([
+    request(`/api/public/websites/${slug}`),
+    request(`/websites/${slug}`),
+    request('/sitemap.xml'),
+  ]);
+  assert.equal(publicApi.status, 404);
+  assert.equal(websiteHtml.status, 404);
+  assert.doesNotMatch(await sitemap.text(), new RegExp(`/websites/${slug}/`));
+
+  const [[business]] = await pool.execute<Array<RowDataPacket & { id: string }>>(
+    'SELECT id FROM businesses WHERE slug = ? LIMIT 1',
+    [slug]
+  );
+  assert.ok(business);
+  await pool.execute(
+    'UPDATE subscriptions SET status = "EXPIRED", expiry_date = DATE_ADD(UTC_DATE(), INTERVAL 10 DAY) WHERE business_id = ?',
+    [business.id]
+  );
+  const explicitlyExpired = await request(`/api/public/websites/${slug}`);
+  assert.equal(explicitlyExpired.status, 404);
 });
 
 test('reserved demo slugs resolve database tenants before the demo fallback', async () => {

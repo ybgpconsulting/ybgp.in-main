@@ -32,13 +32,15 @@ export const requireAuth = async (
   response: Response,
   next: NextFunction
 ): Promise<void> => {
-  const sessionId = getSessionId(request);
-  if (!sessionId) {
-    response.status(401).json({ error: 'Authentication required' });
-    return;
+  const sessionIds = [
+    getSessionId(request, 'SUPER_ADMIN'),
+    getSessionId(request, 'BUSINESS_OWNER'),
+  ].filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
+  let row = null;
+  for (const sessionId of sessionIds) {
+    row = await getSessionUser(sessionId);
+    if (row) break;
   }
-
-  const row = await getSessionUser(sessionId);
   if (!row || !isAuthenticatedRole(row.role)) {
     response.status(401).json({ error: 'Authentication required' });
     return;
@@ -51,6 +53,28 @@ export const requireAuth = async (
     role: row.role,
   };
   next();
+};
+
+export const requireRoleAuth = (...roles: UserRole[]) => async (
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> => {
+  for (const role of roles) {
+    const sessionId = getSessionId(request, role);
+    if (!sessionId) continue;
+    const row = await getSessionUser(sessionId);
+    if (!row || row.role !== role) continue;
+    request.user = {
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      role,
+    };
+    next();
+    return;
+  }
+  response.status(401).json({ error: 'Authentication required' });
 };
 
 export const requireRole = (...roles: UserRole[]) => (
