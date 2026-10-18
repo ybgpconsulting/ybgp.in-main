@@ -429,7 +429,7 @@ export function WebsitesAdminDashboard() {
                   </FormSection>
                   <section>
                     <h3 className="font-bold">Choose a template</h3>
-                    <p className="mt-1 text-sm text-[#68746c]">Choose from four distinct storefront layouts. The preview shows the design your new website will use.</p>
+                    <p className="mt-1 text-sm text-[#68746c]">Each preview opens the same live demo shown on the public websites page.</p>
                     {templates.length === 0 ? <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p> : (
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {templates.map((template) => {
@@ -442,7 +442,7 @@ export function WebsitesAdminDashboard() {
                               <span className="relative mt-4 block h-40 overflow-hidden rounded-xl bg-[#f4f5f2]" aria-hidden="true">
                                 <iframe
                                   title={`${template.name} live storefront preview`}
-                                  src={`/websites/template-preview/${template.slug}`}
+                                  src={`/websites/${getWebsiteTemplateDemoSlug(template.slug)}`}
                                   loading="lazy"
                                   tabIndex={-1}
                                   className="pointer-events-none absolute left-0 top-0 border-0"
@@ -450,7 +450,7 @@ export function WebsitesAdminDashboard() {
                                 />
                               </span>
                               <span className="mt-3 block text-xs font-semibold text-[#526158]">
-                                {design === 'food' ? 'Full-bleed menu · warm editorial' : design === 'salon' ? 'Centered portrait · soft editorial' : design === 'jewellery' ? 'Cinematic gallery · dark luxury' : 'Split-screen hero · modern business'} · template preview
+                                {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'} · same live demo as websites page
                               </span>
                             </label>
                           );
