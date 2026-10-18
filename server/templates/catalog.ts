@@ -4,22 +4,22 @@ export const WEBSITE_TEMPLATES = [
   {
     name: 'Modern Business',
     slug: 'modern-business',
-    description: 'A clean, flexible layout for local, professional and service businesses.',
+    description: 'A bold split-screen hero, confident typography and clear contact actions for professional businesses.',
   },
   {
     name: 'Food / Bakery',
     slug: 'food-bakery',
-    description: 'A warm, product-led layout for bakeries, cafes and food businesses.',
+    description: 'A full-bleed food-photo hero, warm menu styling and prominent ordering actions for cafes and food businesses.',
   },
   {
     name: 'Salon & Wellness',
     slug: 'salon-studio',
-    description: 'A calm, editorial layout for salons, spas and wellness studios.',
+    description: 'A centered editorial layout, soft blush palette and sculpted portrait frame for salons and wellness studios.',
   },
   {
     name: 'Jewellery Boutique',
     slug: 'jewellery-boutique',
-    description: 'A refined, dark editorial layout for jewellery and premium boutiques.',
+    description: 'A cinematic, full-width dark hero with gold accents and an editorial gallery for jewellery and premium boutiques.',
   },
 ] as const;
 
