@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link2, MapPin, Navigation } from 'lucide-react';
+import { ArrowRight, ChevronRight, Link2, MapPin, Menu, MessageCircle, X } from 'lucide-react';
 import { SocialBrandIcon, type SocialPlatform } from './SocialBrandIcon';
 import { getWebsiteTemplateDesign } from './templateDesigns';
+import { getTemplateDefaults, getTemplateTheme } from './templateDefaults';
 import { inferPrimaryAction, resolvePrimaryActionUrl, type PrimaryAction } from '../../../server/business/cta';
 import { formatWorkingHours } from '../../../server/business/hours';
 import { resolveBusinessImageUrl } from '../../../server/business/images';
@@ -44,6 +45,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const [data, setData] = useState<BusinessWebsiteResponse | null>(initialData ?? null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -109,22 +111,29 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
   const { business, template, settings, categories, products, gallery, seo } = data;
   const design = getWebsiteTemplateDesign(template.slug);
+  const defaults = getTemplateDefaults(template.slug);
+  const theme = getTemplateTheme(template.slug);
   const foodLayout = design === 'food';
   const salonLayout = design === 'salon';
   const jewelleryLayout = design === 'jewellery';
-  const whatsapp = business.whatsapp;
-  const phone = business.phone;
-  const email = business.email;
+  const isModern = design === 'modern';
+  const isService = isModern || salonLayout;
+  const collectionId = isService ? 'services' : 'collections';
+
+  const whatsapp = business.whatsapp || settings.whatsapp;
+  const phone = business.phone || settings.call_phone;
+  const email = business.email || settings.contact_email;
   const address = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
   const explicitMapsUrl = safeExternalUrl(business.google_maps_url);
-  const locationQuery = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
+  const locationQuery = address || defaults.location.query;
   const directionsUrl = explicitMapsUrl || (locationQuery
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`
     : '');
   const primaryActionType = data.primaryAction?.type ?? inferPrimaryAction(settings, business);
-  const ctaUrl = data.primaryAction?.url ?? resolvePrimaryActionUrl(primaryActionType, business, settings.cta_url) ?? '#contact';
-  const ctaText = data.primaryAction?.text || settings.cta_text || 'Contact us';
-  const displayWorkingHours = formatWorkingHours(settings.working_hours);
+  const ctaUrl = data.primaryAction?.url ?? resolvePrimaryActionUrl(primaryActionType, business, settings.cta_url) ?? (whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : '#contact');
+  const ctaText = data.primaryAction?.text || settings.cta_text || (foodLayout ? 'Order on WhatsApp' : salonLayout ? 'Book Appointment' : jewelleryLayout ? 'Explore Collection' : 'Start a conversation');
+  const displayWorkingHours = formatWorkingHours(settings.working_hours) || defaults.openingHours;
+
   const socialLinks = [
     { name: 'Instagram', url: business.instagram_url, platform: 'instagram' as SocialPlatform },
     { name: 'Facebook', url: business.facebook_url, platform: 'facebook' as SocialPlatform },
@@ -137,161 +146,490 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     { name: 'Other link', url: settings.other_social_url, icon: Link2 },
   ].map((item) => ({ ...item, url: safeExternalUrl(item.url) }))
     .filter((item) => Boolean(item.url));
+
   const heroImage = gallery
     .map((item) => safeImageUrl(item.image))
-    .find((image): image is string => Boolean(image)) || '';
-  const heroActions = (
-    <div className={`mt-7 flex flex-wrap gap-3 ${salonLayout ? 'justify-center' : ''} ${jewelleryLayout ? 'text-[#211a13]' : ''}`}>
-      <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className={`rounded-full px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'bg-[#c5a77e] text-[#211a13]' : foodLayout ? 'bg-[#f4e2d3] text-[#603b2c]' : salonLayout ? 'bg-[#8f5c54] text-white' : 'bg-[#173629] text-white'}`}>{ctaText}</a>
-      {phone ? <a href={`tel:${phone}`} className={`rounded-full border px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'border-white/30 text-white' : salonLayout ? 'border-[#8f5c54]/25 text-[#8f5c54]' : foodLayout ? 'border-white/45 text-white' : 'border-[#173629]/20 text-[#173629]'}`}>Call us</a> : null}
-      {whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className={`rounded-full border px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'border-[#c5a77e]/60 text-[#e8d3b1]' : salonLayout ? 'border-[#8f5c54]/25 text-[#8f5c54]' : foodLayout ? 'border-white/45 text-white' : 'border-[#173629]/20 text-[#173629]'}`}>WhatsApp</a> : null}
-      {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className={`rounded-full border px-5 py-3 text-sm font-bold ${jewelleryLayout ? 'border-white/30 text-white' : salonLayout ? 'border-[#8f5c54]/25 text-[#8f5c54]' : foodLayout ? 'border-white/45 text-white' : 'border-[#173629]/20 text-[#173629]'}`}>Directions</a> : null}
-    </div>
-  );
+    .find((image): image is string => Boolean(image)) || safeImageUrl(business.logo) || defaults.hero.image;
+
+  const whatsappDirectUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to get in touch with ${business.name}.`)}`
+    : ctaUrl;
+
+  const navItems = foodLayout
+    ? [
+        { label: 'Home', href: '#home' },
+        { label: 'Menu', href: `#${collectionId}` },
+        { label: 'Bestsellers', href: '#bestsellers' },
+        { label: 'Our story', href: '#about' },
+        { label: 'Gallery', href: '#gallery' },
+        { label: 'Order', href: '#contact' },
+      ]
+    : isService
+      ? [
+          { label: 'Home', href: '#home' },
+          { label: isModern ? 'What we do' : 'Services', href: `#${collectionId}` },
+          { label: isModern ? 'Ways to work together' : 'Most booked', href: '#bestsellers' },
+          { label: isModern ? 'Our approach' : 'The studio', href: '#about' },
+          { label: 'Gallery', href: '#gallery' },
+          { label: isModern ? 'Contact' : 'Book', href: '#contact' },
+        ]
+      : [
+          { label: 'Home', href: '#home' },
+          { label: 'Collections', href: `#${collectionId}` },
+          { label: 'New pieces', href: '#bestsellers' },
+          { label: 'Craft', href: '#about' },
+          { label: 'Gallery', href: '#gallery' },
+          { label: 'Enquire', href: '#contact' },
+        ];
 
   return (
-    <main className={`min-h-screen ${jewelleryLayout ? 'bg-[#f2eee8] text-[#24201c]' : foodLayout ? 'bg-[#fbf5ed] text-[#34261e]' : salonLayout ? 'bg-[#f8f3f0] text-[#302623]' : 'bg-[#f4f7f4] text-[#192c23]'}`}>
-      <header className={`${jewelleryLayout ? 'bg-[#171411]' : foodLayout ? 'bg-[#3f2d24]' : salonLayout ? 'bg-[#fffdfb]' : 'bg-[#0E2B22]'} px-4 py-5 ${salonLayout ? 'text-[#302623]' : 'text-white'} sm:px-6`}>
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
-          <a className="flex min-w-0 items-center gap-3" href="#top">
-            {safeImageUrl(business.logo) ? <img src={safeImageUrl(business.logo)} alt="" className="h-11 w-11 rounded-xl object-cover" /> : <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl text-lg font-bold ${salonLayout ? 'bg-[#f0e5df] text-[#8f5c54]' : 'bg-white/10'}`}>{business.name.slice(0, 1).toUpperCase()}</span>}
-            <span className="min-w-0"><span className={`block truncate text-xs font-semibold uppercase tracking-[0.2em] ${salonLayout ? 'text-[#8f5c54]' : 'text-white/65'}`}>{template.name}</span><span className="block truncate text-lg font-bold">{business.name}</span></span>
-          </a>
-          <nav className={`hidden items-center gap-5 text-sm sm:flex ${salonLayout ? 'text-[#6e5651]' : 'text-white/80'}`}>
-            <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#offerings">Offerings</a>
-            {gallery.length ? <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#gallery">Gallery</a> : null}
-            {address || phone || whatsapp || email ? <a className={salonLayout ? 'hover:text-[#8f5c54]' : 'hover:text-white'} href="#contact">Contact</a> : null}
-          </nav>
-          <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className={`shrink-0 rounded-full px-4 py-2.5 text-xs font-bold shadow-sm sm:text-sm ${jewelleryLayout ? 'bg-[#c5a77e] text-[#211a13]' : foodLayout ? 'bg-[#f4e2d3] text-[#603b2c]' : salonLayout ? 'bg-[#8f5c54] text-white' : 'bg-white text-[#183629]'}`}>{ctaText}</a>
-        </div>
-      </header>
-
-      {foodLayout ? (
-        <section id="top" className="relative isolate flex min-h-[520px] items-center overflow-hidden bg-[#754b39] text-white">
-          {heroImage ? <img src={heroImage} alt={`${business.name} featured offering`} className="absolute inset-0 -z-20 h-full w-full object-cover" /> : null}
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#28160f]/90 via-[#40261a]/75 to-[#40261a]/15" />
-          <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:px-10 lg:py-24">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#f4d2b4]">{business.category}</p>
-            <h1 className="mt-5 max-w-3xl font-serif text-5xl leading-[1.02] sm:text-7xl">{business.name}</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-white/80 sm:text-lg">{business.description || seo.description}</p>
-            {heroActions}
-          </div>
-          <p className="absolute bottom-5 right-6 whitespace-pre-line text-right text-xs font-semibold uppercase leading-5 tracking-[0.2em] text-white/75">{displayWorkingHours || settings.city || 'Made fresh for you'}</p>
-        </section>
-      ) : salonLayout ? (
-        <section id="top" className="bg-[#f0e5df] px-4 pb-12 pt-12 text-center sm:px-6 sm:pb-16 sm:pt-16">
-          <div className="mx-auto max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#8f5c54]">{business.category}</p>
-            <h1 className="mt-4 font-serif text-5xl font-medium leading-tight tracking-tight text-[#302623] sm:text-7xl">{business.name}</h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-[#6e5651] sm:text-lg">{business.description || seo.description}</p>
-            {heroActions}
-            <div className="relative mx-auto mt-10 h-[260px] max-w-3xl overflow-hidden rounded-t-[12rem] bg-gradient-to-br from-[#cba99e] via-[#f1e5df] to-[#9b7169] sm:h-[360px] sm:rounded-t-[18rem]">
-              {heroImage ? <img src={heroImage} alt={`${business.name} studio`} className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center font-serif text-5xl text-white/75">{business.name.slice(0, 1).toUpperCase()}</div>}
-            </div>
-            {displayWorkingHours ? <p className="mt-5 whitespace-pre-line text-xs font-semibold uppercase leading-5 tracking-[0.18em] text-[#8f5c54]">{displayWorkingHours}</p> : null}
-          </div>
-        </section>
-      ) : jewelleryLayout ? (
-        <section id="top" className="relative isolate flex min-h-[560px] items-end overflow-hidden bg-[#171411] text-[#f8f5ef] sm:min-h-[680px]">
-          {heroImage ? <img src={heroImage} alt={`${business.name} featured collection`} className="absolute inset-0 -z-20 h-full w-full object-cover opacity-75" /> : null}
-          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#171411] via-[#171411]/40 to-[#171411]/10" />
-          <div className="mx-auto w-full max-w-6xl px-6 pb-14 pt-32 sm:px-10 sm:pb-20">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#c5a77e]">{business.category} <span className="mx-2 text-white/35">/</span> {settings.city || 'The collection'}</p>
-            <h1 className="mt-5 max-w-4xl font-serif text-5xl font-normal leading-[1.02] sm:text-7xl">{business.name}</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-white/75 sm:text-lg">{business.description || seo.description}</p>
-            {heroActions}
-          </div>
-        </section>
-      ) : (
-        <section id="top" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-          <div className="overflow-hidden rounded-[2rem] bg-[#dfeae2]">
-            <div className="grid min-h-[330px] items-center gap-8 px-6 py-10 sm:px-10 lg:grid-cols-[1.2fr_0.8fr] lg:px-14">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#587464]">{business.category}</p>
-                <h1 className="mt-4 max-w-3xl text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl">{business.name}</h1>
-                <p className="mt-5 max-w-2xl text-base leading-7 text-[#31453a]/80 sm:text-lg">{business.description || seo.description}</p>
-                {heroActions}
-              </div>
-              <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#6f9680] to-[#294a38] p-8">
-                {heroImage ? <img src={heroImage} alt={`${business.name} gallery`} className="absolute inset-0 h-full w-full object-cover opacity-50" /> : null}
-                <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full border-[30px] border-white/10" />
-                <div className="relative text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.25em] text-white/65">{settings.city || 'Local business'}</p><p className="mt-4 text-3xl font-bold">{business.category}</p><p className="mt-3 whitespace-pre-line text-sm leading-5 text-white/75">{displayWorkingHours || 'Here to help you'}</p></div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {categories.length > 0 ? (
-        <section className="mx-auto max-w-6xl px-4 pb-2 sm:px-6">
-          <div className="flex gap-2 overflow-x-auto pb-3">
-            {categories.map((category) => <a key={category.id} href={`#category-${category.id}`} className={`shrink-0 border px-4 py-2 text-sm font-semibold ${jewelleryLayout ? 'border-[#d6c8b6] bg-[#fffdf9] text-[#51463c]' : salonLayout ? 'rounded-full border-[#eadfd9] bg-white text-[#8f5c54]' : foodLayout ? 'border-[#e7d1c0] bg-[#fffaf6] text-[#754b39]' : 'rounded-full border-[#dce4dc] bg-white text-[#334b3c]'}`}>{category.name}</a>)}
-          </div>
-        </section>
-      ) : null}
-
-      {products.length > 0 ? (
-        <section id="offerings" className={`py-8 sm:py-10 ${jewelleryLayout ? 'bg-[#f2eee8]' : foodLayout ? 'bg-[#fbf5ed]' : salonLayout ? 'bg-[#f8f3f0]' : 'bg-[#f4f7f4]'}`}>
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div><p className={`text-xs font-bold uppercase tracking-[0.2em] ${jewelleryLayout ? 'text-[#876444]' : salonLayout ? 'text-[#8f5c54]' : foodLayout ? 'text-[#a45e3e]' : 'text-[#587464]'}`}>{foodLayout ? 'From our kitchen' : salonLayout ? 'The experience' : jewelleryLayout ? 'The collection' : 'Explore'}</p><h2 className="mt-2 text-3xl font-extrabold">{foodLayout ? 'Fresh from the menu' : salonLayout ? 'Services & treatments' : jewelleryLayout ? 'Selected pieces' : 'Products & services'}</h2></div><p className="text-sm text-[#718078]">{products.length} available</p></div>
-            {categories.length ? categories.map((category) => {
-              const categoryProducts = products.filter((product) => product.category_id === category.id);
-              if (categoryProducts.length === 0) return null;
-              return <div key={category.id} id={`category-${category.id}`} className="mb-8"><h3 className="mb-3 text-xl font-bold">{category.name}</h3><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{categoryProducts.map((product) => <ProductCard key={product.id} product={product} design={design} whatsapp={whatsapp} />)}</div></div>;
-            }) : null}
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{products.filter((product) => !product.category_id || !categories.some((category) => category.id === product.category_id)).map((product) => <ProductCard key={product.id} product={product} design={design} whatsapp={whatsapp} />)}</div>
-          </div>
-        </section>
-      ) : (
-        <section id="offerings" className="mx-auto max-w-6xl px-4 py-8 sm:px-6"><div className="rounded-2xl border border-dashed border-[#d5ded6] bg-white/70 px-6 py-10 text-center"><h2 className="text-xl font-bold">Offerings coming soon</h2><p className="mt-2 text-sm text-[#718078]">Contact {business.name} to learn more.</p></div></section>
-      )}
-
-      {gallery.length ? (
-        <section id="gallery" className={`py-10 ${jewelleryLayout ? 'bg-[#171411] text-[#f8f5ef]' : salonLayout ? 'bg-[#fffdfb]' : foodLayout ? 'bg-[#f4e4d5] text-[#34261e]' : 'bg-white/65'}`}>
-          <div className="mx-auto max-w-6xl px-4 sm:px-6"><p className={`text-xs font-bold uppercase tracking-[0.2em] ${jewelleryLayout ? 'text-[#c5a77e]' : 'text-[#9d7723]'}`}>A closer look</p><h2 className="mt-2 text-3xl font-extrabold">Gallery</h2>
-            <div className={`mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${jewelleryLayout ? '[&>figure:nth-child(even)]:mt-8' : ''}`}>
-              {gallery.map((item) => <figure key={item.id} className={`overflow-hidden border shadow-sm ${foodLayout ? 'border-[#eddfd2] bg-[#fffaf6]' : salonLayout ? 'rounded-2xl border-[#eadfd9] bg-white' : jewelleryLayout ? 'border-[#51483d] bg-[#231f1a]' : 'rounded-2xl border-[#e8e2d7] bg-white'}`}><img src={safeImageUrl(item.image)} alt={item.title} className="h-56 w-full bg-[#eeeae2] object-cover" loading="lazy" /><figcaption className={`p-4 text-sm font-semibold ${jewelleryLayout ? 'text-[#f8f5ef]' : ''}`}>{item.title}</figcaption></figure>)}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {business.description ? (
-        <section id="about" className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-          <div className={`grid gap-6 p-6 sm:p-9 lg:grid-cols-[0.65fr_1.35fr] lg:items-center ${jewelleryLayout ? 'bg-[#231f1a] text-[#f8f5ef]' : foodLayout ? 'bg-[#f0e2d6]' : salonLayout ? 'rounded-[2rem] bg-[#f0e5df]' : 'bg-[#e5eee8]'}`}>
-            <div><p className={`text-xs font-bold uppercase tracking-[0.2em] ${jewelleryLayout ? 'text-[#c5a77e]' : 'text-[#9d7723]'}`}>A little about us</p><h2 className="mt-2 text-3xl font-extrabold">{business.name}</h2><p className="mt-2 text-sm font-medium opacity-70">{business.category}</p></div>
-            <p className="max-w-3xl whitespace-pre-line text-base leading-7 opacity-80">{business.description}</p>
-          </div>
-        </section>
-      ) : null}
-
-      <footer id="contact" className={`${jewelleryLayout ? 'bg-[#171411]' : foodLayout ? 'bg-[#3f2d24]' : salonLayout ? 'bg-[#3c2e2b]' : 'bg-[#10271d]'} px-4 py-10 text-white sm:px-6`}>
-        <div className="mx-auto grid max-w-6xl gap-7 sm:grid-cols-2">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><Navigation aria-hidden="true" size={17} />Get Directions</a> : null}{displayWorkingHours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{displayWorkingHours}</p> : null}</div>
-          <div className="flex flex-col gap-3 sm:items-end">
-            {phone ? <a href={`tel:${phone}`} className="text-sm text-white/85">Call: {phone}</a> : null}
-            {email ? <a href={`mailto:${email}`} className="text-sm text-white/85">{email}</a> : null}
-            {whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><SocialBrandIcon platform="whatsapp" size={18} />Message on WhatsApp</a> : null}
-            {socialLinks.length ? <div className="mt-2 flex flex-wrap gap-3" aria-label="Social media links">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name} title={social.name} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition hover:bg-white/10">{social.platform ? <SocialBrandIcon platform={social.platform} /> : social.icon ? <social.icon aria-hidden="true" size={19} /> : null}</a>)}</div> : null}
-          </div>
-        </div>
-        <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-white/45">© {new Date().getFullYear()} {business.name}.</p>
-          <a
-            href="https://ybgp.in/websites"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Designed and powered by YBGP Websites"
-            className="ml-auto inline-flex max-w-full items-center gap-2 text-right text-white/65 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d3bb78] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10271d]"
-          >
-            <span>Designed &amp; Powered by YBGP Websites</span>
-            <span className="inline-flex shrink-0 rounded bg-white px-1.5 py-1">
-              <img src="/Black%20and%20Gold%20YBGP%20Logo.png" alt="YBGP logo" className="h-7 w-[70px] object-contain" />
+    <div className={`min-h-screen ${foodLayout ? 'font-sans' : ''}`} style={{ background: theme.pageBg, color: theme.text }}>
+      {/* Sticky Blurred Brand Header */}
+      <header className="sticky top-0 z-50 border-b transition-colors" style={{ background: theme.headerSurface, borderColor: theme.border, backdropFilter: 'blur(18px)' }}>
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-10">
+          <a href="#home" className="flex min-w-0 items-center gap-3" aria-label={`${business.name} home`}>
+            {safeImageUrl(business.logo) ? (
+              <img src={safeImageUrl(business.logo)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-heading text-sm font-bold" style={{ background: theme.accentSoft, color: theme.accentDark }}>
+                {business.name.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase()}
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="block truncate font-heading text-lg font-bold leading-tight sm:text-xl" style={{ color: theme.accentDark }}>{business.name}</span>
+              <span className="block text-[9px] font-medium uppercase tracking-[0.18em]" style={{ color: theme.muted }}>{business.category}</span>
             </span>
           </a>
+
+          <nav aria-label={`${business.name} main navigation`} className="hidden items-center gap-5 xl:flex">
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} className="whitespace-nowrap text-[13px] font-medium transition-opacity hover:opacity-65" style={{ color: theme.text }}>
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <div className="hidden shrink-0 items-center gap-2 xl:flex">
+            <a
+              href={ctaUrl}
+              target={ctaUrl.startsWith('http') ? '_blank' : undefined}
+              rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 shadow-sm"
+              style={{ background: theme.cta }}
+            >
+              {ctaText}
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-semibold xl:hidden"
+            style={{ borderColor: theme.border, color: theme.text, background: theme.panel }}
+            aria-expanded={mobileNavOpen}
+            aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            onClick={() => setMobileNavOpen((open) => !open)}
+          >
+            {mobileNavOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {mobileNavOpen ? 'Close' : 'Menu'}
+          </button>
+        </div>
+
+        <nav aria-label={`${business.name} mobile navigation`} hidden={!mobileNavOpen} className="border-t px-4 py-4 xl:hidden" style={{ borderColor: theme.border, background: theme.panel }}>
+          <div className="mx-auto grid max-w-[1440px] grid-cols-2 gap-2 sm:grid-cols-3">
+            {navItems.map((item) => (
+              <a key={item.href} href={item.href} onClick={() => setMobileNavOpen(false)} className="rounded-xl border px-3 py-3 text-sm font-medium" style={{ borderColor: theme.border, color: theme.text, background: theme.pageBg }}>
+                {item.label}
+              </a>
+            ))}
+            <a
+              href={ctaUrl}
+              target={ctaUrl.startsWith('http') ? '_blank' : undefined}
+              rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+              onClick={() => setMobileNavOpen(false)}
+              className="col-span-2 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold text-white sm:col-span-1"
+              style={{ background: theme.cta }}
+            >
+              {ctaText} <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      <main>
+        {/* Full Storefront Hero */}
+        {foodLayout ? (
+          <section id="home" className="relative mx-auto mt-3 min-h-[570px] max-w-[1440px] overflow-hidden sm:mt-6 sm:min-h-[620px] sm:rounded-[28px] lg:min-h-[700px]">
+            <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(31,17,10,0.85) 0%, rgba(39,22,14,0.55) 50%, rgba(39,22,14,0.15) 100%)' }} />
+            <div className="relative flex min-h-[570px] max-w-3xl flex-col justify-center px-5 py-14 sm:min-h-[620px] sm:px-10 lg:min-h-[700px] lg:px-16 text-white">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d5af]">{business.category || defaults.hero.eyebrow}</p>
+              <h1 className="mt-5 max-w-[660px] font-heading text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-white">{business.name}</h1>
+              <p className="mt-6 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {ctaText} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:text-base">
+                  Browse the menu
+                </a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:text-base">Directions</a> : null}
+              </div>
+              <p className="mt-10 text-xs font-medium uppercase tracking-[0.2em] text-white/75">{displayWorkingHours || 'Small batches · baked fresh · made to share'}</p>
+            </div>
+          </section>
+        ) : salonLayout ? (
+          <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
+            <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{business.category || defaults.hero.eyebrow}</p>
+              <h1 className="mt-5 max-w-xl font-heading text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[4.75rem]">{business.name}</h1>
+              <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {ctaText} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href="#services" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
+                  Explore services
+                </a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>Directions</a> : null}
+              </div>
+              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>{displayWorkingHours || 'Considered care · expert hands · time for you'}</div>
+            </div>
+            <div className="order-1 flex h-[330px] items-center justify-center overflow-hidden bg-[#f0e5df] p-6 sm:h-[440px] lg:order-2 lg:h-[650px]">
+              <div className="relative h-full w-full max-w-lg overflow-hidden rounded-t-[12rem] bg-gradient-to-br from-[#cba99e] via-[#f1e5df] to-[#9b7169] sm:rounded-t-[16rem]">
+                <img src={heroImage} alt="" className="h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+              </div>
+            </div>
+          </section>
+        ) : jewelleryLayout ? (
+          <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden bg-[#171411] lg:min-h-[680px] lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="order-2 flex flex-col justify-center px-5 py-12 text-[#f8f5ef] sm:px-12 sm:py-16 lg:order-1 lg:px-20">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#c5a77e]">{business.category || defaults.hero.eyebrow}</p>
+              <h1 className="mt-6 max-w-xl font-heading text-4xl font-normal leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[5rem]">{business.name}</h1>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-white/65 sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <a href="#collections" className="inline-flex min-h-12 w-fit items-center gap-3 border-b border-[#c5a77e] pb-2 text-sm font-medium text-[#e8d3b1] transition-colors hover:text-white sm:text-base">
+                  Explore the collection <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white sm:text-sm">WhatsApp us</a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold uppercase tracking-[0.14em] text-white/70 hover:text-white sm:text-sm">Directions</a> : null}
+              </div>
+              <p className="mt-12 text-[10px] uppercase tracking-[0.24em] text-white/45">{displayWorkingHours || 'Made to hold a story'}</p>
+            </div>
+            <div className="order-1 h-[350px] overflow-hidden bg-[#2b2722] sm:h-[470px] lg:order-2 lg:h-[680px]">
+              <img src={heroImage} alt="" className="h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+            </div>
+          </section>
+        ) : (
+          <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
+            <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{business.category || defaults.hero.eyebrow}</p>
+              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]">{business.name}</h1>
+              <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {ctaText} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href="#services" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
+                  Explore what we do
+                </a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>Directions</a> : null}
+              </div>
+              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>{displayWorkingHours || 'Clear thinking · considered design · practical support'}</div>
+            </div>
+            <div className="order-1 flex h-[330px] items-center justify-center overflow-hidden bg-[#dce9df] p-6 sm:h-[440px] lg:order-2 lg:h-[650px]">
+              <div className="relative h-full w-full overflow-hidden rounded-2xl border border-white/80 bg-white/95 p-6 shadow-[0_24px_60px_rgba(24,54,41,0.12)] sm:p-8">
+                <div className="flex items-center justify-between border-b border-[#e6ece7] pb-4">
+                  <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#294a38]">{business.name}</span>
+                  <span className="rounded-full bg-[#e9f1eb] px-3 py-1 text-[10px] font-semibold text-[#587464]">{business.category}</span>
+                </div>
+                <div className="mt-5 grid gap-5 sm:grid-cols-[1.1fr_0.9fr]">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8d7026]">Welcome to our website</p>
+                    <p className="mt-2 font-heading text-xl font-semibold leading-snug text-[#183629] sm:text-2xl">{business.name}</p>
+                    <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[#52685b]">{business.description || defaults.hero.description}</p>
+                    <a href={ctaUrl} className="mt-4 inline-flex rounded-full bg-[#183629] px-4 py-2 text-xs font-semibold text-white">{ctaText}</a>
+                  </div>
+                  <div className="flex flex-col justify-center gap-2">
+                    {defaults.highlights.slice(0, 3).map((item, idx) => (
+                      <div key={item.title} className="flex items-center gap-2.5 rounded-xl border border-[#e6ece7] p-2.5 text-xs">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e9f1eb] font-bold text-[#294a38]">0{idx + 1}</span>
+                        <span className="truncate font-medium text-[#52685b]">{item.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Highlights Section */}
+        <section id={collectionId} className="scroll-mt-24 mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:pb-24">
+          <div className={`mb-8 ${jewelleryLayout ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
+              {salonLayout ? 'The salon menu' : isModern ? 'What we do' : foodLayout ? 'From the counter' : 'The collection'}
+            </p>
+            <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
+              {foodLayout ? 'A little something for every kind of gathering.' : salonLayout ? 'Care that starts with listening.' : isModern ? 'The right support for your next step.' : 'Pieces with presence. Made for your own story.'}
+            </h2>
+            <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.summary}</p>
+          </div>
+
+          <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-2 xl:grid-cols-4' : isService ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
+            {defaults.highlights.map((item, index) => (
+              <article key={item.title} className={`${isService ? 'group' : foodLayout ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={foodLayout ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
+                <div className={`overflow-hidden ${foodLayout ? 'h-[260px] sm:h-[300px]' : isService ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
+                  <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
+                </div>
+                <div className={`${foodLayout ? 'p-5' : isService ? 'pt-5' : 'pt-4'}`}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.label }}>{isService ? `0${index + 1} / ${business.category}` : item.title}</p>
+                  <h3 className="mt-2 font-heading text-xl font-semibold sm:text-2xl" style={{ color: theme.accentDark }}>{item.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: theme.muted }}>{item.subtitle}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Story Section */}
+        <section id="about" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
+          {foodLayout ? (
+            <div className="grid overflow-hidden lg:grid-cols-[1fr_1fr]" style={{ background: theme.panelStrong }}>
+              <img src={defaults.story.image} alt="" className="h-[320px] w-full object-cover sm:h-[420px] lg:h-[560px]" loading="lazy" />
+              <div className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
+                <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{defaults.story.title}</h2>
+                <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <div className="mt-6 space-y-2.5">
+                  {defaults.story.points.map((point) => (
+                    <div key={point} className="flex items-center gap-2 text-sm font-medium">
+                      <span className="text-[#a04a2b]">✓</span> {point}
+                    </div>
+                  ))}
+                </div>
+                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+              </div>
+            </div>
+          ) : isService ? (
+            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
+              <div className="relative">
+                <img src={defaults.story.image} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
+                <span className="absolute bottom-4 left-4 max-w-[240px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>{isModern ? 'Thoughtful work, made personal.' : 'A softer kind of salon day.'}</span>
+              </div>
+              <div className="max-w-xl py-3 lg:py-10">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
+                <h2 className="mt-4 font-heading text-3xl font-medium leading-tight tracking-[-0.025em] sm:text-4xl lg:text-5xl">{defaults.story.title}</h2>
+                <p className="mt-5 text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
+                  {defaults.story.points.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
+                </div>
+                <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-8 bg-[#eae4dc] p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12">
+              <div className="flex flex-col justify-center">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
+                <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{defaults.story.title}</h2>
+                <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <div className="mt-6 space-y-2">
+                  {defaults.story.points.map((point) => <p key={point} className="text-sm font-medium text-[#211a13]">✦ {point}</p>)}
+                </div>
+                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+              </div>
+              <img src={defaults.story.image} alt="" className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
+            </div>
+          )}
+        </section>
+
+        {/* Offerings & Products Section */}
+        <section id="bestsellers" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
+                {salonLayout ? 'Most requested' : isModern ? 'Ways to work together' : foodLayout ? 'Customer favourites' : 'A few beloved pieces'}
+              </p>
+              <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+                {products.length > 0
+                  ? 'Our products & services'
+                  : salonLayout
+                    ? 'The appointments guests return for.'
+                    : isModern
+                      ? 'Focused support, built around you.'
+                      : foodLayout
+                        ? 'The ones that disappear first.'
+                        : 'The signatures that stay with you.'}
+              </h2>
+            </div>
+            <a href={ctaUrl} className="inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>
+              {salonLayout ? 'Book a visit' : isModern ? 'Talk through your goals' : foodLayout ? 'Order a favourite' : 'Ask about a piece'} <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+
+          {categories.length > 0 ? (
+            <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+              {categories.map((category) => (
+                <a key={category.id} href={`#category-${category.id}`} className="shrink-0 rounded-full border px-4 py-2 text-sm font-semibold" style={{ borderColor: theme.border, background: theme.panel, color: theme.text }}>
+                  {category.name}
+                </a>
+              ))}
+            </div>
+          ) : null}
+
+          {products.length > 0 ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  name={product.name}
+                  description={product.description}
+                  price={product.price ? `₹${Number(product.price).toLocaleString('en-IN')}` : undefined}
+                  image={safeImageUrl(product.image)}
+                  whatsapp={whatsapp}
+                  theme={theme}
+                  jewelleryLayout={jewelleryLayout}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
+              {defaults.bestsellers.map((item) => (
+                <ProductCard
+                  key={item.name}
+                  name={item.name}
+                  description={item.description}
+                  price={item.price}
+                  image={item.image}
+                  whatsapp={whatsapp}
+                  theme={theme}
+                  jewelleryLayout={jewelleryLayout}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Gallery Section */}
+        <section id="gallery" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
+          <div className={`mb-8 ${jewelleryLayout ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
+              {salonLayout ? 'Inside the studio' : isModern ? 'Selected work' : foodLayout ? 'A peek behind the counter' : 'Details in their own light'}
+            </p>
+            <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
+              {salonLayout ? 'A little of the studio feeling.' : isModern ? 'A few things we are proud of.' : foodLayout ? 'Made, dressed and shared with care.' : 'A closer look at the little things.'}
+            </h2>
+          </div>
+
+          <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${foodLayout ? 'lg:grid-cols-4' : isService ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+            {gallery.length > 0 ? (
+              gallery.map((item, index) => (
+                <figure key={item.id} className={`${index === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden rounded-2xl border`} style={{ borderColor: theme.border, background: theme.panel }}>
+                  <img src={safeImageUrl(item.image)} alt={item.title} className="h-full min-h-[220px] w-full object-cover" loading="lazy" />
+                  {item.title ? <figcaption className="p-3 text-xs font-medium" style={{ color: theme.muted }}>{item.title}</figcaption> : null}
+                </figure>
+              ))
+            ) : (
+              defaults.gallery.map((item, index) => (
+                <figure key={item.image} className={`${foodLayout && index === 0 ? 'col-span-2 row-span-2' : ''} ${isService && index === 0 ? 'col-span-2 lg:col-span-1 lg:row-span-2' : ''} ${!foodLayout && !isService && (index === 1 || index === 4) ? 'row-span-2' : ''} overflow-hidden rounded-2xl border`} style={{ borderColor: theme.border, background: theme.panel }}>
+                  <img src={item.image} alt={item.alt} className={`h-full w-full object-cover ${foodLayout && index === 0 ? 'min-h-[300px] sm:min-h-[360px]' : 'min-h-[160px] sm:min-h-[220px] lg:min-h-[260px]'}`} loading="lazy" />
+                </figure>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* Final High-Conversion Banner */}
+        <section id="final-cta" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
+          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${jewelleryLayout ? 'bg-[#171411] text-white' : ''}`} style={!jewelleryLayout ? { background: theme.panelStrong } : undefined}>
+            <div className="max-w-2xl">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: jewelleryLayout ? '#c5a77e' : theme.label }}>
+                {salonLayout ? 'Make a little time for you' : isModern ? 'Your next step starts here' : foodLayout ? 'Tell us what you are celebrating' : 'A piece, chosen personally'}
+              </p>
+              <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{defaults.finalCta.title}</h2>
+              <p className="mt-3 text-base leading-relaxed" style={{ color: jewelleryLayout ? 'rgba(255,255,255,0.68)' : theme.muted }}>{defaults.finalCta.description}</p>
+            </div>
+            <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base shadow-sm" style={{ background: theme.cta }}>
+              {defaults.finalCta.button} <MessageCircle className="h-5 w-5" />
+            </a>
+          </div>
+        </section>
+
+        {/* Location & Contact Section */}
+        <section id="contact" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 lg:px-10">
+          <div className="grid overflow-hidden border" style={{ borderColor: theme.border, background: theme.panel }}>
+            <div className="grid gap-8 p-6 sm:p-9 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>Visit or get in touch</p>
+                <h2 className="mt-3 font-heading text-3xl font-semibold">{business.name}</h2>
+                <p className="mt-3 text-sm leading-6" style={{ color: theme.muted }}>{business.category}{address ? ` · ${address}` : ''}</p>
+                <div className="mt-6 space-y-4 text-sm">
+                  {address ? (
+                    <div className="flex gap-3"><MapPin className="mt-0.5 h-5 w-5 shrink-0" style={{ color: theme.accentStrong }} /><div><p className="font-semibold">Location</p><p className="mt-1" style={{ color: theme.muted }}>{address}</p></div></div>
+                  ) : null}
+                  {displayWorkingHours ? (
+                    <div className="flex gap-3"><span className="mt-0.5 text-base" style={{ color: theme.accentStrong }}>◷</span><div><p className="font-semibold">Opening hours</p><p className="mt-1 whitespace-pre-line" style={{ color: theme.muted }}>{displayWorkingHours}</p></div></div>
+                  ) : null}
+                  {phone ? (
+                    <div className="flex gap-3"><span className="mt-0.5 text-base" style={{ color: theme.accentStrong }}>☎</span><div><p className="font-semibold">Phone</p><a href={`tel:${phone}`} className="mt-1 block hover:underline" style={{ color: theme.muted }}>{phone}</a></div></div>
+                  ) : null}
+                  {email ? (
+                    <div className="flex gap-3"><span className="mt-0.5 text-base" style={{ color: theme.accentStrong }}>✉</span><div><p className="font-semibold">Email</p><a href={`mailto:${email}`} className="mt-1 block hover:underline" style={{ color: theme.muted }}>{email}</a></div></div>
+                  ) : null}
+                </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {directionsUrl ? (
+                    <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm" style={{ background: theme.cta }}><MapPin aria-hidden="true" size={17} />Google Maps Directions</a>
+                  ) : null}
+                  {whatsapp ? (
+                    <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold" style={{ borderColor: theme.border, color: theme.text }}><MessageCircle aria-hidden="true" size={17} />WhatsApp</a>
+                  ) : null}
+                </div>
+                {socialLinks.length ? (
+                  <div className="mt-8 border-t pt-5" style={{ borderColor: theme.border }}>
+                    <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: theme.label }}>Social profiles</p>
+                    <div className="mt-3 flex flex-wrap gap-2" aria-label="Social profiles">
+                      {socialLinks.map((social) => (
+                        <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" title={social.name} className="inline-flex h-10 w-10 items-center justify-center rounded-full border transition hover:opacity-75" style={{ color: theme.accentDark, borderColor: theme.border }}>
+                          {social.platform ? <SocialBrandIcon platform={social.platform} /> : social.icon ? <social.icon aria-hidden="true" size={18} /> : null}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+              <div className="min-h-[300px] overflow-hidden bg-[#e9ece8]">
+                <iframe title={`Map showing ${business.name}`} src={`https://www.google.com/maps?q=${encodeURIComponent(locationQuery)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="h-full min-h-[300px] w-full border-0" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Branded Footer */}
+      <footer className="border-t" style={{ background: theme.panel, borderColor: theme.border }}>
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+          <div>
+            <p className="font-heading text-lg font-semibold" style={{ color: theme.accentDark }}>{business.name}</p>
+            <p className="mt-1 text-xs" style={{ color: theme.muted }}>{business.category}{address ? ` · ${address}` : ''}</p>
+          </div>
+          <nav aria-label={`${business.name} footer navigation`} className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium" style={{ color: theme.muted }}>
+            {navItems.slice(1, 5).map((item) => <a key={item.href} href={item.href} className="hover:underline">{item.label}</a>)}
+          </nav>
+          <div className="flex flex-col gap-1 text-right text-xs" style={{ color: theme.muted }}>
+            <p>© {new Date().getFullYear()} {business.name}.</p>
+            <a
+              href="https://ybgp.in/websites"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:underline"
+            >
+              <span>Designed &amp; Powered by YBGP</span>
+            </a>
+          </div>
         </div>
       </footer>
-    </main>
+    </div>
   );
 }
 
@@ -310,24 +648,54 @@ function safeImageUrl(value: string | null | undefined): string {
 }
 
 function ProductCard({
-  product,
-  design,
+  name,
+  description,
+  price,
+  image,
   whatsapp,
+  theme,
+  jewelleryLayout,
 }: {
   key?: string;
-  product: BusinessWebsiteResponse['products'][number];
-  design: ReturnType<typeof getWebsiteTemplateDesign>;
-  whatsapp: string | null;
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  theme: ReturnType<typeof getTemplateTheme>;
+  jewelleryLayout: boolean;
 }) {
-  const foodLayout = design === 'food';
-  const salonLayout = design === 'salon';
-  const jewelleryLayout = design === 'jewellery';
-  const image = safeImageUrl(product.image);
   return (
-    <article className={`overflow-hidden border ${foodLayout ? 'rounded-xl border-[#eddfd2] bg-[#fffaf6] shadow-[0_8px_24px_rgba(117,75,57,0.08)]' : salonLayout ? 'rounded-3xl border-[#eadfd9] bg-[#fffdfb] shadow-[0_8px_24px_rgba(143,92,84,0.08)]' : jewelleryLayout ? 'border-[#51483d] bg-[#231f1a] text-[#f8f5ef] shadow-[0_8px_28px_rgba(43,35,27,0.12)]' : 'rounded-2xl border-[#e7e5dc] bg-white shadow-[0_6px_20px_rgba(35,48,38,0.05)]'}`}>
-      {image ? <img src={image} alt="" className="h-48 w-full bg-[#f0eee8] object-cover" loading="lazy" /> : <div className={`grid h-32 place-items-center ${foodLayout ? 'bg-[#f5e6d9]' : salonLayout ? 'bg-[#f0e5df]' : jewelleryLayout ? 'bg-[#e8dfd3]' : 'bg-[#e9f0eb]'}`}><span className="text-4xl font-light text-[#617568]/60">{product.name.slice(0, 1).toUpperCase()}</span></div>}
-      <div className="p-5"><h3 className="text-lg font-bold">{product.name}</h3>{product.description ? <p className={`mt-2 line-clamp-3 text-sm leading-6 ${jewelleryLayout ? 'text-white/60' : 'text-[#68746c]'}`}>{product.description}</p> : null}
-        <div className="mt-5 flex items-center justify-between gap-3"><span className={`font-bold ${jewelleryLayout ? 'text-[#c5a77e]' : salonLayout ? 'text-[#8f5c54]' : foodLayout ? 'text-[#a45e3e]' : 'text-[#183629]'}`}>{product.price ? `₹${Number(product.price).toLocaleString('en-IN')}` : 'Ask for details'}</span>{whatsapp ? <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I am interested in ${product.name}.`)}`} target="_blank" rel="noopener noreferrer" className={`rounded-full px-3 py-2 text-xs font-bold ${foodLayout ? 'bg-[#a45e3e] text-white' : salonLayout ? 'bg-[#f3e4df] text-[#8f5c54]' : jewelleryLayout ? 'bg-[#c5a77e] text-[#211a13]' : 'bg-[#eaf0eb] text-[#173629]'}`}>{foodLayout ? 'Order / enquire' : salonLayout ? 'Book / enquire' : 'Enquire'}</a> : null}</div>
+    <article
+      className="overflow-hidden border transition-transform duration-300 hover:-translate-y-1"
+      style={!jewelleryLayout ? { background: theme.panel, borderColor: theme.border } : { borderColor: theme.border }}
+    >
+      {image ? (
+        <img src={image} alt="" className="h-60 sm:h-72 w-full object-cover" loading="lazy" />
+      ) : (
+        <div className="grid h-48 place-items-center" style={{ background: theme.accentSoft }}>
+          <span className="font-heading text-4xl font-light" style={{ color: theme.accent }}>{name.slice(0, 1).toUpperCase()}</span>
+        </div>
+      )}
+      <div className="px-5 py-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h3 className="font-heading text-lg font-semibold sm:text-xl" style={{ color: theme.accentDark }}>{name}</h3>
+            {description ? <p className="mt-2 line-clamp-3 text-sm leading-relaxed" style={{ color: theme.muted }}>{description}</p> : null}
+          </div>
+          {price && <span className="shrink-0 pt-1 text-sm font-bold" style={{ color: theme.label }}>{price}</span>}
+        </div>
+        {whatsapp ? (
+          <a
+            href={`https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I am interested in ${name}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-opacity hover:opacity-75"
+            style={{ color: theme.accentStrong }}
+          >
+            Enquire on WhatsApp <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        ) : null}
       </div>
     </article>
   );

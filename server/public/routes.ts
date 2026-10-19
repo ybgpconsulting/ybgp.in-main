@@ -2,7 +2,7 @@ import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { env } from '../config/env.js';
-import { resolveTenantSeo } from '../seo/settings.js';
+import { resolveTenantSeo, SEO_SETTING_KEYS } from '../seo/settings.js';
 import { inferPrimaryAction, resolveBusinessContact, resolvePrimaryActionUrl } from '../business/cta.js';
 
 const router = Router();
@@ -76,7 +76,6 @@ const PUBLIC_SETTING_KEYS = [
   'pincode',
   'cta_text',
   'cta_url',
-  'cta_url',
   'youtube_url',
   'linkedin_url',
   'tiktok_url',
@@ -86,6 +85,7 @@ const PUBLIC_SETTING_KEYS = [
   'other_social_url',
   'working_hours',
   'primary_action',
+  ...SEO_SETTING_KEYS,
 ] as const;
 
 const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,179}$/i.test(value);

@@ -14,7 +14,7 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
-import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign } from './templateDesigns';
+import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign, getWebsiteTemplatePreviewImage } from './templateDesigns';
 import {
   isValidOptionalImageUrl,
   OG_DESCRIPTION_MAX_LENGTH,
@@ -181,7 +181,10 @@ export function WebsitesAdminDashboard() {
       setBusy(false);
     }
     setSelectedBusiness(null);
-    setForm(emptyForm());
+    setForm({
+      ...emptyForm(),
+      template_slug: templates[0]?.slug ?? 'modern-business',
+    });
     setNotice('');
     setError('');
     setFormMode('create');
@@ -454,7 +457,7 @@ export function WebsitesAdminDashboard() {
               ) : (
                 <>
                   <div className="space-y-3 p-3 md:hidden">
-                    {businesses.map((business) => <BusinessCard key={business.id} business={business} busy={busy} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} onDelete={() => void deleteBusiness(business)} />)}
+                    {businesses.map((business) => <BusinessCard key={business.id} business={business} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} />)}
                   </div>
                   <div className="hidden overflow-x-auto md:block">
                     <table className="min-w-[1000px] w-full text-left text-sm">
@@ -470,7 +473,7 @@ export function WebsitesAdminDashboard() {
                             <td className="px-4 py-4"><StatusBadge value={business.status === 'INACTIVE' ? 'DRAFT' : isExpired(business) ? 'EXPIRED' : 'ACTIVE'} /></td>
                             <td className="px-4 py-4">{business.plan || '—'}<p className="text-xs text-[#758078]">{business.subscription_status || 'No subscription'}</p></td>
                             <td className="px-4 py-4">{formatDate(business.expiry_date)}</td>
-                            <td className="px-4 py-4"><BusinessActions business={business} busy={busy} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} onDelete={() => void deleteBusiness(business)} /></td>
+                            <td className="px-4 py-4"><BusinessActions business={business} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} /></td>
                           </tr>
                         ))}
                       </tbody>
@@ -492,37 +495,28 @@ export function WebsitesAdminDashboard() {
             </div>
             <form onSubmit={formMode === 'create' ? createBusiness : saveBusiness} className="max-h-[calc(100vh-130px)] space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
               {formMode === 'view' ? (
-                <>
-                  <section className="grid gap-4 sm:grid-cols-2">
-                    {[
-                      ['Business', selectedBusiness?.name],
-                      ['Public URL', `${window.location.origin}/websites/${selectedBusiness?.slug ?? ''}`],
-                      ['Category', selectedBusiness?.category],
-                      ['Owner', selectedBusiness?.owner_name || 'Pending'],
-                      ['Owner email', selectedBusiness?.owner_email || '—'],
-                      ['Template', selectedBusiness?.template_name || '—'],
-                      ['Status', selectedBusiness?.status || '—'],
-                      ['Subscription', selectedBusiness?.plan || '—'],
-                      ['Annual price', selectedBusiness?.amount ? `₹${Number(selectedBusiness.amount).toLocaleString('en-IN')}` : '—'],
-                      ['Expiry', formatDate(selectedBusiness?.expiry_date)],
-                      ['Enquiries', String(selectedBusiness?.enquiry_count ?? 0)],
-                      ['Phone', selectedBusiness?.phone || '—'],
-                      ['Email', selectedBusiness?.email || '—'],
-                      ['Meta title', selectedBusiness?.seo_title || 'Automatic default'],
-                      ['Meta description', selectedBusiness?.seo_description || 'Automatic default'],
-                      ['Open Graph title', selectedBusiness?.og_title || 'Automatic default'],
-                      ['Open Graph description', selectedBusiness?.og_description || 'Automatic default'],
-                      ['Open Graph image', selectedBusiness?.og_image || 'Automatic default'],
-                    ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e8e2d7] bg-white p-4"><p className="text-xs font-semibold text-[#718078]">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>)}
-                  </section>
-                  {selectedBusiness ? (
-                    <DangerZoneSection
-                      businessName={selectedBusiness.name}
-                      onDelete={() => void deleteBusiness(selectedBusiness)}
-                      busy={busy}
-                    />
-                  ) : null}
-                </>
+                <section className="grid gap-4 sm:grid-cols-2">
+                  {[
+                    ['Business', selectedBusiness?.name],
+                    ['Public URL', `${window.location.origin}/websites/${selectedBusiness?.slug ?? ''}`],
+                    ['Category', selectedBusiness?.category],
+                    ['Owner', selectedBusiness?.owner_name || 'Pending'],
+                    ['Owner email', selectedBusiness?.owner_email || '—'],
+                    ['Template', selectedBusiness?.template_name || '—'],
+                    ['Status', selectedBusiness?.status || '—'],
+                    ['Subscription', selectedBusiness?.plan || '—'],
+                    ['Annual price', selectedBusiness?.amount ? `₹${Number(selectedBusiness.amount).toLocaleString('en-IN')}` : '—'],
+                    ['Expiry', formatDate(selectedBusiness?.expiry_date)],
+                    ['Enquiries', String(selectedBusiness?.enquiry_count ?? 0)],
+                    ['Phone', selectedBusiness?.phone || '—'],
+                    ['Email', selectedBusiness?.email || '—'],
+                    ['Meta title', selectedBusiness?.seo_title || 'Automatic default'],
+                    ['Meta description', selectedBusiness?.seo_description || 'Automatic default'],
+                    ['Open Graph title', selectedBusiness?.og_title || 'Automatic default'],
+                    ['Open Graph description', selectedBusiness?.og_description || 'Automatic default'],
+                    ['Open Graph image', selectedBusiness?.og_image || 'Automatic default'],
+                  ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e8e2d7] bg-white p-4"><p className="text-xs font-semibold text-[#718078]">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>)}
+                </section>
               ) : formMode === 'create' ? (
                 <>
                   <FormSection title="Business">
@@ -564,14 +558,56 @@ export function WebsitesAdminDashboard() {
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {templates.map((template) => {
                           const design = getWebsiteTemplateDesign(template.slug);
+                          const isSelected = form.template_slug === template.slug;
+                          const previewImage = getWebsiteTemplatePreviewImage(template.slug);
                           return (
-                            <label key={template.id} className={`cursor-pointer rounded-2xl border p-4 transition ${form.template_slug === template.slug ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/10' : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f]'}`}>
-                              <input className="sr-only" type="radio" name="template" value={template.slug} required checked={form.template_slug === template.slug} onChange={() => updateField('template_slug', template.slug)} />
-                              <span className="flex items-center justify-between"><strong>{template.name}</strong><span className="text-xs font-semibold text-[#9d7723]">{form.template_slug === template.slug ? 'Selected' : 'Select'}</span></span>
-                              <span className="mt-2 block text-sm leading-5 text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
-                              <span className="mt-3 block text-xs font-semibold text-[#526158]">
-                                {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'}
-                              </span>
+                            <label
+                              key={template.id}
+                              className={`group relative cursor-pointer overflow-hidden rounded-2xl border transition duration-200 ${
+                                isSelected
+                                  ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
+                                  : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
+                              }`}
+                            >
+                              <input
+                                className="sr-only"
+                                type="radio"
+                                name="template"
+                                value={template.slug}
+                                required
+                                checked={isSelected}
+                                onChange={() => updateField('template_slug', template.slug)}
+                              />
+                              <div className="relative h-28 w-full overflow-hidden bg-[#e5eee7] sm:h-32">
+                                <img
+                                  src={previewImage}
+                                  alt=""
+                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                <span className={`absolute bottom-2.5 left-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                  design === 'food' ? 'bg-[#f4e2d3] text-[#603b2c]' : design === 'salon' ? 'bg-[#f0e5df] text-[#8f5c54]' : design === 'jewellery' ? 'bg-[#c5a77e] text-[#211a13]' : 'bg-white text-[#173629]'
+                                }`}>
+                                  {design === 'food' ? 'Food & Bakery' : design === 'salon' ? 'Salon & Wellness' : design === 'jewellery' ? 'Jewellery Boutique' : 'Modern Business'}
+                                </span>
+                                {isSelected ? (
+                                  <span className="absolute right-2.5 top-2.5 rounded-full bg-[#0E2B22] px-2.5 py-1 text-[11px] font-bold text-white shadow">
+                                    ✓ Selected
+                                  </span>
+                                ) : (
+                                  <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-[#526158] backdrop-blur-sm">
+                                    Select
+                                  </span>
+                                )}
+                              </div>
+                              <div className="p-4">
+                                <strong className="block text-base font-bold text-[#173328]">{template.name}</strong>
+                                <span className="mt-1 block text-xs leading-relaxed text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
+                                <span className="mt-2.5 block text-[11px] font-semibold text-[#526158]">
+                                  {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'}
+                                </span>
+                              </div>
                             </label>
                           );
                         })}
@@ -677,42 +713,28 @@ export function WebsitesAdminDashboard() {
                 </>
               )}
               {error ? <Notice>{error}</Notice> : null}
-              <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  {selectedBusiness && (formMode === 'edit' || formMode === 'view') ? (
-                    <button
-                      type="button"
-                      className={`${secondaryButtonClassName} border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300`}
-                      onClick={() => void deleteBusiness(selectedBusiness)}
-                      disabled={busy}
-                    >
-                      {busy ? 'Deleting…' : 'Delete business'}
-                    </button>
-                  ) : null}
-                </div>
-                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                  <button className={secondaryButtonClassName} type="button" onClick={closeBusinessForm}>
-                    {formMode === 'view' ? 'Close' : 'Cancel'}
+              <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:justify-end">
+                <button className={secondaryButtonClassName} type="button" onClick={closeBusinessForm}>
+                  {formMode === 'view' ? 'Close' : 'Cancel'}
+                </button>
+                {formMode === 'view' && selectedBusiness ? (
+                  <button
+                    className={buttonClassName}
+                    type="button"
+                    onClick={() => setFormMode('edit')}
+                  >
+                    Edit business
                   </button>
-                  {formMode === 'view' && selectedBusiness ? (
-                    <button
-                      className={buttonClassName}
-                      type="button"
-                      onClick={() => setFormMode('edit')}
-                    >
-                      Edit business
-                    </button>
-                  ) : null}
-                  {formMode !== 'view' ? (
-                    <button
-                      className={buttonClassName}
-                      type="submit"
-                      disabled={busy || (formMode === 'create' && templates.length === 0)}
-                    >
-                      {busy ? 'Saving…' : formMode === 'create' ? 'Create website' : 'Save changes'}
-                    </button>
-                  ) : null}
-                </div>
+                ) : null}
+                {formMode !== 'view' ? (
+                  <button
+                    className={buttonClassName}
+                    type="submit"
+                    disabled={busy || (formMode === 'create' && templates.length === 0)}
+                  >
+                    {busy ? 'Saving…' : formMode === 'create' ? 'Create website' : 'Save changes'}
+                  </button>
+                ) : null}
               </div>
             </form>
           </section>
@@ -922,21 +944,17 @@ function StatusBadge({ value }: { value: string }) {
 
 function BusinessCard({
   business,
-  busy,
   onView,
   onEdit,
   onSubscription,
   onToggle,
-  onDelete,
 }: {
   key?: string;
   business: BusinessSummary;
-  busy: boolean;
   onView: () => void;
   onEdit: () => void;
   onSubscription: () => void;
   onToggle: () => void;
-  onDelete: () => void;
 }) {
   return (
     <article className="rounded-2xl border border-[#e8e2d7] bg-white p-4 shadow-sm">
@@ -947,28 +965,24 @@ function BusinessCard({
         <div><p className="text-xs text-[#758078]">Subscription</p><p className="mt-0.5 font-medium">{business.plan || '—'}</p></div>
         <div><p className="text-xs text-[#758078]">Expiry</p><p className="mt-0.5 font-medium">{formatDate(business.expiry_date)}</p></div>
       </div>
-      <BusinessActions business={business} busy={busy} onView={onView} onEdit={onEdit} onSubscription={onSubscription} onToggle={onToggle} onDelete={onDelete} />
+      <BusinessActions business={business} onView={onView} onEdit={onEdit} onSubscription={onSubscription} onToggle={onToggle} />
     </article>
   );
 }
 
 function BusinessActions({
   business,
-  busy,
   onView,
   onEdit,
   onSubscription,
   onToggle,
-  onDelete,
 }: {
   key?: string;
   business: BusinessSummary;
-  busy: boolean;
   onView: () => void;
   onEdit: () => void;
   onSubscription: () => void;
   onToggle: () => void;
-  onDelete: () => void;
 }) {
   return (
     <div className="mt-3 flex flex-wrap gap-2">
@@ -977,7 +991,6 @@ function BusinessActions({
       <button className={secondaryButtonClassName} onClick={onSubscription}>Subscription</button>
       <button className={secondaryButtonClassName} onClick={onToggle}>{business.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button>
       <a className={secondaryButtonClassName} href={`/websites/${business.slug}`} target="_blank" rel="noreferrer">Open website ↗</a>
-      <button className={`${secondaryButtonClassName} border-red-200 text-red-700 hover:bg-red-50`} onClick={onDelete} disabled={busy}>Delete</button>
     </div>
   );
 }
