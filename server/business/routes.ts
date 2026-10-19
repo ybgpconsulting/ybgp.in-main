@@ -3,6 +3,9 @@ import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { requireRoleAuth } from '../auth/middleware.js';
 import { SEO_SETTING_KEYS, validateSeoSettings } from '../seo/settings.js';
+import { isPrimaryAction, resolveBusinessContact, resolvePrimaryActionUrl } from './cta.js';
+import { isValidWorkingHoursValue } from './hours.js';
+import { isValidBusinessImageUrl } from './images.js';
 
 const router = Router();
 
@@ -81,6 +84,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const validBusinessId = (value: string | undefined): boolean => typeof value === 'string' && /^[1-9]\d{0,19}$/.test(value);
+const validSortOrder = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 2_147_483_647;
 
 const ownedRecordExists = async (
   table: 'products' | 'categories' | 'gallery' | 'enquiries',
@@ -160,9 +165,10 @@ router.get('/me', async (request, response) => {
     return;
   }
 
+  const settings = await getSettingsMap(businessId);
   response.json({
-    business,
-    settings: await getSettingsMap(businessId),
+    business: { ...business, ...resolveBusinessContact(business, settings) },
+    settings,
     publicUrl: `/websites/${business.slug}`,
   });
 });
@@ -214,6 +220,26 @@ router.patch('/me', async (request, response) => {
       return;
     }
     values.set(field, body[field].trim());
+  }
+
+  const fieldLimits: Record<string, number> = {
+    name: 180, category: 120, description: 3000, phone: 32, whatsapp: 32, email: 254,
+    address: 500, business_hours: 500, city: 100, pincode: 10, google_maps_url: 2048,
+    instagram_url: 2048, facebook_url: 2048, youtube_url: 2048,
+    linkedin_url: 2048, google_business_url: 2048, other_social_url: 2048,
+    tiktok_url: 2048, x_url: 2048, pinterest_url: 2048,
+  };
+  for (const [field, value] of values) {
+    const limit = fieldLimits[field];
+    if (limit && value.length > limit) {
+      response.status(400).json({ error: `${field.replaceAll('_', ' ')} must be ${limit} characters or fewer` });
+      return;
+    }
+  }
+  const email = values.get('email') ?? '';
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    response.status(400).json({ error: 'Business email must be a valid email address' });
+    return;
   }
 
   if (values.has('name') && !values.get('name')) {
@@ -288,6 +314,7 @@ router.patch('/me', async (request, response) => {
       ...(values.has('address') ? [['contact_address', values.get('address') || null] as [string, string | null]] : []),
       ...(values.has('phone') ? [['call_phone', values.get('phone') || null] as [string, string | null]] : []),
       ...(values.has('whatsapp') ? [['whatsapp', values.get('whatsapp') || null] as [string, string | null]] : []),
+      ...(values.has('email') ? [['contact_email', values.get('email') || null] as [string, string | null]] : []),
       ...settingFields.filter((field) => values.has(field)).map((field) => [field, values.get(field) || null] as [string, string | null]),
     ];
     for (const [key, value] of settings) {
@@ -344,9 +371,26 @@ router.post('/products', async (request, response) => {
     response.status(400).json({ error: 'Product name is required' });
     return;
   }
+  if (body.name.trim().length > 180 || (typeof body.description === 'string' && body.description.length > 3000)) {
+    response.status(400).json({ error: 'Product name must be 180 characters or fewer and description 3,000 or fewer' });
+    return;
+  }
 
   const slug = (typeof body.slug === 'string' ? body.slug : body.name).trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'product';
   const price = typeof body.price === 'number' || typeof body.price === 'string' ? Number(body.price) : null;
+  if (price !== null && (!Number.isFinite(price) || price < 0)) {
+    response.status(400).json({ error: 'Price must be a valid non-negative amount' });
+    return;
+  }
+  const image = typeof body.image === 'string' ? body.image.trim() : '';
+  if (image.length > 2048 || (image && !isValidBusinessImageUrl(image))) {
+    response.status(400).json({ error: 'Product image must be a valid HTTP(S) URL or safe local image path' });
+    return;
+  }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
+    return;
+  }
   const categoryId: string | number | null = typeof body.category_id === 'string' || typeof body.category_id === 'number'
     ? body.category_id
     : null;
@@ -371,8 +415,8 @@ router.post('/products', async (request, response) => {
     body.name.trim(),
     slug,
     typeof body.description === 'string' ? body.description.trim() || null : null,
-    Number.isFinite(price) ? price : null,
-    typeof body.image === 'string' ? body.image.trim() || null : null,
+    price,
+    image || null,
     body.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
     typeof body.sort_order === 'number' ? body.sort_order : 0,
   ];
@@ -408,6 +452,14 @@ router.patch('/products/:id', async (request, response) => {
     response.status(400).json({ error: 'Product payload is required' });
     return;
   }
+  if (typeof body.name === 'string' && body.name.trim().length > 180) {
+    response.status(400).json({ error: 'Product name must be 180 characters or fewer' });
+    return;
+  }
+  if (typeof body.description === 'string' && body.description.length > 3000) {
+    response.status(400).json({ error: 'Product description must be 3,000 characters or fewer' });
+    return;
+  }
 
   const updates: Array<string> = [];
   const values: Array<string | number | null> = [];
@@ -420,6 +472,10 @@ router.patch('/products/:id', async (request, response) => {
   }
   if (typeof body.price !== 'undefined') {
     const price = typeof body.price === 'number' || typeof body.price === 'string' ? Number(body.price) : null;
+    if (price !== null && (!Number.isFinite(price) || price < 0)) {
+      response.status(400).json({ error: 'Price must be a valid non-negative amount' });
+      return;
+    }
     updates.push('price = ?'); values.push(Number.isFinite(price) ? price : null);
   }
   if (typeof body.status === 'string') {
@@ -451,11 +507,20 @@ router.patch('/products/:id', async (request, response) => {
     }
     updates.push('slug = ?'); values.push(slug);
   }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
+    return;
+  }
   if (typeof body.sort_order === 'number') {
     updates.push('sort_order = ?'); values.push(body.sort_order);
   }
   if (typeof body.image === 'string') {
-    updates.push('image = ?'); values.push(body.image.trim() || null);
+    const image = body.image.trim();
+    if (image.length > 2048 || (image && !isValidBusinessImageUrl(image))) {
+      response.status(400).json({ error: 'Product image must be a valid HTTP(S) URL or safe local image path' });
+      return;
+    }
+    updates.push('image = ?'); values.push(image || null);
   }
 
   if (updates.length === 0) {
@@ -517,6 +582,14 @@ router.post('/categories', async (request, response) => {
     response.status(400).json({ error: 'Category name is required' });
     return;
   }
+  if (body.name.trim().length > 120) {
+    response.status(400).json({ error: 'Category name must be 120 characters or fewer' });
+    return;
+  }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
+    return;
+  }
 
   const values: Array<string | number | null> = [
     businessId,
@@ -553,6 +626,14 @@ router.patch('/categories/:id', async (request, response) => {
   const body = request.body;
   if (!isRecord(body)) {
     response.status(400).json({ error: 'Category payload is required' });
+    return;
+  }
+  if (typeof body.name === 'string' && body.name.trim().length > 120) {
+    response.status(400).json({ error: 'Category name must be 120 characters or fewer' });
+    return;
+  }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
     return;
   }
 
@@ -636,6 +717,14 @@ router.post('/gallery', async (request, response) => {
     response.status(400).json({ error: 'Image URL and title are required' });
     return;
   }
+  if (body.title.trim().length > 180 || body.image.trim().length > 2048 || !isValidBusinessImageUrl(body.image.trim())) {
+    response.status(400).json({ error: 'Use a valid HTTP(S) image URL or safe local path and keep image text to 180 characters or fewer' });
+    return;
+  }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
+    return;
+  }
 
   const values: Array<string | number | null> = [
     businessId,
@@ -673,6 +762,18 @@ router.patch('/gallery/:id', async (request, response) => {
   const body = request.body;
   if (!isRecord(body)) {
     response.status(400).json({ error: 'Gallery payload is required' });
+    return;
+  }
+  if (typeof body.title === 'string' && body.title.trim().length > 180) {
+    response.status(400).json({ error: 'Image title must be 180 characters or fewer' });
+    return;
+  }
+  if (typeof body.image === 'string' && (!body.image.trim() || body.image.trim().length > 2048 || !isValidBusinessImageUrl(body.image.trim()))) {
+    response.status(400).json({ error: 'Use a valid HTTP(S) image URL or safe local path' });
+    return;
+  }
+  if (body.sort_order !== undefined && !validSortOrder(body.sort_order)) {
+    response.status(400).json({ error: 'Display order must be a non-negative whole number' });
     return;
   }
 
@@ -795,6 +896,44 @@ router.patch('/settings', async (request, response) => {
   const seoSettings = validateSeoSettings(body);
   if (seoSettings.error) {
     response.status(400).json({ error: seoSettings.error });
+    return;
+  }
+  if (body.primary_action !== undefined && !isPrimaryAction(body.primary_action)) {
+    response.status(400).json({ error: 'Primary action must be WhatsApp, call, email, or custom' });
+    return;
+  }
+  if (body.cta_text !== undefined && (typeof body.cta_text !== 'string' || body.cta_text.length > 60)) {
+    response.status(400).json({ error: 'Button text must be 60 characters or fewer' });
+    return;
+  }
+  if (typeof body.cta_url === 'string' && body.cta_url.length > 2048) {
+    response.status(400).json({ error: 'Custom link must be 2,048 characters or fewer' });
+    return;
+  }
+  if (body.working_hours !== undefined && (typeof body.working_hours !== 'string' || !isValidWorkingHoursValue(body.working_hours))) {
+    response.status(400).json({ error: 'Working hours must be a valid weekly schedule or legacy text up to 500 characters' });
+    return;
+  }
+  if (body.primary_action !== undefined && !isPrimaryAction(body.primary_action)) {
+    response.status(400).json({ error: 'Primary action must be WhatsApp, call, email, or custom' });
+    return;
+  }
+  if (body.cta_text !== undefined && (typeof body.cta_text !== 'string' || body.cta_text.length > 60)) {
+    response.status(400).json({ error: 'Button text must be 60 characters or fewer' });
+    return;
+  }
+  if (body.working_hours !== undefined && (typeof body.working_hours !== 'string' || !isValidWorkingHoursValue(body.working_hours))) {
+    response.status(400).json({ error: 'Working hours must be a valid weekly schedule or legacy text up to 500 characters' });
+    return;
+  }
+  if (body.cta_url !== undefined && body.cta_url !== '' &&
+    (typeof body.cta_url !== 'string' || !resolvePrimaryActionUrl('custom', {}, body.cta_url))) {
+    response.status(400).json({ error: 'Custom link must be a valid HTTP(S), phone, email, or safe site-relative URL' });
+    return;
+  }
+  if (body.primary_action === 'custom' &&
+    (typeof body.cta_url !== 'string' || !resolvePrimaryActionUrl('custom', {}, body.cta_url))) {
+    response.status(400).json({ error: 'Custom action requires a valid HTTP(S), phone, email, or safe site-relative URL' });
     return;
   }
   const seoKeys = new Set<string>(SEO_SETTING_KEYS);

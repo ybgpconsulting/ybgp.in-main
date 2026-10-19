@@ -1,9 +1,27 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 
 export const inputClassName = 'mt-1.5 w-full rounded-xl border border-[#ded9cd] bg-white px-3.5 py-3 text-sm text-[#172c25] outline-none transition focus:border-[#0E2B22] focus:ring-2 focus:ring-[#0E2B22]/10';
-export const buttonClassName = 'inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0E2B22] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#194638] disabled:cursor-not-allowed disabled:opacity-60';
-export const secondaryButtonClassName = 'inline-flex min-h-11 items-center justify-center rounded-xl border border-[#ded9cd] bg-white px-4 py-2.5 text-sm font-semibold text-[#173328] transition hover:bg-[#f7f5f0] disabled:cursor-not-allowed disabled:opacity-60';
+export const buttonClassName = 'inline-flex min-h-11 items-center justify-center rounded-xl bg-[#0E2B22] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#194638] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E2B22] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+export const secondaryButtonClassName = 'inline-flex min-h-11 items-center justify-center rounded-xl border border-[#ded9cd] bg-white px-4 py-2.5 text-sm font-semibold text-[#173328] transition hover:bg-[#f7f5f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E2B22] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60';
+
+export function useUnsavedChanges(isDirty: boolean, onDirtyChange: (dirty: boolean) => void) {
+  useEffect(() => {
+    onDirtyChange(isDirty);
+    return () => onDirtyChange(false);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [isDirty]);
+}
 
 export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
@@ -183,10 +201,11 @@ export function AccessPanel({
   );
 }
 
-export function SignOutButton({ role }: { role: 'SUPER_ADMIN' | 'BUSINESS_OWNER' }) {
+export function SignOutButton({ role, beforeSignOut }: { role: 'SUPER_ADMIN' | 'BUSINESS_OWNER'; beforeSignOut?: () => boolean }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const signOut = async () => {
+    if (beforeSignOut && !beforeSignOut()) return;
     setBusy(true);
     setError('');
     try {

@@ -1,4 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
+import { inferPrimaryAction, resolvePrimaryActionUrl } from '../../../server/business/cta';
+import {
+  isValidOptionalImageUrl,
+  OG_DESCRIPTION_MAX_LENGTH,
+  OG_TITLE_MAX_LENGTH,
+  SEO_DESCRIPTION_MAX_LENGTH,
+  SEO_TITLE_MAX_LENGTH,
+} from '../../../server/seo/shared';
 import {
   AccessPanel,
   apiRequest,
@@ -31,6 +40,9 @@ interface BusinessSummary {
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   expiry_date: string | null;
   status: 'ACTIVE' | 'INACTIVE';
+  phone: string | null;
+  whatsapp: string | null;
+  email: string | null;
 }
 
 interface OwnerSnapshot {
@@ -59,10 +71,11 @@ const effectiveSubscriptionStatus = (business: BusinessSummary) =>
 
 export function WebsitesOwnerDashboard() {
   const [snapshot, setSnapshot] = useState<OwnerSnapshot | null>(null);
-  const [counts, setCounts] = useState({ products: 0, categories: 0, gallery: 0, enquiries: 0 });
+  const [counts, setCounts] = useState({ products: 0, categories: 0, gallery: 0, enquiries: 0, newEnquiries: 0 });
   const [loading, setLoading] = useState(true);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [error, setError] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [section, setSection] = useState<Section>(() => {
     const requested = new URLSearchParams(window.location.search).get('section');
     return sections.some((item) => item.id === requested) ? requested as Section : 'overview';
@@ -79,13 +92,14 @@ export function WebsitesOwnerDashboard() {
         apiRequest<{ products: unknown[] }>('/api/business/products'),
         apiRequest<{ categories: unknown[] }>('/api/business/categories'),
         apiRequest<{ gallery: unknown[] }>('/api/business/gallery'),
-        apiRequest<{ enquiries: unknown[] }>('/api/business/enquiries'),
+        apiRequest<{ enquiries: Array<{ status: string }> }>('/api/business/enquiries'),
       ]);
       setCounts({
         products: products.products.length,
         categories: categories.categories.length,
         gallery: gallery.gallery.length,
         enquiries: enquiries.enquiries.length,
+        newEnquiries: enquiries.enquiries.filter((item) => item.status === 'NEW').length,
       });
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : 'Unable to load your website';
@@ -102,16 +116,30 @@ export function WebsitesOwnerDashboard() {
     ? window.location.pathname.replace(/\/+$/, '') || '/websites/dashboard'
     : '/websites/dashboard';
 
+  const canDiscard = () => !hasUnsavedChanges || window.confirm('Discard your unsaved changes?');
+  const confirmDiscard = () => {
+    if (!canDiscard()) return false;
+    setHasUnsavedChanges(false);
+    return true;
+  };
+
   useEffect(() => {
     const handlePopState = () => {
+      if (hasUnsavedChanges && !window.confirm('Discard your unsaved changes?')) {
+        window.history.pushState({}, '', section === 'overview' ? basePath : `${basePath}?section=${section}`);
+        return;
+      }
+      setHasUnsavedChanges(false);
       const requested = new URLSearchParams(window.location.search).get('section');
       setSection(sections.some((item) => item.id === requested) ? requested as Section : 'overview');
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  }, [basePath, hasUnsavedChanges, section]);
 
   const goTo = (next: Section) => {
+    if (next === section) return;
+    if (!confirmDiscard()) return;
     setSection(next);
     const url = next === 'overview' ? basePath : `${basePath}?section=${next}`;
     window.history.pushState({}, '', url);
@@ -139,14 +167,14 @@ export function WebsitesOwnerDashboard() {
   }
 
   const { business, settings, publicUrl } = snapshot;
-  const content = section === 'profile' ? <BusinessProfileManager business={business} settings={settings} onSaved={load} />
-    : section === 'products' ? <ProductsManager />
-      : section === 'categories' ? <CategoriesManager />
-        : section === 'gallery' ? <GalleryManager />
+  const content = section === 'profile' ? <BusinessProfileManager business={business} settings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
+    : section === 'products' ? <ProductsManager onDirtyChange={setHasUnsavedChanges} onNavigate={goTo} />
+      : section === 'categories' ? <CategoriesManager onDirtyChange={setHasUnsavedChanges} />
+        : section === 'gallery' ? <GalleryManager onDirtyChange={setHasUnsavedChanges} />
           : section === 'enquiries' ? <EnquiriesManager />
-            : section === 'settings' ? <SettingsManager initialSettings={settings} onSaved={load} />
-              : section === 'seo' ? <SeoManager initialSettings={settings} onSaved={load} />
-                : <Overview business={business} publicUrl={publicUrl} counts={counts} settings={settings} />;
+            : section === 'settings' ? <SettingsManager business={business} initialSettings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
+              : section === 'seo' ? <SeoManager business={business} publicUrl={publicUrl} initialSettings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
+                : <Overview business={business} publicUrl={publicUrl} counts={counts} settings={settings} onNavigate={goTo} />;
 
   return (
     <main className="min-h-screen bg-[#f7f6f2] px-3 py-5 text-[#0E2B22] sm:px-6 sm:py-8">
@@ -155,7 +183,7 @@ export function WebsitesOwnerDashboard() {
           eyebrow="YBGP Websites · Owner workspace"
           title={business.name}
           description={`Manage your ${business.category.toLowerCase()} website and keep your business information up to date.`}
-          action={<div className="flex flex-wrap gap-2"><SignOutButton role="BUSINESS_OWNER" /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
+          action={<div className="flex flex-wrap gap-2 sm:justify-end"><SignOutButton role="BUSINESS_OWNER" beforeSignOut={canDiscard} /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
         />
 
         <div className="grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
@@ -163,7 +191,7 @@ export function WebsitesOwnerDashboard() {
             <div className="px-3 pb-2 pt-3"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9d7723]">Manage site</p></div>
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-4 lg:grid-cols-1">
               {sections.map((item) => (
-                <button key={item.id} onClick={() => goTo(item.id)} className={`rounded-xl px-3 py-3 text-left transition ${section === item.id ? 'bg-[#eaf0eb] text-[#0E2B22]' : 'text-[#58665e] hover:bg-[#f7f5f0]'}`}>
+                <button key={item.id} aria-current={section === item.id ? 'page' : undefined} onClick={() => goTo(item.id)} className={`rounded-xl px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E2B22] ${section === item.id ? 'bg-[#eaf0eb] text-[#0E2B22]' : 'text-[#58665e] hover:bg-[#f7f5f0]'}`}>
                   <span className="block text-sm font-semibold">{item.label}</span>
                   <span className="mt-0.5 hidden text-xs text-[#7b867f] lg:block">{item.detail}</span>
                 </button>
@@ -188,16 +216,41 @@ function Overview({
   publicUrl,
   counts,
   settings,
+  onNavigate,
 }: {
   business: BusinessSummary;
   publicUrl: string;
-  counts: { products: number; categories: number; gallery: number; enquiries: number };
+  counts: { products: number; categories: number; gallery: number; enquiries: number; newEnquiries: number };
   settings: Record<string, string>;
+  onNavigate: (section: Section) => void;
 }) {
-  const links: Section[] = ['profile', 'products', 'categories', 'gallery', 'enquiries', 'settings', 'seo'];
-  const basePath = typeof window !== 'undefined'
-    ? window.location.pathname.replace(/\/+$/, '') || '/websites/dashboard'
-    : '/websites/dashboard';
+  const [copied, setCopied] = useState(false);
+  const publicHref = `${window.location.origin}${publicUrl}`;
+  const primaryAction = inferPrimaryAction(settings, business);
+  const hasContactAction = Boolean(resolvePrimaryActionUrl(primaryAction, business, settings.cta_url));
+  const hasCustomSeo = Boolean(settings.seo_title || settings.seo_description || settings.og_title || settings.og_description || settings.og_image);
+  const seoIsValid = (settings.seo_title ?? '').length <= SEO_TITLE_MAX_LENGTH &&
+    (settings.seo_description ?? '').length <= SEO_DESCRIPTION_MAX_LENGTH &&
+    (settings.og_title ?? '').length <= OG_TITLE_MAX_LENGTH &&
+    (settings.og_description ?? '').length <= OG_DESCRIPTION_MAX_LENGTH &&
+    isValidOptionalImageUrl(settings.og_image ?? '');
+  const checklist: Array<{ id: Section; label: string; complete: boolean }> = [
+    { id: 'profile', label: 'Complete business details', complete: Boolean(business.name && business.category && business.description && (business.phone || business.whatsapp || business.email)) },
+    { id: 'products', label: 'Add products or services', complete: counts.products > 0 },
+    { id: 'categories', label: 'Organize categories where applicable', complete: counts.products === 0 || counts.categories > 0 },
+    { id: 'gallery', label: 'Add gallery images', complete: counts.gallery > 0 },
+    { id: 'settings', label: 'Configure a contact action and hours', complete: hasContactAction && Boolean(settings.working_hours?.trim()) },
+    { id: 'seo', label: 'Review search and social metadata', complete: hasCustomSeo && seoIsValid },
+  ];
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(publicHref);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -211,22 +264,24 @@ function Overview({
         <MetricCard label="Products / Services" value={counts.products} />
         <MetricCard label="Categories" value={counts.categories} />
         <MetricCard label="Gallery images" value={counts.gallery} />
-        <MetricCard label="Enquiries" value={counts.enquiries} />
+        <MetricCard label="Enquiries" value={counts.enquiries} hint={`${counts.newEnquiries} new`} />
       </div>
       <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9d7723]">Your public website</p><h2 className="mt-1 text-xl font-bold">{business.name}</h2><p className="mt-1 break-all text-sm text-[#657168]">{window.location.origin}{publicUrl}</p></div>
-          <a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>Open website ↗</a>
+          <div className="min-w-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#9d7723]">Your public website</p><h2 className="mt-1 text-xl font-bold">{business.name}</h2><p className="mt-1 break-all text-sm text-[#657168]">{publicHref}</p></div>
+          <button type="button" onClick={() => void copyLink()} className={secondaryButtonClassName} aria-label={copied ? 'Website link copied' : 'Copy website link'}>{copied ? <Check aria-hidden="true" size={17} /> : <Copy aria-hidden="true" size={17} />}<span className="ml-2">{copied ? 'Copied' : 'Copy link'}</span></button>
         </div>
         <div className="mt-5 rounded-xl bg-[#f7f5f0] p-4 text-sm text-[#59675e]"><span className="font-semibold text-[#253d31]">Visibility: </span>{settings.website_visibility || (business.status === 'ACTIVE' ? 'public' : 'draft')}</div>
       </section>
       <section>
-        <h2 className="mb-3 text-lg font-bold">Quick actions</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {links.map((id) => {
-            const item = sections.find((entry) => entry.id === id)!;
-            return <a key={id} href={`${basePath}?section=${id}`} className="rounded-2xl border border-[#e8e2d7] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><span className="block font-semibold">{item.label}</span><span className="mt-1 block text-xs leading-5 text-[#758078]">{item.detail}</span></a>;
-          })}
+        <h2 className="mb-3 text-lg font-bold">Website setup</h2>
+        <div className="divide-y divide-[#eee9df] rounded-2xl border border-[#e8e2d7] bg-white px-4">
+          {checklist.map((item) => (
+            <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <span className="flex min-w-0 items-center gap-2 text-sm font-medium"><span aria-hidden="true" className={item.complete ? 'text-emerald-700' : 'text-[#9a6a20]'}>{item.complete ? '✓' : '○'}</span>{item.label}</span>
+              <button type="button" onClick={() => onNavigate(item.id)} className={`${secondaryButtonClassName} min-h-10 px-3 py-2`}>{item.complete ? 'Review' : 'Set up'}</button>
+            </div>
+          ))}
         </div>
       </section>
     </div>

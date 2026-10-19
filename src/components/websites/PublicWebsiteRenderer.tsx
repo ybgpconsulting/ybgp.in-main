@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link2, MapPin, Navigation } from 'lucide-react';
 import { SocialBrandIcon, type SocialPlatform } from './SocialBrandIcon';
 import { getWebsiteTemplateDesign } from './templateDesigns';
+import { inferPrimaryAction, resolvePrimaryActionUrl, type PrimaryAction } from '../../../server/business/cta';
+import { formatWorkingHours } from '../../../server/business/hours';
+import { resolveBusinessImageUrl } from '../../../server/business/images';
 
 export interface BusinessWebsiteResponse {
   business: {
@@ -23,6 +26,7 @@ export interface BusinessWebsiteResponse {
     slug: string;
   };
   settings: Record<string, string>;
+  primaryAction?: { type: PrimaryAction; text: string; url: string | null };
   categories: Array<{ id: string; name: string; status: string }>;
   products: Array<{ id: string; category_id: string | null; name: string; slug: string; description: string | null; price: string | null; image: string | null; status: string }>;
   gallery: Array<{ id: string; title: string; image: string; status: string }>;
@@ -108,9 +112,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const foodLayout = design === 'food';
   const salonLayout = design === 'salon';
   const jewelleryLayout = design === 'jewellery';
-  const whatsapp = settings.whatsapp || business.whatsapp;
-  const phone = settings.call_phone || business.phone;
-  const email = settings.contact_email || business.email;
+  const whatsapp = business.whatsapp;
+  const phone = business.phone;
+  const email = business.email;
   const address = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
   const explicitMapsUrl = safeExternalUrl(business.google_maps_url);
   const locationQuery = [business.address || settings.contact_address, settings.city, settings.pincode].filter(Boolean).join(', ');
@@ -120,8 +124,10 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const mapEmbedUrl = locationQuery
     ? `https://www.google.com/maps?q=${encodeURIComponent(locationQuery)}&output=embed`
     : '';
-  const ctaText = settings.cta_text || 'Contact us';
-  const ctaUrl = safeUrl(settings.cta_url) || (whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : phone ? `tel:${phone}` : email ? `mailto:${email}` : '#contact');
+  const primaryActionType = data.primaryAction?.type ?? inferPrimaryAction(settings, business);
+  const ctaUrl = data.primaryAction?.url ?? resolvePrimaryActionUrl(primaryActionType, business, settings.cta_url) ?? '#contact';
+  const ctaText = data.primaryAction?.text || settings.cta_text || 'Contact us';
+  const displayWorkingHours = formatWorkingHours(settings.working_hours);
   const socialLinks = [
     { name: 'Instagram', url: business.instagram_url, platform: 'instagram' as SocialPlatform },
     { name: 'Facebook', url: business.facebook_url, platform: 'facebook' as SocialPlatform },
@@ -173,7 +179,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <p className="mt-5 max-w-xl text-base leading-7 text-white/80 sm:text-lg">{business.description || seo.description}</p>
             {heroActions}
           </div>
-          <p className="absolute bottom-5 right-6 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{settings.working_hours || settings.city || 'Made fresh for you'}</p>
+          <p className="absolute bottom-5 right-6 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{displayWorkingHours || settings.city || 'Made fresh for you'}</p>
         </section>
       ) : salonLayout ? (
         <section id="top" className="bg-[#f0e5df] px-4 pb-12 pt-12 text-center sm:px-6 sm:pb-16 sm:pt-16">
@@ -185,7 +191,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <div className="relative mx-auto mt-10 h-[260px] max-w-3xl overflow-hidden rounded-t-[12rem] bg-gradient-to-br from-[#cba99e] via-[#f1e5df] to-[#9b7169] sm:h-[360px] sm:rounded-t-[18rem]">
               {heroImage ? <img src={heroImage} alt={`${business.name} studio`} className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center font-serif text-5xl text-white/75">{business.name.slice(0, 1).toUpperCase()}</div>}
             </div>
-            {settings.working_hours ? <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#8f5c54]">{settings.working_hours}</p> : null}
+            {displayWorkingHours ? <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#8f5c54]">{displayWorkingHours}</p> : null}
           </div>
         </section>
       ) : jewelleryLayout ? (
@@ -212,7 +218,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#6f9680] to-[#294a38] p-8">
                 {heroImage ? <img src={heroImage} alt={`${business.name} gallery`} className="absolute inset-0 h-full w-full object-cover opacity-50" /> : null}
                 <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full border-[30px] border-white/10" />
-                <div className="relative text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.25em] text-white/65">{settings.city || 'Local business'}</p><p className="mt-4 text-3xl font-bold">{business.category}</p><p className="mt-3 text-sm text-white/75">{settings.working_hours || 'Here to help you'}</p></div>
+                <div className="relative text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.25em] text-white/65">{settings.city || 'Local business'}</p><p className="mt-4 text-3xl font-bold">{business.category}</p><p className="mt-3 text-sm text-white/75">{displayWorkingHours || 'Here to help you'}</p></div>
               </div>
             </div>
           </div>
@@ -264,7 +270,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
       <footer id="contact" className={`${jewelleryLayout ? 'bg-[#171411]' : foodLayout ? 'bg-[#3f2d24]' : salonLayout ? 'bg-[#3c2e2b]' : 'bg-[#10271d]'} px-4 py-10 text-white sm:px-6`}>
         <div className="mx-auto grid max-w-6xl gap-7 sm:grid-cols-2">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><Navigation aria-hidden="true" size={17} />Get Directions</a> : null}{settings.working_hours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{settings.working_hours}</p> : null}</div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#d3bb78]">Get in touch</p><h2 className="mt-2 text-2xl font-bold">{business.name}</h2><p className="mt-2 text-sm text-white/65">{business.category}</p>{address ? <p className="mt-4 max-w-lg whitespace-pre-wrap text-sm leading-6 text-white/80">{address}</p> : null}{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"><Navigation aria-hidden="true" size={17} />Get Directions</a> : null}{displayWorkingHours ? <p className="mt-3 whitespace-pre-wrap text-sm text-white/70">{displayWorkingHours}</p> : null}</div>
           <div className="flex flex-col gap-3 sm:items-end">
             {phone ? <a href={`tel:${phone}`} className="text-sm text-white/85">Call: {phone}</a> : null}
             {email ? <a href={`mailto:${email}`} className="text-sm text-white/85">{email}</a> : null}
@@ -279,16 +285,6 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   );
 }
 
-function safeUrl(value: string | null | undefined): string {
-  if (!value) return '';
-  try {
-    const url = new URL(value, window.location.origin);
-    return ['http:', 'https:', 'tel:', 'mailto:'].includes(url.protocol) ? value : '';
-  } catch {
-    return '';
-  }
-}
-
 function safeExternalUrl(value: string | null | undefined): string {
   if (!value) return '';
   try {
@@ -300,16 +296,7 @@ function safeExternalUrl(value: string | null | undefined): string {
 }
 
 function safeImageUrl(value: string | null | undefined): string {
-  if (!value) return '';
-  if (value.startsWith('/') && !value.startsWith('//')) return value;
-  try {
-    const url = new URL(value);
-    return ['http:', 'https:'].includes(url.protocol) && url.hostname && !url.username && !url.password
-      ? url.toString()
-      : '';
-  } catch {
-    return '';
-  }
+  return resolveBusinessImageUrl(value);
 }
 
 function ProductCard({

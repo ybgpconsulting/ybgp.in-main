@@ -149,6 +149,10 @@ const seed = async (): Promise<void> => {
   if (process.env.NODE_ENV === 'production') {
     throw new Error('The development database seed cannot run when NODE_ENV=production');
   }
+  if (process.env.NODE_ENV === 'test') {
+    const { verifyTestDatabase } = await import('./testDatabaseGuard.js');
+    await verifyTestDatabase(pool);
+  }
 
   const passwordHash = await hashPassword(demoPassword);
   const connection = await pool.getConnection();
@@ -333,6 +337,13 @@ const seed = async (): Promise<void> => {
 };
 
 void seed().catch((error: unknown) => {
-  console.error('Development database seed failed:', error);
+  if (process.env.NODE_ENV === 'test') {
+    const code = typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string'
+      ? ` (MySQL error ${error.code})`
+      : '';
+    console.error(`Test database seed failed${code}; verify the disposable schema and user privileges.`);
+  } else {
+    console.error('Development database seed failed:', error);
+  }
   process.exitCode = 1;
 });

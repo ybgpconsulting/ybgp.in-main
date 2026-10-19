@@ -1,4 +1,4 @@
-import '../db/testDatabaseGuard.js';
+import { verifyTestDatabase } from '../db/testDatabaseGuard.js';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { after, before, test } from 'node:test';
@@ -45,6 +45,7 @@ const login = async (email: string, password: string): Promise<{ cookie: string 
 };
 
 before(async () => {
+  await verifyTestDatabase(pool);
   server = createServer(app);
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -354,10 +355,11 @@ test('owners can atomically update only their own profile, contact, location and
     cookie: ownerA,
     body: {
       business_id: forgedBusinessId,
+      slug: 'forged-owner-slug',
       name: 'Contact A Updated',
       category: 'Services',
       description: 'Updated owner profile',
-      email: tenants[0].email,
+      email: 'contact-a-updated@example.test',
       address: '42 Sample Road',
       city: 'Pune',
       pincode: '411001',
@@ -376,6 +378,10 @@ test('owners can atomically update only their own profile, contact, location and
     },
   });
   assert.equal(updateResponse.status, 200);
+  const ownerSnapshotResponse = await request('/api/business/me', { cookie: ownerA });
+  const ownerSnapshot = await ownerSnapshotResponse.json() as { publicUrl: string; business: { slug: string } };
+  assert.equal(ownerSnapshot.business.slug, tenants[0].slug);
+  assert.equal(ownerSnapshot.publicUrl, `/websites/${tenants[0].slug}`);
 
   const [publicAResponse, publicBResponse] = await Promise.all([
     request(`/api/public/websites/${tenants[0].slug}`),
@@ -384,7 +390,7 @@ test('owners can atomically update only their own profile, contact, location and
   assert.equal(publicAResponse.status, 200);
   assert.equal(publicBResponse.status, 200);
   const publicA = await publicAResponse.json() as {
-    business: { address: string; google_maps_url: string; phone: string; whatsapp: string; instagram_url: string; facebook_url: string | null };
+    business: { slug: string; address: string; google_maps_url: string; phone: string; whatsapp: string; email: string; instagram_url: string; facebook_url: string | null };
     settings: Record<string, string>;
   };
   const publicB = await publicBResponse.json() as {
@@ -398,6 +404,9 @@ test('owners can atomically update only their own profile, contact, location and
   assert.equal(publicA.business.whatsapp, '+919876543210');
   assert.equal(publicA.business.instagram_url, 'https://instagram.com/contact-a');
   assert.equal(publicA.business.facebook_url, null);
+  assert.equal(publicA.business.slug, tenants[0].slug);
+  assert.equal(publicA.business.email, 'contact-a-updated@example.test');
+  assert.equal(publicA.settings.contact_email, 'contact-a-updated@example.test');
   assert.equal(publicA.settings.city, 'Pune');
   assert.equal(publicA.settings.pincode, '411001');
   assert.equal(publicA.settings.contact_address, '42 Sample Road');
@@ -413,6 +422,35 @@ test('owners can atomically update only their own profile, contact, location and
   assert.equal(publicB.business.google_maps_url, null);
   assert.equal(publicB.business.instagram_url, null);
   assert.equal(publicB.settings.city, undefined);
+
+  const customActionResponse = await request('/api/business/settings', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: { primary_action: 'custom', cta_text: 'Book now', cta_url: 'https://booking.example.test/contact-a' },
+  });
+  assert.equal(customActionResponse.status, 200);
+  const customActionPublic = await request(`/api/public/websites/${tenants[0].slug}`);
+  const customActionBody = await customActionPublic.json() as { primaryAction: { type: string; text: string; url: string } };
+  assert.deepEqual(customActionBody.primaryAction, {
+    type: 'custom',
+    text: 'Book now',
+    url: 'https://booking.example.test/contact-a',
+  });
+  const invalidActionResponse = await request('/api/business/settings', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: { primary_action: 'custom', cta_url: 'javascript:alert(1)' },
+  });
+  assert.equal(invalidActionResponse.status, 400);
+  const callActionResponse = await request('/api/business/settings', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: { primary_action: 'call' },
+  });
+  assert.equal(callActionResponse.status, 200);
+  const callActionPublic = await request(`/api/public/websites/${tenants[0].slug}`);
+  const callActionBody = await callActionPublic.json() as { primaryAction: { type: string; url: string } };
+  assert.deepEqual(callActionBody.primaryAction, { type: 'call', text: 'Call', url: 'tel:+919876543210' });
 
   const adminUpdateResponse = await request(`/api/admin/businesses/${businessIds[1]}`, {
     method: 'PATCH',
@@ -508,6 +546,37 @@ test('owners can atomically update only their own profile, contact, location and
     },
   });
   assert.equal(invalidUrlResponse.status, 400);
+
+  const invalidEmailResponse = await request('/api/business/me', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: { email: 'not-an-email' },
+  });
+  assert.equal(invalidEmailResponse.status, 400);
+  const invalidProductImageResponse = await request('/api/business/products', {
+    method: 'POST',
+    cookie: ownerA,
+    body: { name: 'Unsafe image item', image: 'javascript:alert(1)' },
+  });
+  assert.equal(invalidProductImageResponse.status, 400);
+  const oversizedGalleryImageResponse = await request('/api/business/gallery', {
+    method: 'POST',
+    cookie: ownerA,
+    body: { image: `https://example.test/${'a'.repeat(2050)}.jpg`, title: 'Oversized image URL' },
+  });
+  assert.equal(oversizedGalleryImageResponse.status, 400);
+  const invalidGalleryImageResponse = await request('/api/business/gallery', {
+    method: 'POST',
+    cookie: ownerA,
+    body: { image: '//images.example.test/photo.jpg', title: 'Unsafe image' },
+  });
+  assert.equal(invalidGalleryImageResponse.status, 400);
+  const invalidHoursResponse = await request('/api/business/settings', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: { working_hours: '{"monday":{"closed":false}}' },
+  });
+  assert.equal(invalidHoursResponse.status, 400);
 
   const triggerName = `test_fail_business_settings_${timestamp}`;
   await pool.query(

@@ -3,6 +3,7 @@ import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { env } from '../config/env.js';
 import { resolveTenantSeo } from '../seo/settings.js';
+import { inferPrimaryAction, resolveBusinessContact, resolvePrimaryActionUrl } from '../business/cta.js';
 
 const router = Router();
 
@@ -75,6 +76,7 @@ const PUBLIC_SETTING_KEYS = [
   'pincode',
   'cta_text',
   'cta_url',
+  'cta_url',
   'youtube_url',
   'linkedin_url',
   'tiktok_url',
@@ -83,6 +85,7 @@ const PUBLIC_SETTING_KEYS = [
   'google_business_url',
   'other_social_url',
   'working_hours',
+  'primary_action',
 ] as const;
 
 const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,179}$/i.test(value);
@@ -198,15 +201,23 @@ router.get('/websites/:slug', async (request, response) => {
       og_image: settings.og_image,
     },
   }, env.siteUrl);
+  const contact = resolveBusinessContact(business, settings);
+  const primaryAction = inferPrimaryAction(settings, contact);
+  const primaryActionUrl = resolvePrimaryActionUrl(primaryAction, contact, settings.cta_url ?? '');
 
   response.json({
-    business: normalizeBusiness(business),
+    business: { ...normalizeBusiness(business), ...contact },
     template: {
       id: business.template_id,
       name: business.template_name,
       slug: business.template_slug,
     },
     settings,
+    primaryAction: {
+      type: primaryAction,
+      text: settings.cta_text?.trim() || (primaryAction === 'whatsapp' ? 'WhatsApp' : primaryAction === 'call' ? 'Call' : primaryAction === 'email' ? 'Email' : 'Contact us'),
+      url: primaryActionUrl,
+    },
     categories: categoryRows.map((item) => ({
       id: item.id,
       name: item.name,

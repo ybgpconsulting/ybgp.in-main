@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { normalizeSiteUrl } from './site.js';
+import { requireTestDatabaseConfig } from './testDatabase.js';
 
 const readRequired = (name: string): string => {
   const value = process.env[name];
@@ -20,10 +21,22 @@ const readPort = (name: string, fallback: number): number => {
   return value;
 };
 
-const databasePassword = process.env.DB_PASSWORD;
-if (databasePassword === undefined) {
-  throw new Error('Missing required environment variable: DB_PASSWORD');
-}
+const isTestEnvironment = process.env.NODE_ENV === 'test';
+const database = isTestEnvironment
+  ? requireTestDatabaseConfig(process.env)
+  : (() => {
+    const password = process.env.DB_PASSWORD;
+    if (password === undefined) {
+      throw new Error('Missing required environment variable: DB_PASSWORD');
+    }
+    return Object.freeze({
+      host: readRequired('DB_HOST'),
+      port: readPort('DB_PORT', 3306),
+      name: readRequired('DB_NAME'),
+      user: readRequired('DB_USER'),
+      password,
+    });
+  })();
 
 const apiPort = process.env.PORT === undefined
   ? readPort('API_PORT', 3001)
@@ -32,11 +45,5 @@ const apiPort = process.env.PORT === undefined
 export const env = Object.freeze({
   apiPort,
   siteUrl: normalizeSiteUrl(process.env.VITE_SITE_URL),
-  database: Object.freeze({
-    host: readRequired('DB_HOST'),
-    port: readPort('DB_PORT', 3306),
-    name: readRequired('DB_NAME'),
-    user: readRequired('DB_USER'),
-    password: databasePassword,
-  }),
+  database,
 });

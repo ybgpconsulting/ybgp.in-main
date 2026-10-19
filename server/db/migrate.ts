@@ -19,6 +19,11 @@ const isExpectedRepeatError = (file: string, statement: string, error: unknown):
 };
 
 const migrate = async (): Promise<void> => {
+  if (process.env.NODE_ENV === 'test') {
+    const { verifyTestDatabase } = await import('./testDatabaseGuard.js');
+    await verifyTestDatabase(pool);
+  }
+
   const files = (await readdir(migrationsDirectory))
     .filter((file) => file.endsWith('.sql'))
     .sort();
@@ -54,6 +59,13 @@ const migrate = async (): Promise<void> => {
 };
 
 void migrate().catch((error: unknown) => {
-  console.error('Database migration failed:', error);
+  if (process.env.NODE_ENV === 'test') {
+    const code = typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string'
+      ? ` (MySQL error ${error.code})`
+      : '';
+    console.error(`Test database migration failed${code}; verify the disposable schema and user privileges.`);
+  } else {
+    console.error('Database migration failed:', error);
+  }
   process.exitCode = 1;
 });
