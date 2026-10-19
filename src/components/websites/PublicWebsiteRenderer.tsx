@@ -121,9 +121,6 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const directionsUrl = explicitMapsUrl || (locationQuery
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationQuery)}`
     : '');
-  const mapEmbedUrl = locationQuery
-    ? `https://www.google.com/maps?q=${encodeURIComponent(locationQuery)}&output=embed`
-    : '';
   const primaryActionType = data.primaryAction?.type ?? inferPrimaryAction(settings, business);
   const ctaUrl = data.primaryAction?.url ?? resolvePrimaryActionUrl(primaryActionType, business, settings.cta_url) ?? '#contact';
   const ctaText = data.primaryAction?.text || settings.cta_text || 'Contact us';
@@ -278,8 +275,19 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             {socialLinks.length ? <div className="mt-2 flex flex-wrap gap-3" aria-label="Social media links">{socialLinks.map((social) => <a key={social.name} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.name} title={social.name} className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 text-white/85 transition hover:bg-white/10">{social.platform ? <SocialBrandIcon platform={social.platform} /> : social.icon ? <social.icon aria-hidden="true" size={19} /> : null}</a>)}</div> : null}
           </div>
         </div>
-        {mapEmbedUrl ? <div className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-2xl border border-white/15 bg-white/5"><div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d3bb78]">Find us</p><p className="mt-1 text-sm text-white/75">{address || locationQuery}</p></div>{directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20"><Navigation aria-hidden="true" size={16} />Open in Google Maps</a> : null}</div><iframe title={`Map to ${business.name}`} src={mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" className="h-64 w-full border-0" /></div> : null}
-        <div className="mx-auto mt-8 max-w-6xl border-t border-white/10 pt-4 text-xs text-white/45">© {new Date().getFullYear()} {business.name}. Powered by YBGP Websites.</div>
+        <div className="mx-auto mt-8 flex max-w-6xl flex-col gap-3 border-t border-white/10 pt-4 text-xs sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-white/45">© {new Date().getFullYear()} {business.name}.</p>
+          <a
+            href="https://ybgp.in/websites"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Designed and powered by YBGP Websites"
+            className="ml-auto inline-flex max-w-full items-center gap-2 text-right text-white/65 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d3bb78] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10271d]"
+          >
+            <span>Designed &amp; Powered by YBGP Websites</span>
+            <img src="/Black%20and%20Gold%20YBGP%20Logo.png" alt="YBGP logo" className="h-7 w-[70px] shrink-0 object-contain" />
+          </a>
+        </div>
       </footer>
     </main>
   );
