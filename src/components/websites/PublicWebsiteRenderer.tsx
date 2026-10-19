@@ -34,11 +34,6 @@ export interface BusinessWebsiteResponse {
     ogDescription: string;
     ogImage?: string;
   };
-  subscription: {
-    plan: string | null;
-    amount: string | null;
-    status: string | null;
-  };
 }
 
 export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; initialData?: BusinessWebsiteResponse }) {
@@ -77,10 +72,18 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     if (!data) return;
     document.title = data.seo.title;
     document.head.querySelector('meta[name="description"]')?.setAttribute('content', data.seo.description);
+    document.head.querySelector('meta[name="author"]')?.setAttribute('content', data.business.name);
+    document.head.querySelector('meta[property="og:site_name"]')?.setAttribute('content', data.business.name);
     document.head.querySelector('meta[property="og:title"]')?.setAttribute('content', data.seo.ogTitle);
     document.head.querySelector('meta[property="og:description"]')?.setAttribute('content', data.seo.ogDescription);
-    if (data.seo.ogImage) document.head.querySelector('meta[property="og:image"]')?.setAttribute('content', data.seo.ogImage);
+    document.head.querySelector('meta[property="og:image"]')?.setAttribute('content', data.seo.ogImage ?? '');
+    document.head.querySelector('meta[property="og:image:alt"]')?.setAttribute('content', data.business.name);
+    document.head.querySelector('meta[property="og:url"]')?.setAttribute('content', data.seo.canonicalUrl);
     document.head.querySelector('link[rel="canonical"]')?.setAttribute('href', data.seo.canonicalUrl);
+    document.head.querySelector('meta[name="twitter:title"]')?.setAttribute('content', data.seo.ogTitle);
+    document.head.querySelector('meta[name="twitter:description"]')?.setAttribute('content', data.seo.ogDescription);
+    document.head.querySelector('meta[name="twitter:image"]')?.setAttribute('content', data.seo.ogImage ?? '');
+    document.head.querySelector('meta[name="twitter:url"]')?.setAttribute('content', data.seo.canonicalUrl);
   }, [data]);
 
   if (loading) {

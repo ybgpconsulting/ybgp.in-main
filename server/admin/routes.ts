@@ -4,6 +4,7 @@ import { pool } from '../db/pool.js';
 import { hashPassword } from '../auth/password.js';
 import { requireRoleAuth } from '../auth/middleware.js';
 import { isValidSubscriptionPeriod } from './dates.js';
+import { validateSeoSettings } from '../seo/settings.js';
 
 const router = Router();
 
@@ -37,6 +38,11 @@ interface BusinessRow extends RowDataPacket {
   tiktok_url: string | null;
   x_url: string | null;
   pinterest_url: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
   status: 'ACTIVE' | 'INACTIVE';
   template_id: string;
   created_at: string;
@@ -144,6 +150,11 @@ router.get('/businesses', async (_request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'tiktok_url') AS tiktok_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'x_url') AS x_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pinterest_url') AS pinterest_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_title') AS seo_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_description') AS seo_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_title') AS og_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_description') AS og_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_image') AS og_image,
       b.status,
       b.template_id,
       b.created_at,
@@ -198,6 +209,11 @@ router.get('/businesses/:id', async (request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'tiktok_url') AS tiktok_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'x_url') AS x_url,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'pinterest_url') AS pinterest_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_title') AS seo_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_description') AS seo_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_title') AS og_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_description') AS og_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_image') AS og_image,
       b.status,
       b.template_id,
       b.created_at,
@@ -235,6 +251,11 @@ router.post('/businesses', async (request, response) => {
   const body = request.body;
   if (!isRecord(body)) {
     response.status(400).json({ error: 'Business payload is required' });
+    return;
+  }
+  const seoSettings = validateSeoSettings(body);
+  if (seoSettings.error) {
+    response.status(400).json({ error: seoSettings.error });
     return;
   }
 
@@ -373,7 +394,7 @@ router.post('/businesses', async (request, response) => {
       [businessId, plan, amount, startDate, expiryDate, body.subscription_active === false ? 'EXPIRED' : 'ACTIVE']
     );
 
-    const settings = Object.entries({
+    const settings: Array<[string, string | null]> = Object.entries({
       website_visibility: body.published === true || body.status === 'ACTIVE' ? 'public' : 'draft',
       city,
       pincode,
@@ -385,7 +406,8 @@ router.post('/businesses', async (request, response) => {
       tiktok_url: tiktok,
       x_url: x,
       pinterest_url: pinterest,
-    }).filter(([, value]) => value);
+    }).filter(([, value]) => value) as Array<[string, string | null]>;
+    settings.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);
     for (const [key, value] of settings) {
       await connection.execute(
         'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
@@ -425,6 +447,11 @@ router.patch('/businesses/:id', async (request, response) => {
   const body = request.body;
   if (!isRecord(body)) {
     response.status(400).json({ error: 'No changes supplied' });
+    return;
+  }
+  const seoSettings = validateSeoSettings(body);
+  if (seoSettings.error) {
+    response.status(400).json({ error: seoSettings.error });
     return;
   }
 
@@ -598,7 +625,7 @@ router.patch('/businesses/:id', async (request, response) => {
       subscriptionValues.push(body.subscription_status);
     }
     const businessSettingFields = ['address', 'phone', 'whatsapp', 'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'];
-    if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string')) {
+    if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string') && Object.keys(seoSettings.values).length === 0) {
       await connection.rollback();
       response.status(400).json({ error: 'No valid fields to update' });
       return;
@@ -620,6 +647,7 @@ router.patch('/businesses/:id', async (request, response) => {
     for (const field of ['city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const) {
       if (typeof body[field] === 'string') settingsToSave.push([field, body[field].trim() || null]);
     }
+    settingsToSave.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);
     for (const [key, value] of settingsToSave) {
       await connection.execute(
         'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import {
   AccessPanel,
@@ -15,6 +15,14 @@ import {
   TextAreaField,
 } from './shared';
 import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign } from './templateDesigns';
+import {
+  isValidOptionalImageUrl,
+  OG_DESCRIPTION_MAX_LENGTH,
+  OG_TITLE_MAX_LENGTH,
+  resolveTenantImageUrl,
+  SEO_DESCRIPTION_MAX_LENGTH,
+  SEO_TITLE_MAX_LENGTH,
+} from '../../../server/seo/shared';
 
 interface BusinessSummary {
   id: string;
@@ -38,6 +46,11 @@ interface BusinessSummary {
   tiktok_url: string | null;
   x_url: string | null;
   pinterest_url: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
   template_name: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
@@ -88,6 +101,11 @@ const emptyForm = (): FormValues => ({
   tiktok_url: '',
   x_url: '',
   pinterest_url: '',
+  seo_title: '',
+  seo_description: '',
+  og_title: '',
+  og_description: '',
+  og_image: '',
   template_slug: '',
   owner_name: '',
   owner_email: '',
@@ -125,6 +143,8 @@ export function WebsitesAdminDashboard() {
   const [form, setForm] = useState<FormValues>(emptyForm);
   const [busy, setBusy] = useState(false);
   const [showCredentialForm, setShowCredentialForm] = useState(false);
+  const businessFormRequestId = useRef(0);
+  const businessFormLoading = useRef(false);
 
   const load = useCallback(async () => {
     setIsLoading(true);
@@ -155,50 +175,97 @@ export function WebsitesAdminDashboard() {
 
   const updateField = (key: string, value: string) => setForm((previous) => ({ ...previous, [key]: value }));
   const openCreate = () => {
+    businessFormRequestId.current += 1;
+    if (businessFormLoading.current) {
+      businessFormLoading.current = false;
+      setBusy(false);
+    }
     setSelectedBusiness(null);
     setForm(emptyForm());
     setNotice('');
     setError('');
     setFormMode('create');
   };
-  const openBusinessForm = (business: BusinessSummary, mode: Exclude<FormMode, 'create' | null>) => {
-    setSelectedBusiness(business);
+  const openBusinessForm = async (business: BusinessSummary, mode: Exclude<FormMode, 'create' | null>) => {
+    const requestId = ++businessFormRequestId.current;
     setNotice('');
     setError('');
-    setForm({
-      ...emptyForm(),
-      name: business.name,
-      slug: business.slug,
-      category: business.category,
-      description: business.description ?? '',
-      phone: business.phone ?? '',
-      whatsapp: business.whatsapp ?? '',
-      email: business.email ?? '',
-      address: business.address ?? '',
-      google_maps_url: business.google_maps_url ?? '',
-      city: business.city ?? '',
-      pincode: business.pincode ?? '',
-      instagram_url: business.instagram_url ?? '',
-      facebook_url: business.facebook_url ?? '',
-      youtube_url: business.youtube_url ?? '',
-      linkedin_url: business.linkedin_url ?? '',
-      google_business_url: business.google_business_url ?? '',
-      other_social_url: business.other_social_url ?? '',
-      tiktok_url: business.tiktok_url ?? '',
-      x_url: business.x_url ?? '',
-      pinterest_url: business.pinterest_url ?? '',
-      plan: business.plan ?? 'YBGP Websites',
-      amount: business.amount ?? '1999',
-      start_date: business.start_date?.slice(0, 10) ?? today(),
-      expiry_date: business.expiry_date?.slice(0, 10) ?? yearFromToday(),
-      subscription_active: business.subscription_status === 'EXPIRED' ? 'false' : 'true',
-      published: business.status === 'ACTIVE' ? 'true' : 'false',
-    });
-    setFormMode(mode);
+    setFormMode(null);
+    businessFormLoading.current = true;
+    setBusy(true);
+    try {
+      const payload = await apiRequest<{ business: BusinessSummary }>(`/api/admin/businesses/${business.id}`);
+      if (requestId !== businessFormRequestId.current) return;
+      const current = payload.business;
+      setSelectedBusiness(current);
+      setForm({
+        ...emptyForm(),
+        name: current.name,
+        slug: current.slug,
+        category: current.category,
+        description: current.description ?? '',
+        phone: current.phone ?? '',
+        whatsapp: current.whatsapp ?? '',
+        email: current.email ?? '',
+        address: current.address ?? '',
+        google_maps_url: current.google_maps_url ?? '',
+        city: current.city ?? '',
+        pincode: current.pincode ?? '',
+        instagram_url: current.instagram_url ?? '',
+        facebook_url: current.facebook_url ?? '',
+        youtube_url: current.youtube_url ?? '',
+        linkedin_url: current.linkedin_url ?? '',
+        google_business_url: current.google_business_url ?? '',
+        other_social_url: current.other_social_url ?? '',
+        tiktok_url: current.tiktok_url ?? '',
+        x_url: current.x_url ?? '',
+        pinterest_url: current.pinterest_url ?? '',
+        seo_title: current.seo_title ?? '',
+        seo_description: current.seo_description ?? '',
+        og_title: current.og_title ?? '',
+        og_description: current.og_description ?? '',
+        og_image: current.og_image ?? '',
+        plan: current.plan ?? 'YBGP Websites',
+        amount: current.amount ?? '1999',
+        start_date: current.start_date?.slice(0, 10) ?? today(),
+        expiry_date: current.expiry_date?.slice(0, 10) ?? yearFromToday(),
+        subscription_active: current.subscription_status === 'EXPIRED' ? 'false' : 'true',
+        published: current.status === 'ACTIVE' ? 'true' : 'false',
+      });
+      setFormMode(mode);
+    } catch (loadError) {
+      if (requestId === businessFormRequestId.current) {
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load business details');
+      }
+    } finally {
+      if (requestId === businessFormRequestId.current) {
+        businessFormLoading.current = false;
+        setBusy(false);
+      }
+    }
+  };
+  const closeBusinessForm = () => {
+    businessFormRequestId.current += 1;
+    if (businessFormLoading.current) {
+      businessFormLoading.current = false;
+      setBusy(false);
+    }
+    setFormMode(null);
   };
 
   const createBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (form.seo_title.length > SEO_TITLE_MAX_LENGTH ||
+      form.seo_description.length > SEO_DESCRIPTION_MAX_LENGTH ||
+      form.og_title.length > OG_TITLE_MAX_LENGTH ||
+      form.og_description.length > OG_DESCRIPTION_MAX_LENGTH) {
+      setError('Please correct the highlighted SEO field limits before saving.');
+      return;
+    }
+    if (!isValidOptionalImageUrl(form.og_image.trim())) {
+      setError('Open Graph image must be a valid http or https URL or an image path under /uploads.');
+      return;
+    }
     if (form.expiry_date < form.start_date) {
       setError('Expiry date must be on or after the subscription start date.');
       return;
@@ -230,6 +297,19 @@ export function WebsitesAdminDashboard() {
   const saveBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!selectedBusiness) return;
+    if (formMode === 'edit' && (
+      form.seo_title.length > SEO_TITLE_MAX_LENGTH ||
+      form.seo_description.length > SEO_DESCRIPTION_MAX_LENGTH ||
+      form.og_title.length > OG_TITLE_MAX_LENGTH ||
+      form.og_description.length > OG_DESCRIPTION_MAX_LENGTH
+    )) {
+      setError('Please correct the highlighted SEO field limits before saving.');
+      return;
+    }
+    if (formMode === 'edit' && !isValidOptionalImageUrl(form.og_image.trim())) {
+      setError('Open Graph image must be a valid http or https URL or an image path under /uploads.');
+      return;
+    }
     if (formMode === 'subscription' && form.expiry_date < form.start_date) {
       setError('Expiry date must be on or after the subscription start date.');
       return;
@@ -267,6 +347,11 @@ export function WebsitesAdminDashboard() {
             tiktok_url: form.tiktok_url,
             x_url: form.x_url,
             pinterest_url: form.pinterest_url,
+            seo_title: form.seo_title,
+            seo_description: form.seo_description,
+            og_title: form.og_title,
+            og_description: form.og_description,
+            og_image: form.og_image,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -376,11 +461,11 @@ export function WebsitesAdminDashboard() {
       </div>
 
       {formMode ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#12221b]/55 p-3 sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setFormMode(null); }}>
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-[#12221b]/55 p-3 sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeBusinessForm(); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="business-modal-title" className="mx-auto my-3 max-w-3xl rounded-2xl bg-[#fbfaf7] shadow-2xl sm:my-8">
             <div className="flex items-start justify-between border-b border-[#e8e2d7] px-5 py-4 sm:px-7">
               <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d7723]">{formMode === 'create' ? 'New tenant' : formMode === 'subscription' ? 'Billing' : 'Business details'}</p><h2 id="business-modal-title" className="mt-1 text-2xl font-bold">{formMode === 'create' ? 'Create business' : formMode === 'subscription' ? 'Manage subscription' : 'Edit business'}</h2></div>
-              <button className="rounded-full px-3 py-2 text-lg text-[#68746c] hover:bg-[#eeeae1]" onClick={() => setFormMode(null)} aria-label="Close">×</button>
+              <button className="rounded-full px-3 py-2 text-lg text-[#68746c] hover:bg-[#eeeae1]" onClick={closeBusinessForm} aria-label="Close">×</button>
             </div>
             <form onSubmit={formMode === 'create' ? createBusiness : saveBusiness} className="max-h-[calc(100vh-130px)] space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
               {formMode === 'view' ? (
@@ -399,6 +484,11 @@ export function WebsitesAdminDashboard() {
                     ['Enquiries', String(selectedBusiness?.enquiry_count ?? 0)],
                     ['Phone', selectedBusiness?.phone || '—'],
                     ['Email', selectedBusiness?.email || '—'],
+                    ['Meta title', selectedBusiness?.seo_title || 'Automatic default'],
+                    ['Meta description', selectedBusiness?.seo_description || 'Automatic default'],
+                    ['Open Graph title', selectedBusiness?.og_title || 'Automatic default'],
+                    ['Open Graph description', selectedBusiness?.og_description || 'Automatic default'],
+                    ['Open Graph image', selectedBusiness?.og_image || 'Automatic default'],
                   ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e8e2d7] bg-white p-4"><p className="text-xs font-semibold text-[#718078]">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>)}
                 </section>
               ) : formMode === 'create' ? (
@@ -427,6 +517,14 @@ export function WebsitesAdminDashboard() {
                     <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
                     <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
                   </FormSection>
+                  <SeoSettingsSection
+                    form={form}
+                    onChange={updateField}
+                    businessName={form.name}
+                    slug={form.slug}
+                    category={form.category}
+                    description={form.description}
+                  />
                   <section>
                     <h3 className="font-bold">Choose a template</h3>
                     <p className="mt-1 text-sm text-[#68746c]">Each preview opens the same live demo shown on the public websites page.</p>
@@ -522,11 +620,21 @@ export function WebsitesAdminDashboard() {
                       <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
                     </FormSection>
                   ) : null}
+                  {formMode === 'edit' ? (
+                    <SeoSettingsSection
+                      form={form}
+                      onChange={updateField}
+                      businessName={form.name}
+                      slug={form.slug}
+                      category={form.category}
+                      description={form.description}
+                    />
+                  ) : null}
                 </>
               )}
               {error ? <Notice>{error}</Notice> : null}
               <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:justify-end">
-                <button className={secondaryButtonClassName} type="button" onClick={() => setFormMode(null)}>Cancel</button>
+                <button className={secondaryButtonClassName} type="button" onClick={closeBusinessForm}>Cancel</button>
                 {formMode !== 'view' ? <button className={buttonClassName} type="submit" disabled={busy || (formMode === 'create' && templates.length === 0)}>{busy ? 'Saving…' : formMode === 'create' ? 'Create website' : 'Save changes'}</button> : null}
               </div>
             </form>
@@ -599,6 +707,104 @@ function AdminCredentialForm({ onClose }: { onClose: () => void }) {
 
 function FormSection({ title, children }: { title: string; children: ReactNode }) {
   return <section><h3 className="mb-3 font-bold">{title}</h3><div className="grid gap-4 sm:grid-cols-2">{children}</div></section>;
+}
+
+function SeoSettingsSection({
+  form,
+  onChange,
+  businessName,
+  slug,
+  category,
+  description,
+}: {
+  form: FormValues;
+  onChange: (key: string, value: string) => void;
+  businessName: string;
+  slug: string;
+  category: string;
+  description: string;
+}) {
+  const defaultTitle = `${businessName || 'Business'}${category ? ` | ${category}` : ''}`;
+  const defaultDescription = description.trim() || `Visit ${businessName || 'this business'} for ${category.toLowerCase() || 'business'} offerings and contact information.`;
+  const previewTitle = form.og_title.trim() || form.seo_title.trim() || defaultTitle;
+  const previewDescription = form.og_description.trim() || form.seo_description.trim() || defaultDescription;
+  const image = form.og_image.trim();
+  const imageError = !isValidOptionalImageUrl(image)
+    ? 'Use an HTTP(S) image URL or an image path under /uploads (for example, /uploads/businesses/example/share.jpg).'
+    : '';
+  const previewSlug = (slug.trim() || businessName).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 180) || 'business';
+  const titleError = form.seo_title.length > SEO_TITLE_MAX_LENGTH
+    ? `Meta title must be at most ${SEO_TITLE_MAX_LENGTH} characters.`
+    : '';
+  const seoDescriptionError = form.seo_description.length > SEO_DESCRIPTION_MAX_LENGTH
+    ? `Meta description must be at most ${SEO_DESCRIPTION_MAX_LENGTH} characters.`
+    : '';
+  const ogTitleError = form.og_title.length > OG_TITLE_MAX_LENGTH
+    ? `Open Graph title must be at most ${OG_TITLE_MAX_LENGTH} characters.`
+    : '';
+  const ogDescriptionError = form.og_description.length > OG_DESCRIPTION_MAX_LENGTH
+    ? `Open Graph description must be at most ${OG_DESCRIPTION_MAX_LENGTH} characters.`
+    : '';
+  let imagePreview = '/og-image.svg';
+  if (typeof window !== 'undefined') {
+    try {
+      const canonicalUrl = new URL(`/websites/${previewSlug}/`, window.location.origin).href;
+      imagePreview = resolveTenantImageUrl(image, canonicalUrl, '/og-image.svg');
+    } catch {
+      imagePreview = '/og-image.svg';
+    }
+  }
+
+  return (
+    <section className="space-y-4 rounded-xl border border-[#e8e2d7] bg-white p-4">
+      <div>
+        <h3 className="font-bold">SEO &amp; Social Preview</h3>
+        <p className="mt-1 text-sm text-[#68746c]">Leave fields empty to use automatic defaults based on this business.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Field label="Meta title" value={form.seo_title} onChange={(value) => onChange('seo_title', value)} maxLength={SEO_TITLE_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${titleError ? 'text-red-700' : 'text-[#818b84]'}`} role={titleError ? 'alert' : undefined}>
+            {titleError || `${form.seo_title.length}/${SEO_TITLE_MAX_LENGTH} characters`}
+          </p>
+        </div>
+        <div>
+          <Field label="Open Graph title" value={form.og_title} onChange={(value) => onChange('og_title', value)} maxLength={OG_TITLE_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${ogTitleError ? 'text-red-700' : 'text-[#818b84]'}`} role={ogTitleError ? 'alert' : undefined}>
+            {ogTitleError || `${form.og_title.length}/${OG_TITLE_MAX_LENGTH} characters`}
+          </p>
+        </div>
+        <div>
+          <TextAreaField label="Meta description" value={form.seo_description} onChange={(value) => onChange('seo_description', value)} rows={3} maxLength={SEO_DESCRIPTION_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${seoDescriptionError ? 'text-red-700' : 'text-[#818b84]'}`} role={seoDescriptionError ? 'alert' : undefined}>
+            {seoDescriptionError || `${form.seo_description.length}/${SEO_DESCRIPTION_MAX_LENGTH} characters`}
+          </p>
+        </div>
+        <div>
+          <TextAreaField label="Open Graph description" value={form.og_description} onChange={(value) => onChange('og_description', value)} rows={3} maxLength={OG_DESCRIPTION_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${ogDescriptionError ? 'text-red-700' : 'text-[#818b84]'}`} role={ogDescriptionError ? 'alert' : undefined}>
+            {ogDescriptionError || `${form.og_description.length}/${OG_DESCRIPTION_MAX_LENGTH} characters`}
+          </p>
+        </div>
+        <div>
+          <Field label="Open Graph image URL or path" value={form.og_image} onChange={(value) => onChange('og_image', value)} />
+          <p className={`mt-1 text-xs ${imageError ? 'text-red-700' : 'text-[#818b84]'}`} role={imageError ? 'alert' : undefined}>
+            {imageError || `${form.og_image.length} characters`}
+          </p>
+        </div>
+      </div>
+      <div className="max-w-lg overflow-hidden rounded-xl border border-[#ded9cd] bg-[#f7f6f2]">
+        <p className="px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-[#78827b]">Illustrative social-sharing preview</p>
+        <img src={imagePreview} alt="" className="mt-2 aspect-[1.91/1] w-full bg-[#e9e5db] object-cover" />
+        <div className="p-3">
+          <p className="truncate text-xs uppercase text-[#78827b]">{typeof window === 'undefined' ? 'your-website' : window.location.host}</p>
+          <p className="mt-1 line-clamp-2 font-semibold text-[#173328]">{previewTitle}</p>
+          <p className="mt-1 line-clamp-2 text-sm text-[#68746c]">{previewDescription}</p>
+        </div>
+      </div>
+      <p className="text-xs text-[#78827b]">Search engines may rewrite snippets; metadata does not guarantee rankings or indexing.</p>
+    </section>
+  );
 }
 
 function StatusBadge({ value }: { value: string }) {

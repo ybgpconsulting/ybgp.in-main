@@ -10,6 +10,13 @@ import {
   SelectField,
   TextAreaField,
 } from './shared';
+import {
+  isValidOptionalImageUrl,
+  OG_DESCRIPTION_MAX_LENGTH,
+  OG_TITLE_MAX_LENGTH,
+  SEO_DESCRIPTION_MAX_LENGTH,
+  SEO_TITLE_MAX_LENGTH,
+} from '../../../server/seo/shared';
 
 interface OwnerBusiness {
   id: string;
@@ -571,10 +578,21 @@ export function SeoManager({
     });
   }, [initialSettings]);
   const update = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const imageError = !isValidOptionalImageUrl(form.og_image.trim())
+    ? 'Use an HTTP(S) image URL or an image path under /uploads.'
+    : '';
+  const seoTitleError = form.seo_title.length > SEO_TITLE_MAX_LENGTH;
+  const seoDescriptionError = form.seo_description.length > SEO_DESCRIPTION_MAX_LENGTH;
+  const ogTitleError = form.og_title.length > OG_TITLE_MAX_LENGTH;
+  const ogDescriptionError = form.og_description.length > OG_DESCRIPTION_MAX_LENGTH;
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (form.seo_title.length > 180 || form.seo_description.length > 500) {
-      setError('Meta title must be at most 180 characters and description at most 500 characters.');
+    if (seoTitleError || seoDescriptionError || ogTitleError || ogDescriptionError) {
+      setError('Please correct the highlighted SEO field limits before saving.');
+      return;
+    }
+    if (imageError) {
+      setError(imageError);
       return;
     }
     setBusy(true); setError(''); setSuccess('');
@@ -588,15 +606,34 @@ export function SeoManager({
     <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
       <PanelHeading title="SEO & social preview" description="Set simple search titles and Open Graph text. This does not submit your site to search engines." />
       <form onSubmit={save} className="space-y-4">
-        <Field label="Meta title" value={form.seo_title} onChange={(value) => update('seo_title', value)} />
-        <p className="-mt-3 text-xs text-[#818b84]">{form.seo_title.length}/180 characters</p>
-        <TextAreaField label="Meta description" value={form.seo_description} onChange={(value) => update('seo_description', value)} rows={3} />
-        <p className="-mt-3 text-xs text-[#818b84]">{form.seo_description.length}/500 characters</p>
+        <div>
+          <Field label="Meta title" value={form.seo_title} onChange={(value) => update('seo_title', value)} maxLength={SEO_TITLE_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${seoTitleError ? 'text-red-700' : 'text-[#818b84]'}`} role={seoTitleError ? 'alert' : undefined}>
+            {seoTitleError ? `Meta title must be at most ${SEO_TITLE_MAX_LENGTH} characters.` : `${form.seo_title.length}/${SEO_TITLE_MAX_LENGTH} characters`}
+          </p>
+        </div>
+        <div>
+          <TextAreaField label="Meta description" value={form.seo_description} onChange={(value) => update('seo_description', value)} rows={3} maxLength={SEO_DESCRIPTION_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${seoDescriptionError ? 'text-red-700' : 'text-[#818b84]'}`} role={seoDescriptionError ? 'alert' : undefined}>
+            {seoDescriptionError ? `Meta description must be at most ${SEO_DESCRIPTION_MAX_LENGTH} characters.` : `${form.seo_description.length}/${SEO_DESCRIPTION_MAX_LENGTH} characters`}
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Open Graph title" value={form.og_title} onChange={(value) => update('og_title', value)} />
+          <div>
+            <Field label="Open Graph title" value={form.og_title} onChange={(value) => update('og_title', value)} maxLength={OG_TITLE_MAX_LENGTH} />
+            <p className={`mt-1 text-xs ${ogTitleError ? 'text-red-700' : 'text-[#818b84]'}`} role={ogTitleError ? 'alert' : undefined}>
+              {ogTitleError ? `Open Graph title must be at most ${OG_TITLE_MAX_LENGTH} characters.` : `${form.og_title.length}/${OG_TITLE_MAX_LENGTH} characters`}
+            </p>
+          </div>
           <Field label="Open Graph image URL or path" value={form.og_image} onChange={(value) => update('og_image', value)} />
         </div>
-        <TextAreaField label="Open Graph description" value={form.og_description} onChange={(value) => update('og_description', value)} rows={3} />
+        {imageError ? <p className="-mt-3 text-sm text-red-700" role="alert">{imageError}</p> : null}
+        <div>
+          <TextAreaField label="Open Graph description" value={form.og_description} onChange={(value) => update('og_description', value)} rows={3} maxLength={OG_DESCRIPTION_MAX_LENGTH} />
+          <p className={`mt-1 text-xs ${ogDescriptionError ? 'text-red-700' : 'text-[#818b84]'}`} role={ogDescriptionError ? 'alert' : undefined}>
+            {ogDescriptionError ? `Open Graph description must be at most ${OG_DESCRIPTION_MAX_LENGTH} characters.` : `${form.og_description.length}/${OG_DESCRIPTION_MAX_LENGTH} characters`}
+          </p>
+        </div>
         {error ? <Notice>{error}</Notice> : null}{success ? <Notice kind="success">{success}</Notice> : null}
         <button className={buttonClassName} disabled={busy}>{busy ? 'Saving…' : 'Save SEO settings'}</button>
       </form>

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { requireRoleAuth } from '../auth/middleware.js';
+import { SEO_SETTING_KEYS, validateSeoSettings } from '../seo/settings.js';
 
 const router = Router();
 
@@ -791,12 +792,32 @@ router.patch('/settings', async (request, response) => {
     return;
   }
 
-  const entries = Object.entries(body).filter(([, value]) => value !== undefined);
-  for (const [key, value] of entries) {
-    await pool.execute(
-      'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
-      [businessId, key, typeof value === 'string' ? value : JSON.stringify(value)]
-    );
+  const seoSettings = validateSeoSettings(body);
+  if (seoSettings.error) {
+    response.status(400).json({ error: seoSettings.error });
+    return;
+  }
+  const seoKeys = new Set<string>(SEO_SETTING_KEYS);
+  const entries: Array<[string, string | null]> = Object.entries(body)
+    .filter(([key, value]) => key !== 'business_id' && !seoKeys.has(key) && value !== undefined)
+    .map(([key, value]) => [key, typeof value === 'string' ? value : JSON.stringify(value)]);
+  entries.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    for (const [key, value] of entries) {
+      await connection.execute(
+        'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)',
+        [businessId, key, value]
+      );
+    }
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
 
   response.json({ success: true, settings: await getSettingsMap(businessId) });

@@ -10,6 +10,7 @@ import businessRouter from './business/routes.js';
 import publicRouter from './public/routes.js';
 import templatesRouter from './templates/routes.js';
 import { renderTenantHtml } from './seo/html.js';
+import { resolveTenantSeo } from './seo/settings.js';
 
 const app = express();
 const frontendDirectory = resolve(process.cwd(), 'dist');
@@ -32,6 +33,8 @@ interface TenantSeoRow extends RowDataPacket {
   description: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  og_title: string | null;
+  og_description: string | null;
   og_image: string | null;
 }
 
@@ -84,6 +87,8 @@ app.get('/websites/:slug', async (request, response, next) => {
       `SELECT b.name, b.category, b.description,
         (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_title' LIMIT 1) AS seo_title,
         (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'seo_description' LIMIT 1) AS seo_description,
+        (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_title' LIMIT 1) AS og_title,
+        (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_description' LIMIT 1) AS og_description,
         (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_image' LIMIT 1) AS og_image
        FROM businesses b
        WHERE b.slug = ? AND b.status = 'ACTIVE'
@@ -106,31 +111,19 @@ app.get('/websites/:slug', async (request, response, next) => {
       return;
     }
 
-    const description = tenant.seo_description?.trim() ||
-      tenant.description?.trim() ||
-      `Visit ${tenant.name} for ${tenant.category.toLowerCase()} offerings and contact information.`;
-    const canonicalUrl = new URL(`websites/${slug}/`, env.siteUrl).href;
-    const defaultImage = new URL('og-image.svg', env.siteUrl).href;
-    let imageUrl = defaultImage;
-    if (tenant.og_image?.trim()) {
-      try {
-        const candidate = new URL(tenant.og_image.trim(), env.siteUrl);
-        if (['https:', 'http:'].includes(candidate.protocol) && !candidate.username && !candidate.password) {
-          imageUrl = candidate.href;
-        }
-      } catch {
-        imageUrl = defaultImage;
-      }
-    }
-
+    const metadata = resolveTenantSeo({
+      ...tenant,
+      slug,
+      settings: {
+        seo_title: tenant.seo_title,
+        seo_description: tenant.seo_description,
+        og_title: tenant.og_title,
+        og_description: tenant.og_description,
+        og_image: tenant.og_image,
+      },
+    }, env.siteUrl);
     const template = await readFile(resolve(frontendDirectory, 'index.html'), 'utf8');
-    response.type('html').send(renderTenantHtml(template, {
-      name: tenant.name,
-      title: tenant.seo_title?.trim() || `${tenant.name} | ${tenant.category}`,
-      description,
-      canonicalUrl,
-      imageUrl,
-    }));
+    response.type('html').send(renderTenantHtml(template, metadata));
   } catch (error) {
     if (showcaseSlugs.has(slug)) {
       next();

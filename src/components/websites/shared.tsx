@@ -103,16 +103,18 @@ export function TextAreaField({
   value,
   onChange,
   rows = 4,
+  maxLength,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   rows?: number;
+  maxLength?: number;
 }) {
   return (
     <label className="block text-sm font-medium text-[#33463d]">
       {label}
-      <textarea className={inputClassName} rows={rows} value={value} onChange={(event) => onChange(event.target.value)} />
+      <textarea className={inputClassName} rows={rows} value={value} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }

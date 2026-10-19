@@ -7,6 +7,7 @@ import type { Server } from 'node:http';
 import type { RowDataPacket } from 'mysql2';
 import app from '../app.js';
 import { ADMIN_SESSION_COOKIE_NAME, OWNER_SESSION_COOKIE_NAME } from '../auth/session.js';
+import { env } from '../config/env.js';
 import { pool } from '../db/pool.js';
 
 const demoPassword = 'Ybgp-Dev-Only-6cV9-Qm2X!Local';
@@ -537,4 +538,168 @@ test('owners can atomically update only their own profile, contact, location and
   } finally {
     await pool.query(`DROP TRIGGER IF EXISTS ${triggerName}`);
   }
+});
+
+test('SEO settings are shared across admin and owner dashboards and isolated by tenant', async () => {
+  const adminCookie = (await login('admin@ybgp.local', demoPassword)).cookie;
+  const timestamp = Date.now();
+  const tenants = [
+    { name: 'SEO Tenant A', slug: `seo-tenant-a-${timestamp}`, email: `seo-tenant-a-${timestamp}@example.test` },
+    { name: 'SEO Tenant B', slug: `seo-tenant-b-${timestamp}`, email: `seo-tenant-b-${timestamp}@example.test` },
+  ];
+  const businessIds: string[] = [];
+  const initialSettings = {
+    seo_title: 'Tenant A SEO title',
+    seo_description: 'Tenant A search description',
+    og_title: 'Tenant A social title',
+    og_description: 'Tenant A social description',
+    og_image: '/uploads/tenant-a.jpg',
+  };
+
+  const unauthorizedAdmin = await request('/api/admin/businesses');
+  const unauthorizedOwner = await request('/api/business/settings');
+  assert.equal(unauthorizedAdmin.status, 401);
+  assert.equal(unauthorizedOwner.status, 401);
+
+  for (const [index, tenant] of tenants.entries()) {
+    createdEmails.push(tenant.email);
+    createdSlugs.push(tenant.slug);
+    const response = await request('/api/admin/businesses', {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        ...tenant,
+        category: 'Services',
+        description: 'Tenant SEO test business description.',
+        template_slug: 'modern-business',
+        owner_name: tenant.name,
+        owner_email: tenant.email,
+        owner_password: demoPassword,
+        published: true,
+        ...(index === 0 ? initialSettings : {}),
+      },
+    });
+    assert.equal(response.status, 201);
+    const result = await response.json() as { business?: { id: string } };
+    assert.ok(result.business?.id);
+    businessIds.push(result.business.id);
+  }
+
+  const initialListResponse = await request('/api/admin/businesses', { cookie: adminCookie });
+  const initialList = await initialListResponse.json() as {
+    businesses: Array<{ id: string; seo_title: string | null; og_title: string | null; og_image: string | null }>;
+  };
+  const listedTenantA = initialList.businesses.find((business) => business.id === businessIds[0]);
+  assert.equal(listedTenantA?.seo_title, initialSettings.seo_title);
+  assert.equal(listedTenantA?.og_title, initialSettings.og_title);
+  assert.equal(listedTenantA?.og_image, initialSettings.og_image);
+
+  const detailsResponse = await request(`/api/admin/businesses/${businessIds[0]}`, { cookie: adminCookie });
+  const details = await detailsResponse.json() as { business: Record<string, string | null> };
+  assert.equal(details.business.seo_description, initialSettings.seo_description);
+  assert.equal(details.business.og_description, initialSettings.og_description);
+
+  for (const invalidBody of [
+    { seo_title: 'x'.repeat(181) },
+    { seo_description: 'd'.repeat(501) },
+    { og_image: 'javascript:alert(1)' },
+    { og_image: '//external.example/image.png' },
+  ]) {
+    const invalidResponse = await request(`/api/admin/businesses/${businessIds[0]}`, {
+      method: 'PATCH',
+      cookie: adminCookie,
+      body: invalidBody,
+    });
+    assert.equal(invalidResponse.status, 400);
+  }
+
+  const ownerA = (await login(tenants[0].email, demoPassword)).cookie;
+  const ownerB = (await login(tenants[1].email, demoPassword)).cookie;
+  for (const invalidBody of [
+    { seo_title: 'x'.repeat(181) },
+    { seo_description: 'd'.repeat(501) },
+    { og_image: 'javascript:alert(1)' },
+  ]) {
+    const invalidResponse = await request('/api/business/settings', {
+      method: 'PATCH',
+      cookie: ownerA,
+      body: invalidBody,
+    });
+    assert.equal(invalidResponse.status, 400);
+  }
+  const ownerUpdate = await request('/api/business/settings', {
+    method: 'PATCH',
+    cookie: ownerA,
+    body: {
+      business_id: businessIds[1],
+      seo_title: 'Owner A updated title',
+      seo_description: 'Owner A updated description',
+      og_image: 'uploads/owner-a.jpg',
+      private_internal_note: 'Must never be public',
+    },
+  });
+  assert.equal(ownerUpdate.status, 200);
+  const ownerSettings = await ownerUpdate.json() as { settings: Record<string, string> };
+  assert.equal(ownerSettings.settings.seo_title, 'Owner A updated title');
+
+  const ownerBSettingsResponse = await request('/api/business/settings', { cookie: ownerB });
+  const ownerBSettings = await ownerBSettingsResponse.json() as { settings: Record<string, string> };
+  assert.equal(ownerBSettings.settings.seo_title, undefined);
+
+  const updatedAdminDetailsResponse = await request(`/api/admin/businesses/${businessIds[0]}`, { cookie: adminCookie });
+  const updatedAdminDetails = await updatedAdminDetailsResponse.json() as { business: Record<string, string | null> };
+  assert.equal(updatedAdminDetails.business.seo_title, 'Owner A updated title');
+  assert.equal(updatedAdminDetails.business.og_image, 'uploads/owner-a.jpg');
+
+  const adminUpdate = await request(`/api/admin/businesses/${businessIds[0]}`, {
+    method: 'PATCH',
+    cookie: adminCookie,
+    body: { seo_title: 'Admin updated title', og_title: 'Admin social title' },
+  });
+  assert.equal(adminUpdate.status, 200);
+  const ownerRefreshResponse = await request('/api/business/settings', { cookie: ownerA });
+  const ownerRefresh = await ownerRefreshResponse.json() as { settings: Record<string, string> };
+  assert.equal(ownerRefresh.settings.seo_title, 'Admin updated title');
+  assert.equal(ownerRefresh.settings.seo_description, 'Owner A updated description');
+
+  const clearResponse = await request(`/api/admin/businesses/${businessIds[0]}`, {
+    method: 'PATCH',
+    cookie: adminCookie,
+    body: { seo_title: '', seo_description: '', og_title: '', og_description: '', og_image: '' },
+  });
+  assert.equal(clearResponse.status, 200);
+
+  const publicResponse = await request(`/api/public/websites/${tenants[0].slug}`);
+  const publicBody = await publicResponse.json() as {
+    settings: Record<string, string>;
+    subscription?: Record<string, unknown>;
+    seo: { title: string; description: string; ogTitle: string; ogDescription: string; canonicalUrl: string; ogImage: string };
+  };
+  assert.equal(publicBody.settings.private_internal_note, undefined);
+  assert.equal(publicBody.subscription, undefined);
+  assert.equal(publicBody.seo.title, 'SEO Tenant A | Services');
+  assert.equal(publicBody.seo.description, 'Tenant SEO test business description.');
+  assert.equal(publicBody.seo.ogTitle, publicBody.seo.title);
+  assert.equal(publicBody.seo.ogDescription, publicBody.seo.description);
+  const expectedCanonical = new URL(`websites/${tenants[0].slug}/`, env.siteUrl).href;
+  assert.equal(publicBody.seo.canonicalUrl, expectedCanonical);
+  assert.equal(publicBody.seo.ogImage, new URL('og-image.svg', env.siteUrl).href);
+
+  const htmlResponse = await request(`/websites/${tenants[0].slug}`);
+  const html = await htmlResponse.text();
+  const defaultImage = new URL('og-image.svg', env.siteUrl).href;
+  assert.ok(html.includes(`<title>${tenants[0].name} | Services</title>`));
+  assert.ok(html.includes('<meta name="description" content="Tenant SEO test business description." />'));
+  assert.ok(html.includes('<meta property="og:title" content="SEO Tenant A | Services" />'));
+  assert.ok(html.includes('<meta property="og:description" content="Tenant SEO test business description." />'));
+  assert.ok(html.includes(`property="og:url" content="${expectedCanonical}"`));
+  assert.ok(html.includes(`property="og:image" content="${defaultImage}"`));
+  assert.ok(html.includes('<meta name="twitter:title" content="SEO Tenant A | Services" />'));
+  assert.ok(html.includes('<meta name="twitter:description" content="Tenant SEO test business description." />'));
+  assert.ok(html.includes(`name="twitter:url" content="${expectedCanonical}"`));
+  assert.ok(html.includes(`name="twitter:image" content="${defaultImage}"`));
+  assert.ok(html.includes(`rel="canonical" href="${expectedCanonical}"`));
+  assert.match(html, /@type":"WebPage"/);
+  assert.doesNotMatch(html, /@type":"Organization"/);
+  assert.ok(!html.includes(`property="og:url" content="${env.siteUrl}"`));
 });

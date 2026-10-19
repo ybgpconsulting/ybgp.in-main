@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { RowDataPacket } from 'mysql2';
 import { pool } from '../db/pool.js';
 import { env } from '../config/env.js';
+import { resolveTenantSeo } from '../seo/settings.js';
 
 const router = Router();
 
@@ -64,6 +65,25 @@ interface SettingRow extends RowDataPacket {
   setting_key: string;
   setting_value: string | null;
 }
+
+const PUBLIC_SETTING_KEYS = [
+  'whatsapp',
+  'call_phone',
+  'contact_email',
+  'contact_address',
+  'city',
+  'pincode',
+  'cta_text',
+  'cta_url',
+  'youtube_url',
+  'linkedin_url',
+  'tiktok_url',
+  'x_url',
+  'pinterest_url',
+  'google_business_url',
+  'other_social_url',
+  'working_hours',
+] as const;
 
 const isValidSlug = (value: string): boolean => /^[a-z0-9][a-z0-9-]{1,179}$/i.test(value);
 
@@ -157,22 +177,27 @@ router.get('/websites/:slug', async (request, response) => {
   const [settingRows] = await pool.execute<SettingRow[]>(
     `SELECT setting_key, setting_value
      FROM business_settings
-     WHERE business_id = ?`,
-    [business.id]
+     WHERE business_id = ? AND setting_key IN (${PUBLIC_SETTING_KEYS.map(() => '?').join(', ')})`,
+    [business.id, ...PUBLIC_SETTING_KEYS]
   );
 
   const settings = Object.fromEntries(
     settingRows.map((row) => [row.setting_key, row.setting_value])
   );
 
-  const seo = {
-    title: settings.seo_title || `${business.name} | ${business.category}`,
-    description: settings.seo_description || business.description || `Visit ${business.name} for ${business.category.toLowerCase()} offerings and contact information.`,
-    canonicalUrl: new URL(`websites/${business.slug}/`, env.siteUrl).href,
-    ogTitle: settings.og_title || business.name,
-    ogDescription: settings.og_description || business.description || business.category,
-    ogImage: settings.og_image || '',
-  };
+  const seo = resolveTenantSeo({
+    name: business.name,
+    category: business.category,
+    description: business.description,
+    slug: business.slug,
+    settings: {
+      seo_title: settings.seo_title,
+      seo_description: settings.seo_description,
+      og_title: settings.og_title,
+      og_description: settings.og_description,
+      og_image: settings.og_image,
+    },
+  }, env.siteUrl);
 
   response.json({
     business: normalizeBusiness(business),
@@ -206,12 +231,13 @@ router.get('/websites/:slug', async (request, response) => {
       sort_order: item.sort_order,
       status: item.status,
     })),
-    seo,
-    subscription: {
-      plan: business.plan,
-      amount: business.amount,
-      status: business.subscription_status,
-      expiry_date: business.expiry_date,
+    seo: {
+      title: seo.title,
+      description: seo.description,
+      canonicalUrl: seo.canonicalUrl,
+      ogTitle: seo.ogTitle,
+      ogDescription: seo.ogDescription,
+      ogImage: seo.imageUrl,
     },
   });
 });
