@@ -251,6 +251,7 @@ export function WebsitesAdminDashboard() {
       setBusy(false);
     }
     setFormMode(null);
+    setSelectedBusiness(null);
   };
 
   const createBusiness = async (event: FormEvent<HTMLFormElement>) => {
@@ -383,11 +384,33 @@ export function WebsitesAdminDashboard() {
     }
   };
 
+  const deleteBusiness = async (business: BusinessSummary) => {
+    const confirmed = window.confirm(
+      `Permanently delete ${business.name}? This removes its website, products, categories, gallery, enquiries, settings and subscription. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      await apiRequest(`/api/admin/businesses/${business.id}`, { method: 'DELETE' });
+      setNotice(`${business.name} was deleted.`);
+      closeBusinessForm();
+      await load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete business');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const active = businesses.filter((business) => business.status === 'ACTIVE' && !isExpired(business)).length;
   const expired = businesses.filter(isExpired).length;
   const drafts = businesses.filter((business) => business.status === 'INACTIVE').length;
   const enquiries = businesses.reduce((count, business) => count + Number(business.enquiry_count || 0), 0);
   const expiring = businesses.filter(isExpiringSoon).length;
+  const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
 
   return (
     <main className="min-h-screen bg-[#f7f6f2] px-4 py-7 text-[#0E2B22] sm:px-6 sm:py-10">
@@ -431,7 +454,7 @@ export function WebsitesAdminDashboard() {
               ) : (
                 <>
                   <div className="space-y-3 p-3 md:hidden">
-                    {businesses.map((business) => <BusinessCard key={business.id} business={business} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} />)}
+                    {businesses.map((business) => <BusinessCard key={business.id} business={business} busy={busy} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} onDelete={() => void deleteBusiness(business)} />)}
                   </div>
                   <div className="hidden overflow-x-auto md:block">
                     <table className="min-w-[1000px] w-full text-left text-sm">
@@ -447,7 +470,7 @@ export function WebsitesAdminDashboard() {
                             <td className="px-4 py-4"><StatusBadge value={business.status === 'INACTIVE' ? 'DRAFT' : isExpired(business) ? 'EXPIRED' : 'ACTIVE'} /></td>
                             <td className="px-4 py-4">{business.plan || '—'}<p className="text-xs text-[#758078]">{business.subscription_status || 'No subscription'}</p></td>
                             <td className="px-4 py-4">{formatDate(business.expiry_date)}</td>
-                            <td className="px-4 py-4"><BusinessActions business={business} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} /></td>
+                            <td className="px-4 py-4"><BusinessActions business={business} busy={busy} onView={() => openBusinessForm(business, 'view')} onEdit={() => openBusinessForm(business, 'edit')} onSubscription={() => openBusinessForm(business, 'subscription')} onToggle={() => void toggleStatus(business)} onDelete={() => void deleteBusiness(business)} /></td>
                           </tr>
                         ))}
                       </tbody>
@@ -464,33 +487,42 @@ export function WebsitesAdminDashboard() {
         <div className="fixed inset-0 z-50 overflow-y-auto bg-[#12221b]/55 p-3 sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeBusinessForm(); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="business-modal-title" className="mx-auto my-3 max-w-3xl rounded-2xl bg-[#fbfaf7] shadow-2xl sm:my-8">
             <div className="flex items-start justify-between border-b border-[#e8e2d7] px-5 py-4 sm:px-7">
-              <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d7723]">{formMode === 'create' ? 'New tenant' : formMode === 'subscription' ? 'Billing' : 'Business details'}</p><h2 id="business-modal-title" className="mt-1 text-2xl font-bold">{formMode === 'create' ? 'Create business' : formMode === 'subscription' ? 'Manage subscription' : 'Edit business'}</h2></div>
+              <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#9d7723]">{formMode === 'create' ? 'New tenant' : formMode === 'subscription' ? 'Billing' : formMode === 'view' ? 'Business overview' : 'Business details'}</p><h2 id="business-modal-title" className="mt-1 text-2xl font-bold">{formMode === 'create' ? 'Create business' : formMode === 'subscription' ? 'Manage subscription' : formMode === 'view' ? 'Business details' : 'Edit business'}</h2></div>
               <button className="rounded-full px-3 py-2 text-lg text-[#68746c] hover:bg-[#eeeae1]" onClick={closeBusinessForm} aria-label="Close">×</button>
             </div>
             <form onSubmit={formMode === 'create' ? createBusiness : saveBusiness} className="max-h-[calc(100vh-130px)] space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
               {formMode === 'view' ? (
-                <section className="grid gap-4 sm:grid-cols-2">
-                  {[
-                    ['Business', selectedBusiness?.name],
-                    ['Public URL', `${window.location.origin}/websites/${selectedBusiness?.slug ?? ''}`],
-                    ['Category', selectedBusiness?.category],
-                    ['Owner', selectedBusiness?.owner_name || 'Pending'],
-                    ['Owner email', selectedBusiness?.owner_email || '—'],
-                    ['Template', selectedBusiness?.template_name || '—'],
-                    ['Status', selectedBusiness?.status || '—'],
-                    ['Subscription', selectedBusiness?.plan || '—'],
-                    ['Annual price', selectedBusiness?.amount ? `₹${Number(selectedBusiness.amount).toLocaleString('en-IN')}` : '—'],
-                    ['Expiry', formatDate(selectedBusiness?.expiry_date)],
-                    ['Enquiries', String(selectedBusiness?.enquiry_count ?? 0)],
-                    ['Phone', selectedBusiness?.phone || '—'],
-                    ['Email', selectedBusiness?.email || '—'],
-                    ['Meta title', selectedBusiness?.seo_title || 'Automatic default'],
-                    ['Meta description', selectedBusiness?.seo_description || 'Automatic default'],
-                    ['Open Graph title', selectedBusiness?.og_title || 'Automatic default'],
-                    ['Open Graph description', selectedBusiness?.og_description || 'Automatic default'],
-                    ['Open Graph image', selectedBusiness?.og_image || 'Automatic default'],
-                  ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e8e2d7] bg-white p-4"><p className="text-xs font-semibold text-[#718078]">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>)}
-                </section>
+                <>
+                  <section className="grid gap-4 sm:grid-cols-2">
+                    {[
+                      ['Business', selectedBusiness?.name],
+                      ['Public URL', `${window.location.origin}/websites/${selectedBusiness?.slug ?? ''}`],
+                      ['Category', selectedBusiness?.category],
+                      ['Owner', selectedBusiness?.owner_name || 'Pending'],
+                      ['Owner email', selectedBusiness?.owner_email || '—'],
+                      ['Template', selectedBusiness?.template_name || '—'],
+                      ['Status', selectedBusiness?.status || '—'],
+                      ['Subscription', selectedBusiness?.plan || '—'],
+                      ['Annual price', selectedBusiness?.amount ? `₹${Number(selectedBusiness.amount).toLocaleString('en-IN')}` : '—'],
+                      ['Expiry', formatDate(selectedBusiness?.expiry_date)],
+                      ['Enquiries', String(selectedBusiness?.enquiry_count ?? 0)],
+                      ['Phone', selectedBusiness?.phone || '—'],
+                      ['Email', selectedBusiness?.email || '—'],
+                      ['Meta title', selectedBusiness?.seo_title || 'Automatic default'],
+                      ['Meta description', selectedBusiness?.seo_description || 'Automatic default'],
+                      ['Open Graph title', selectedBusiness?.og_title || 'Automatic default'],
+                      ['Open Graph description', selectedBusiness?.og_description || 'Automatic default'],
+                      ['Open Graph image', selectedBusiness?.og_image || 'Automatic default'],
+                    ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#e8e2d7] bg-white p-4"><p className="text-xs font-semibold text-[#718078]">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>)}
+                  </section>
+                  {selectedBusiness ? (
+                    <DangerZoneSection
+                      businessName={selectedBusiness.name}
+                      onDelete={() => void deleteBusiness(selectedBusiness)}
+                      busy={busy}
+                    />
+                  ) : null}
+                </>
               ) : formMode === 'create' ? (
                 <>
                   <FormSection title="Business">
@@ -527,7 +559,7 @@ export function WebsitesAdminDashboard() {
                   />
                   <section>
                     <h3 className="font-bold">Choose a template</h3>
-                    <p className="mt-1 text-sm text-[#68746c]">Each preview opens the same live demo shown on the public websites page.</p>
+                    <p className="mt-1 text-sm text-[#68746c]">Choose a layout for this website. The preview below changes with your selection.</p>
                     {templates.length === 0 ? <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p> : (
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {templates.map((template) => {
@@ -537,24 +569,29 @@ export function WebsitesAdminDashboard() {
                               <input className="sr-only" type="radio" name="template" value={template.slug} required checked={form.template_slug === template.slug} onChange={() => updateField('template_slug', template.slug)} />
                               <span className="flex items-center justify-between"><strong>{template.name}</strong><span className="text-xs font-semibold text-[#9d7723]">{form.template_slug === template.slug ? 'Selected' : 'Select'}</span></span>
                               <span className="mt-2 block text-sm leading-5 text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
-                              <span className="relative mt-4 block h-40 overflow-hidden rounded-xl bg-[#f4f5f2]" aria-hidden="true">
-                                <iframe
-                                  title={`${template.name} live storefront preview`}
-                                  src={`/websites/${getWebsiteTemplateDemoSlug(template.slug)}`}
-                                  loading="lazy"
-                                  tabIndex={-1}
-                                  className="pointer-events-none absolute left-0 top-0 border-0"
-                                  style={{ width: '400%', height: '640px', transform: 'scale(0.25)', transformOrigin: 'top left' }}
-                                />
-                              </span>
                               <span className="mt-3 block text-xs font-semibold text-[#526158]">
-                                {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'} · same live demo as websites page
+                                {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'}
                               </span>
                             </label>
                           );
                         })}
                       </div>
                     )}
+                    {selectedTemplate ? (
+                      <section className="mt-4 overflow-hidden rounded-xl border border-[#ded9cd] bg-white" aria-live="polite" aria-label={`${selectedTemplate.name} live template preview`}>
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee9df] px-4 py-3">
+                          <div><p className="text-[11px] font-bold uppercase tracking-wide text-[#8a958e]">Selected template</p><h4 className="mt-0.5 font-semibold text-[#173328]">{selectedTemplate.name}</h4></div>
+                          <a href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#173328] underline decoration-[#c6b676] underline-offset-4">Open full demo</a>
+                        </div>
+                        <iframe
+                          key={selectedTemplate.slug}
+                          title={`${selectedTemplate.name} live storefront preview`}
+                          src={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
+                          loading="lazy"
+                          className="h-80 w-full border-0 bg-[#f4f5f2] sm:h-[28rem]"
+                        />
+                      </section>
+                    ) : null}
                     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                       <span className="font-semibold text-[#526158]">Explore storefront demos:</span>
                       {[
@@ -630,12 +667,52 @@ export function WebsitesAdminDashboard() {
                       description={form.description}
                     />
                   ) : null}
+                  {formMode === 'edit' && selectedBusiness ? (
+                    <DangerZoneSection
+                      businessName={selectedBusiness.name}
+                      onDelete={() => void deleteBusiness(selectedBusiness)}
+                      busy={busy}
+                    />
+                  ) : null}
                 </>
               )}
               {error ? <Notice>{error}</Notice> : null}
-              <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:justify-end">
-                <button className={secondaryButtonClassName} type="button" onClick={closeBusinessForm}>Cancel</button>
-                {formMode !== 'view' ? <button className={buttonClassName} type="submit" disabled={busy || (formMode === 'create' && templates.length === 0)}>{busy ? 'Saving…' : formMode === 'create' ? 'Create website' : 'Save changes'}</button> : null}
+              <div className="sticky bottom-0 flex flex-col-reverse gap-2 border-t border-[#e8e2d7] bg-[#fbfaf7] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  {selectedBusiness && (formMode === 'edit' || formMode === 'view') ? (
+                    <button
+                      type="button"
+                      className={`${secondaryButtonClassName} border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300`}
+                      onClick={() => void deleteBusiness(selectedBusiness)}
+                      disabled={busy}
+                    >
+                      {busy ? 'Deleting…' : 'Delete business'}
+                    </button>
+                  ) : null}
+                </div>
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                  <button className={secondaryButtonClassName} type="button" onClick={closeBusinessForm}>
+                    {formMode === 'view' ? 'Close' : 'Cancel'}
+                  </button>
+                  {formMode === 'view' && selectedBusiness ? (
+                    <button
+                      className={buttonClassName}
+                      type="button"
+                      onClick={() => setFormMode('edit')}
+                    >
+                      Edit business
+                    </button>
+                  ) : null}
+                  {formMode !== 'view' ? (
+                    <button
+                      className={buttonClassName}
+                      type="submit"
+                      disabled={busy || (formMode === 'create' && templates.length === 0)}
+                    >
+                      {busy ? 'Saving…' : formMode === 'create' ? 'Create website' : 'Save changes'}
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </form>
           </section>
@@ -807,6 +884,37 @@ function SeoSettingsSection({
   );
 }
 
+function DangerZoneSection({
+  businessName,
+  onDelete,
+  busy,
+}: {
+  businessName: string;
+  onDelete: () => void;
+  busy: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-red-200 bg-red-50/50 p-4 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-base font-bold text-red-950">Danger zone</h3>
+          <p className="mt-1 text-sm leading-6 text-red-800">
+            Permanently delete <strong className="font-semibold text-red-950">{businessName}</strong>? This removes its website, products, categories, gallery, enquiries, settings and subscription. This cannot be undone.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          onClick={onDelete}
+          disabled={busy}
+        >
+          {busy ? 'Deleting…' : 'Delete business'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function StatusBadge({ value }: { value: string }) {
   const className = value === 'ACTIVE' ? 'bg-emerald-50 text-emerald-800' : value === 'EXPIRED' ? 'bg-amber-50 text-amber-800' : 'bg-slate-100 text-slate-700';
   return <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${className}`}>{value}</span>;
@@ -814,17 +922,21 @@ function StatusBadge({ value }: { value: string }) {
 
 function BusinessCard({
   business,
+  busy,
   onView,
   onEdit,
   onSubscription,
   onToggle,
+  onDelete,
 }: {
   key?: string;
   business: BusinessSummary;
+  busy: boolean;
   onView: () => void;
   onEdit: () => void;
   onSubscription: () => void;
   onToggle: () => void;
+  onDelete: () => void;
 }) {
   return (
     <article className="rounded-2xl border border-[#e8e2d7] bg-white p-4 shadow-sm">
@@ -835,24 +947,28 @@ function BusinessCard({
         <div><p className="text-xs text-[#758078]">Subscription</p><p className="mt-0.5 font-medium">{business.plan || '—'}</p></div>
         <div><p className="text-xs text-[#758078]">Expiry</p><p className="mt-0.5 font-medium">{formatDate(business.expiry_date)}</p></div>
       </div>
-      <BusinessActions business={business} onView={onView} onEdit={onEdit} onSubscription={onSubscription} onToggle={onToggle} />
+      <BusinessActions business={business} busy={busy} onView={onView} onEdit={onEdit} onSubscription={onSubscription} onToggle={onToggle} onDelete={onDelete} />
     </article>
   );
 }
 
 function BusinessActions({
   business,
+  busy,
   onView,
   onEdit,
   onSubscription,
   onToggle,
+  onDelete,
 }: {
   key?: string;
   business: BusinessSummary;
+  busy: boolean;
   onView: () => void;
   onEdit: () => void;
   onSubscription: () => void;
   onToggle: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="mt-3 flex flex-wrap gap-2">
@@ -861,6 +977,7 @@ function BusinessActions({
       <button className={secondaryButtonClassName} onClick={onSubscription}>Subscription</button>
       <button className={secondaryButtonClassName} onClick={onToggle}>{business.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button>
       <a className={secondaryButtonClassName} href={`/websites/${business.slug}`} target="_blank" rel="noreferrer">Open website ↗</a>
+      <button className={`${secondaryButtonClassName} border-red-200 text-red-700 hover:bg-red-50`} onClick={onDelete} disabled={busy}>Delete</button>
     </div>
   );
 }

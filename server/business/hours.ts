@@ -52,8 +52,28 @@ export const isValidWorkingHoursValue = (value: string): boolean => {
 export const formatWorkingHours = (value: string | null | undefined): string => {
   const schedule = parseWeeklyHours(value);
   if (!schedule) return value?.trim() ?? '';
-  return BUSINESS_DAYS.map(({ key, shortLabel }) => {
-    const hours = schedule[key];
-    return hours.closed ? `${shortLabel}: Closed` : `${shortLabel}: ${hours.open}–${hours.close}`;
-  }).join(' · ');
+  const formatTime = (value: string): string => {
+    const [hour, minute] = value.split(':').map(Number);
+    const meridiem = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${String(hour12).padStart(2, '0')}:${String(minute).padStart(2, '0')} ${meridiem}`;
+  };
+  const lines: string[] = [];
+  let index = 0;
+  while (index < BUSINESS_DAYS.length) {
+    const first = schedule[BUSINESS_DAYS[index].key];
+    let lastIndex = index;
+    while (lastIndex + 1 < BUSINESS_DAYS.length) {
+      const next = schedule[BUSINESS_DAYS[lastIndex + 1].key];
+      if (next.closed !== first.closed || (!first.closed && (next.open !== first.open || next.close !== first.close))) break;
+      lastIndex += 1;
+    }
+    const dayRange = index === lastIndex
+      ? BUSINESS_DAYS[index].label
+      : `${BUSINESS_DAYS[index].label} – ${BUSINESS_DAYS[lastIndex].label}`;
+    const hoursText = first.closed ? 'Closed' : `${formatTime(first.open)} – ${formatTime(first.close)}`;
+    lines.push(`${dayRange} ${hoursText}`);
+    index = lastIndex + 1;
+  }
+  return lines.join('\n');
 };

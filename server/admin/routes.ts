@@ -665,4 +665,53 @@ router.patch('/businesses/:id', async (request, response) => {
   response.json({ success: true });
 });
 
+router.delete('/businesses/:id', async (request, response) => {
+  const { id } = request.params;
+  if (!isPositiveInteger(id)) {
+    response.status(404).json({ error: 'Business not found' });
+    return;
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [businessRows] = await connection.execute<RowDataPacket[]>(
+      'SELECT id FROM businesses WHERE id = ? FOR UPDATE',
+      [id]
+    );
+    if (!businessRows[0]) {
+      await connection.rollback();
+      response.status(404).json({ error: 'Business not found' });
+      return;
+    }
+
+    const [ownerRows] = await connection.execute<Array<RowDataPacket & { user_id: string }>>(
+      'SELECT user_id FROM business_users WHERE business_id = ? AND role = \'BUSINESS_OWNER\'',
+      [id]
+    );
+
+    for (const table of ['enquiries', 'gallery', 'products', 'categories', 'business_settings', 'subscriptions', 'business_users'] as const) {
+      await connection.execute(`DELETE FROM ${table} WHERE business_id = ?`, [id]);
+    }
+    await connection.execute('DELETE FROM businesses WHERE id = ?', [id]);
+
+    for (const owner of ownerRows) {
+      await connection.execute(
+        `DELETE FROM users
+         WHERE id = ? AND role = 'BUSINESS_OWNER'
+           AND NOT EXISTS (SELECT 1 FROM business_users WHERE user_id = users.id)`,
+        [owner.user_id]
+      );
+    }
+
+    await connection.commit();
+    response.json({ success: true });
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+});
+
 export default router;

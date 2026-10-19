@@ -259,9 +259,13 @@ test('admin can create a business and duplicate slug is rejected', async () => {
   });
 
   assert.equal(createResponse.status, 201);
-  const createdBody = await createResponse.json() as { business?: { slug: string; owner?: { email: string } } };
+  const createdBody = await createResponse.json() as { business?: { slug: string; template?: { slug: string }; owner?: { email: string } } };
   assert.equal(createdBody.business?.slug, slug);
   assert.equal(createdBody.business?.owner?.email, ownerEmail);
+  assert.equal(createdBody.business?.template?.slug, 'food-bakery');
+  const publicCreatedResponse = await request(`/api/public/websites/${slug}`);
+  const publicCreatedBody = await publicCreatedResponse.json() as { template?: { slug: string } };
+  assert.equal(publicCreatedBody.template?.slug, 'food-bakery');
 
   const duplicateResponse = await request('/api/admin/businesses', {
     method: 'POST',
@@ -312,6 +316,92 @@ test('admin can create a draft website that remains unpublished', async () => {
 
   const publicResponse = await request(`/api/public/websites/${slug}`);
   assert.equal(publicResponse.status, 404);
+});
+
+test('only Super Admin can delete a tenant and related records while preserving shared owners', async () => {
+  const adminCookie = (await login('admin@ybgp.local', demoPassword)).cookie;
+  const timestamp = Date.now();
+  const ownerEmail = `delete-tenant-${timestamp}@example.test`;
+  const slugs = [`delete-tenant-a-${timestamp}`, `delete-tenant-b-${timestamp}`];
+  createdEmails.push(ownerEmail);
+  createdSlugs.push(...slugs);
+
+  for (const [index, slug] of slugs.entries()) {
+    const response = await request('/api/admin/businesses', {
+      method: 'POST',
+      cookie: adminCookie,
+      body: {
+        name: `Delete Test Tenant ${index}`,
+        slug,
+        category: 'Services',
+        template_slug: 'modern-business',
+        owner_name: 'Shared Delete Test Owner',
+        owner_email: ownerEmail,
+        owner_password: 'StrongPass!123',
+        published: true,
+      },
+    });
+    assert.equal(response.status, 201);
+  }
+
+  const [businessRows] = await pool.execute<Array<RowDataPacket & { id: string; slug: string }>>(
+    'SELECT id, slug FROM businesses WHERE slug IN (?, ?)',
+    slugs
+  );
+  const tenantA = businessRows.find((business) => business.slug === slugs[0]);
+  assert.ok(tenantA);
+  const businessId = tenantA.id;
+  const ownerCookie = (await login(ownerEmail, 'StrongPass!123')).cookie;
+
+  const deniedDelete = await request(`/api/admin/businesses/${businessId}`, {
+    method: 'DELETE',
+    cookie: ownerCookie,
+  });
+  assert.equal(deniedDelete.status, 403);
+
+  const [categoryResult] = await pool.execute(
+    'INSERT INTO categories (business_id, name, sort_order, status) VALUES (?, ?, 0, \'ACTIVE\')',
+    [businessId, 'Delete Test Category']
+  );
+  const categoryId = Number((categoryResult as { insertId: number }).insertId);
+  await pool.execute(
+    'INSERT INTO products (business_id, category_id, name, slug, description, price, status, sort_order) VALUES (?, ?, ?, ?, ?, ?, \'ACTIVE\', 0)',
+    [businessId, categoryId, 'Delete Test Product', `delete-test-${timestamp}`, 'Temporary test item', 1]
+  );
+  await pool.execute(
+    'INSERT INTO gallery (business_id, image, title, sort_order, status) VALUES (?, ?, ?, 0, \'ACTIVE\')',
+    [businessId, '/uploads/delete-test.jpg', 'Delete Test Gallery']
+  );
+  await pool.execute(
+    'INSERT INTO enquiries (business_id, name, phone, message, source, status) VALUES (?, ?, ?, ?, \'WEBSITE\', \'NEW\')',
+    [businessId, 'Delete Test Enquiry', '1234567890', 'Temporary test enquiry']
+  );
+  await pool.execute(
+    'INSERT INTO business_settings (business_id, setting_key, setting_value) VALUES (?, ?, ?)',
+    [businessId, 'delete_test_setting', 'temporary']
+  );
+
+  const deleted = await request(`/api/admin/businesses/${businessId}`, { method: 'DELETE', cookie: adminCookie });
+  assert.equal(deleted.status, 200);
+  for (const table of ['businesses', 'business_users', 'categories', 'products', 'gallery', 'enquiries', 'business_settings', 'subscriptions'] as const) {
+    const [rows] = await pool.execute<Array<RowDataPacket & { count: number }>>(
+      `SELECT COUNT(*) AS count FROM ${table} WHERE business_id = ?`,
+      [businessId]
+    );
+    assert.equal(Number(rows[0].count), 0, `${table} should be removed for the deleted tenant`);
+  }
+
+  const [sharedOwnerRows] = await pool.execute<Array<RowDataPacket & { id: string }>>(
+    'SELECT id FROM users WHERE email = ? AND role = \'BUSINESS_OWNER\'',
+    [ownerEmail]
+  );
+  assert.equal(sharedOwnerRows.length, 1, 'the owner account remains because it still owns another tenant');
+  const ownerBusiness = await request('/api/business/me', { cookie: ownerCookie });
+  const ownerBusinessBody = await ownerBusiness.json() as { business?: { slug: string } };
+  assert.equal(ownerBusiness.status, 200);
+  assert.equal(ownerBusinessBody.business?.slug, slugs[1]);
+  assert.equal((await request(`/api/public/websites/${slugs[0]}`)).status, 404);
+  assert.equal((await request(`/api/public/websites/${slugs[1]}`)).status, 200);
 });
 
 test('owners can atomically update only their own profile, contact, location and social links', async () => {

@@ -176,7 +176,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <p className="mt-5 max-w-xl text-base leading-7 text-white/80 sm:text-lg">{business.description || seo.description}</p>
             {heroActions}
           </div>
-          <p className="absolute bottom-5 right-6 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">{displayWorkingHours || settings.city || 'Made fresh for you'}</p>
+          <p className="absolute bottom-5 right-6 whitespace-pre-line text-right text-xs font-semibold uppercase leading-5 tracking-[0.2em] text-white/75">{displayWorkingHours || settings.city || 'Made fresh for you'}</p>
         </section>
       ) : salonLayout ? (
         <section id="top" className="bg-[#f0e5df] px-4 pb-12 pt-12 text-center sm:px-6 sm:pb-16 sm:pt-16">
@@ -188,7 +188,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <div className="relative mx-auto mt-10 h-[260px] max-w-3xl overflow-hidden rounded-t-[12rem] bg-gradient-to-br from-[#cba99e] via-[#f1e5df] to-[#9b7169] sm:h-[360px] sm:rounded-t-[18rem]">
               {heroImage ? <img src={heroImage} alt={`${business.name} studio`} className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center font-serif text-5xl text-white/75">{business.name.slice(0, 1).toUpperCase()}</div>}
             </div>
-            {displayWorkingHours ? <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-[#8f5c54]">{displayWorkingHours}</p> : null}
+            {displayWorkingHours ? <p className="mt-5 whitespace-pre-line text-xs font-semibold uppercase leading-5 tracking-[0.18em] text-[#8f5c54]">{displayWorkingHours}</p> : null}
           </div>
         </section>
       ) : jewelleryLayout ? (
@@ -215,7 +215,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               <div className="relative flex min-h-60 items-center justify-center overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#6f9680] to-[#294a38] p-8">
                 {heroImage ? <img src={heroImage} alt={`${business.name} gallery`} className="absolute inset-0 h-full w-full object-cover opacity-50" /> : null}
                 <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full border-[30px] border-white/10" />
-                <div className="relative text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.25em] text-white/65">{settings.city || 'Local business'}</p><p className="mt-4 text-3xl font-bold">{business.category}</p><p className="mt-3 text-sm text-white/75">{displayWorkingHours || 'Here to help you'}</p></div>
+                <div className="relative text-center text-white"><p className="text-xs font-bold uppercase tracking-[0.25em] text-white/65">{settings.city || 'Local business'}</p><p className="mt-4 text-3xl font-bold">{business.category}</p><p className="mt-3 whitespace-pre-line text-sm leading-5 text-white/75">{displayWorkingHours || 'Here to help you'}</p></div>
               </div>
             </div>
           </div>
@@ -285,7 +285,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             className="ml-auto inline-flex max-w-full items-center gap-2 text-right text-white/65 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d3bb78] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10271d]"
           >
             <span>Designed &amp; Powered by YBGP Websites</span>
-            <img src="/Black%20and%20Gold%20YBGP%20Logo.png" alt="YBGP logo" className="h-7 w-[70px] shrink-0 object-contain" />
+            <span className="inline-flex shrink-0 rounded bg-white px-1.5 py-1">
+              <img src="/Black%20and%20Gold%20YBGP%20Logo.png" alt="YBGP logo" className="h-7 w-[70px] object-contain" />
+            </span>
           </a>
         </div>
       </footer>
