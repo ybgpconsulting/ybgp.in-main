@@ -554,11 +554,8 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
 
 export const getTemplateDefaults = (slugOrDesign: string, category?: string | null): DemoBusiness => {
   let normalized = (slugOrDesign || '').toLowerCase();
-  if ((!normalized || normalized === 'modern-business') && category) {
-    const inferred = inferTemplateSlugFromCategory(category);
-    if (inferred !== 'modern-business') {
-      normalized = inferred;
-    }
+  if (!normalized && category) {
+    normalized = inferTemplateSlugFromCategory(category);
   }
 
   if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {
@@ -571,29 +568,13 @@ export const getTemplateDefaults = (slugOrDesign: string, category?: string | nu
     return demoBusinesses['demo-jewellery'];
   }
 
-  if (category) {
-    const cat = category.toLowerCase();
-    if (cat.includes('clinic') || cat.includes('doctor') || cat.includes('dental') || cat.includes('health') || cat.includes('physio') || cat.includes('medical') || cat.includes('hospital')) {
-      return demoBusinesses['demo-clinic'];
-    }
-    if (cat.includes('astrolog') || cat.includes('jyotish') || cat.includes('horoscope') || cat.includes('vastu') || cat.includes('tarot') || cat.includes('kundli')) {
-      return demoBusinesses['demo-astrology'];
-    }
-    if (cat.includes('tour') || cat.includes('travel') || cat.includes('trip') || cat.includes('holiday') || cat.includes('taxi') || cat.includes('cab')) {
-      return demoBusinesses['demo-travel'];
-    }
-  }
-
   return demoBusinesses['demo-modern'];
 };
 
 export const getTemplateTheme = (slugOrDesign: string, category?: string | null): WebsiteTheme => {
   let normalized = (slugOrDesign || '').toLowerCase();
-  if ((!normalized || normalized === 'modern-business') && category) {
-    const inferred = inferTemplateSlugFromCategory(category);
-    if (inferred !== 'modern-business') {
-      normalized = inferred;
-    }
+  if (!normalized && category) {
+    normalized = inferTemplateSlugFromCategory(category);
   }
 
   if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {

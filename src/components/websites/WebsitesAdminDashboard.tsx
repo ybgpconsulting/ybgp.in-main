@@ -203,7 +203,7 @@ export function WebsitesAdminDashboard() {
   const updateField = (key: string, value: string) => {
     setForm((previous) => {
       const next = { ...previous, [key]: value };
-      if (key === 'category' && formMode === 'create' && value.trim()) {
+      if (key === 'category' && value.trim()) {
         const suggested = inferTemplateSlugFromCategory(value);
         if (templates.some((t) => t.slug === suggested)) {
           next.template_slug = suggested;
@@ -246,6 +246,10 @@ export function WebsitesAdminDashboard() {
         name: current.name,
         slug: current.slug,
         category: current.category,
+        template_slug: current.template_slug
+          ?? templates.find((t) => t.id === current.template_id)?.slug
+          ?? inferTemplateSlugFromCategory(current.category)
+          ?? 'modern-business',
         description: current.description ?? '',
         phone: current.phone ?? '',
         whatsapp: current.whatsapp ?? '',
@@ -416,6 +420,7 @@ export function WebsitesAdminDashboard() {
             og_title: form.og_title,
             og_description: form.og_description,
             og_image: form.og_image,
+            template_slug: form.template_slug,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -475,12 +480,16 @@ export function WebsitesAdminDashboard() {
   const expiring = businesses.filter(isExpiringSoon).length;
   const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
 
-  const renderTemplateSelector = () => (
-    <section>
+  const renderTemplateSelector = (isEdit = false) => (
+    <section className={isEdit ? "rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-xs" : ""}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-bold">Choose storefront template</h3>
-          <p className="mt-0.5 text-xs text-[#68746c]">Select the starting layout and style for this website.</p>
+          <h3 className="font-bold">{isEdit ? "Storefront layout & template" : "Choose storefront template"}</h3>
+          <p className="mt-0.5 text-xs text-[#68746c]">
+            {isEdit
+              ? "Change the design, layout, and theme applied to this business website."
+              : "Select the starting layout and style for this website."}
+          </p>
         </div>
         {selectedTemplate ? (
           <a
@@ -514,7 +523,7 @@ export function WebsitesAdminDashboard() {
                 <input
                   className="sr-only"
                   type="radio"
-                  name="create-template"
+                  name={isEdit ? "edit-template" : "create-template"}
                   value={template.slug}
                   checked={isSelected}
                   onChange={() => updateField('template_slug', template.slug)}
@@ -762,6 +771,7 @@ export function WebsitesAdminDashboard() {
                         label="Category"
                         value={form.category}
                         onChange={(value) => updateField('category', value)}
+                        onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
                         required
                       />
                     </div>
@@ -774,6 +784,7 @@ export function WebsitesAdminDashboard() {
                     <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
                     <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
                   </FormSection>
+                  {formMode === 'edit' ? renderTemplateSelector(true) : null}
                   {formMode === 'edit' ? (
                     <FormSection title="Contact, Location & Social Links">
                       <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />

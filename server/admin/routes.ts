@@ -482,14 +482,27 @@ router.patch('/businesses/:id', async (request, response) => {
     response.status(400).json({ error: 'No changes supplied' });
     return;
   }
-  if (body.template_id !== undefined || body.template_slug !== undefined || body.template !== undefined) {
-    response.status(400).json({ error: 'A template can only be selected when creating a business' });
-    return;
-  }
   const seoSettings = validateSeoSettings(body);
   if (seoSettings.error) {
     response.status(400).json({ error: seoSettings.error });
     return;
+  }
+
+  const templateInput = typeof body.template_id === 'string' || typeof body.template_id === 'number'
+    ? body.template_id
+    : typeof body.template_slug === 'string'
+      ? body.template_slug
+      : typeof body.template === 'string'
+        ? body.template
+        : undefined;
+
+  let templateToApply: { id: string; name: string; slug: string } | null = null;
+  if (templateInput !== undefined) {
+    templateToApply = await findTemplate(templateInput);
+    if (!templateToApply) {
+      response.status(400).json({ error: 'Selected template is invalid or unavailable' });
+      return;
+    }
   }
 
   const updates: string[] = [];
@@ -579,6 +592,11 @@ router.patch('/businesses/:id', async (request, response) => {
       response.status(400).json({ error: `${field === 'phone' ? 'Phone' : 'WhatsApp'} number must contain 7 to 15 digits` });
       return;
     }
+  }
+
+  if (templateToApply) {
+    updates.push('template_id = ?');
+    values.push(templateToApply.id);
   }
 
   const connection = await pool.getConnection();

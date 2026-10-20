@@ -22,6 +22,12 @@ import {
   SEO_DESCRIPTION_MAX_LENGTH,
   SEO_TITLE_MAX_LENGTH,
 } from '../../../server/seo/shared';
+import {
+  getWebsiteTemplateDemoSlug,
+  getWebsiteTemplateDesign,
+  getWebsiteTemplatePreviewImage,
+  inferTemplateSlugFromCategory,
+} from './templateDesigns';
 import { CategorySelectField } from './businessCategories';
 
 interface OwnerBusiness {
@@ -38,6 +44,17 @@ interface OwnerBusiness {
   facebook_url?: string | null;
   google_maps_url?: string | null;
   business_hours?: string | null;
+  template_slug?: string | null;
+  template_id?: string | null;
+  template_name?: string | null;
+}
+
+interface TemplateOption {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  preview_image: string | null;
 }
 
 interface CategoryRecord {
@@ -110,11 +127,28 @@ export function BusinessProfileManager({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [templates, setTemplates] = useState<TemplateOption[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    void apiRequest<{ templates: TemplateOption[] }>('/api/templates')
+      .then((data) => {
+        if (active && Array.isArray(data?.templates)) {
+          setTemplates(data.templates);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   useEffect(() => {
     const initialForm = {
       name: business.name,
       slug: business.slug,
       category: business.category,
+      template_slug: business.template_slug || inferTemplateSlugFromCategory(business.category) || 'modern-business',
       description: business.description ?? '',
       phone: business.phone ?? '',
       whatsapp: business.whatsapp ?? '',
@@ -208,6 +242,7 @@ export function BusinessProfileManager({
           tiktok_url: form.tiktok_url,
           x_url: form.x_url,
           pinterest_url: form.pinterest_url,
+          template_slug: form.template_slug,
         }),
       });
       setSavedForm(form);
@@ -234,7 +269,16 @@ export function BusinessProfileManager({
             <CategorySelectField
               label="Business category"
               value={form.category ?? ''}
-              onChange={(value) => update('category', value)}
+              onChange={(value) => {
+                update('category', value);
+                const suggested = inferTemplateSlugFromCategory(value);
+                if (suggested) {
+                  update('template_slug', suggested);
+                }
+              }}
+              onTemplateSuggest={(templateSlug) => {
+                update('template_slug', templateSlug);
+              }}
               required
             />
           </div>
@@ -243,6 +287,95 @@ export function BusinessProfileManager({
             <p className="mt-1 text-xs text-[#78827b]">Your website address cannot be changed here, which keeps your existing links working.</p>
           </div>
         </FormSection>
+
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 className="font-bold text-[#173328]">Storefront theme & layout</h3>
+              <p className="mt-0.5 text-xs text-[#68746c]">
+                Select the visual theme and layout tailored for your industry.
+              </p>
+            </div>
+            {form.template_slug ? (
+              <a
+                href={`/websites/${getWebsiteTemplateDemoSlug(form.template_slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
+              >
+                Preview demo theme ↗
+              </a>
+            ) : null}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(templates.length > 0
+              ? templates
+              : [
+                  { id: '1', name: 'Modern Business', slug: 'modern-business', description: 'Clean, corporate layout for services, consulting, and firms.', preview_image: null },
+                  { id: '2', name: 'Food & Bakery', slug: 'food-bakery', description: 'Warm artisanal bakery and cafe showcase with WhatsApp ordering.', preview_image: null },
+                  { id: '3', name: 'Salon & Wellness', slug: 'salon-studio', description: 'High-end beauty atelier with treatment cards and booking focus.', preview_image: null },
+                  { id: '4', name: 'Jewellery Boutique', slug: 'jewellery-boutique', description: 'Obsidian & gold luxury showroom for bespoke jewellery.', preview_image: null },
+                ]
+            ).map((template) => {
+              const design = getWebsiteTemplateDesign(template.slug);
+              const isSelected = (form.template_slug || 'modern-business') === template.slug;
+              const previewImage = getWebsiteTemplatePreviewImage(template.slug);
+              return (
+                <label
+                  key={template.id}
+                  className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition duration-200 ${
+                    isSelected
+                      ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
+                      : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
+                  }`}
+                >
+                  <input
+                    className="sr-only"
+                    type="radio"
+                    name="owner-template"
+                    value={template.slug}
+                    checked={isSelected}
+                    onChange={() => update('template_slug', template.slug)}
+                  />
+                  <div className="relative h-24 w-full overflow-hidden bg-[#e5eee7]">
+                    <img
+                      src={previewImage}
+                      alt=""
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <span
+                      className={`absolute bottom-2 left-2.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        design === 'food'
+                          ? 'bg-[#f4e2d3] text-[#603b2c]'
+                          : design === 'salon'
+                          ? 'bg-[#f0e5df] text-[#8f5c54]'
+                          : design === 'jewellery'
+                          ? 'bg-[#c5a77e] text-[#211a13]'
+                          : 'bg-white text-[#173629]'
+                      }`}
+                    >
+                      {template.name}
+                    </span>
+                    {isSelected ? (
+                      <span className="absolute right-2 top-2 rounded-full bg-[#0E2B22] px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                        ✓ Active theme
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="p-3">
+                    <strong className="block text-sm font-bold text-[#173328]">{template.name}</strong>
+                    <span className="mt-0.5 block line-clamp-1 text-xs text-[#68746c]">
+                      {template.description || 'A clean, responsive business storefront.'}
+                    </span>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        </section>
 
         <FormSection title="Contact details">
           <Field label="Business email" value={form.email ?? ''} onChange={(value) => update('email', value)} type="email" maxLength={254} autoComplete="email" placeholder="hello@example.com" />

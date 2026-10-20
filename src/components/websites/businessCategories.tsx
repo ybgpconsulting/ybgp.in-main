@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { inputClassName } from './shared';
+import { inferTemplateSlugFromCategory } from './templateDesigns';
 
 export interface PredefinedCategory {
   id: string;
@@ -328,17 +329,16 @@ export function CategorySelectField({
     onChange(categoryName);
 
     const found = findPredefinedCategory(categoryName);
-    if (found) {
-      if (onTemplateSuggest) {
-        onTemplateSuggest(found.templateSlug);
-      }
-      if (
-        descriptionFieldProps?.onDescriptionSuggest &&
-        !descriptionFieldProps.currentDescription &&
-        found.descriptionPlaceholder
-      ) {
-        descriptionFieldProps.onDescriptionSuggest(found.descriptionPlaceholder);
-      }
+    const suggestedTemplate = found?.templateSlug || inferTemplateSlugFromCategory(categoryName);
+    if (suggestedTemplate && onTemplateSuggest) {
+      onTemplateSuggest(suggestedTemplate);
+    }
+    if (
+      descriptionFieldProps?.onDescriptionSuggest &&
+      !descriptionFieldProps.currentDescription &&
+      found?.descriptionPlaceholder
+    ) {
+      descriptionFieldProps.onDescriptionSuggest(found.descriptionPlaceholder);
     }
   };
 
@@ -411,7 +411,17 @@ export function CategorySelectField({
             className={inputClassName}
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const nextVal = e.target.value;
+              onChange(nextVal);
+              if (onTemplateSuggest && nextVal.trim()) {
+                const found = findPredefinedCategory(nextVal);
+                const suggested = found?.templateSlug || inferTemplateSlugFromCategory(nextVal);
+                if (suggested) {
+                  onTemplateSuggest(suggested);
+                }
+              }
+            }}
             placeholder="e.g. Clinic, Astrology, Tour & Travels, Pet Care"
             required={required}
             maxLength={120}

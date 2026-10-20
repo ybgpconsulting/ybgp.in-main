@@ -58,18 +58,26 @@ export const inferTemplateSlugFromCategory = (categoryOrName?: string | null): s
     s.includes('barber') ||
     s.includes('makeup') ||
     s.includes('massage') ||
-    s.includes('laser')
+    s.includes('laser') ||
+    s.includes('yoga') ||
+    s.includes('meditation')
   ) {
     return 'salon-studio';
   }
   if (
     s.includes('jewel') ||
+    s.includes('jewelry') ||
     s.includes('gold') ||
     s.includes('silver') ||
     s.includes('diamond') ||
     s.includes('gem') ||
     s.includes('ornament') ||
-    s.includes('luxury boutique')
+    s.includes('luxury boutique') ||
+    s.includes('designer fashion') ||
+    s.includes('apparel') ||
+    s.includes('bridal wear') ||
+    s.includes('lehenga') ||
+    s.includes('couture')
   ) {
     return 'jewellery-boutique';
   }
