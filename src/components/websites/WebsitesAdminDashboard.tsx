@@ -280,10 +280,6 @@ export function WebsitesAdminDashboard() {
         og_title: current.og_title ?? '',
         og_description: current.og_description ?? '',
         og_image: current.og_image ?? '',
-        template_slug: current.template_slug
-          ?? templates.find((t) => t.id === current.template_id)?.slug
-          ?? inferTemplateSlugFromCategory(current.category)
-          ?? 'modern-business',
         plan: current.plan ?? 'YBGP Websites',
         amount: current.amount ?? '1999',
         start_date: current.start_date?.slice(0, 10) ?? today(),
@@ -332,7 +328,7 @@ export function WebsitesAdminDashboard() {
         body: JSON.stringify({
           name: form.name.trim(),
           category: form.category.trim(),
-          slug: form.name.trim(),
+          slug: form.slug.trim() || form.name.trim(),
           template_slug: form.template_slug,
           owner_name: form.owner_name.trim(),
           owner_email: form.owner_email.trim(),
@@ -420,7 +416,6 @@ export function WebsitesAdminDashboard() {
             og_title: form.og_title,
             og_description: form.og_description,
             og_image: form.og_image,
-            template_slug: form.template_slug,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -480,16 +475,12 @@ export function WebsitesAdminDashboard() {
   const expiring = businesses.filter(isExpiringSoon).length;
   const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
 
-  const renderTemplateSelector = (isEdit = false) => (
-    <section className={isEdit ? "rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-xs" : ""}>
+  const renderTemplateSelector = () => (
+    <section>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="font-bold">{isEdit ? "Storefront layout & template" : "Choose storefront template"}</h3>
-          <p className="mt-0.5 text-xs text-[#68746c]">
-            {isEdit
-              ? "Change the design, layout, and theme applied to this business website."
-              : "Select the starting layout and style for this website."}
-          </p>
+          <h3 className="font-bold">Choose storefront template</h3>
+          <p className="mt-0.5 text-xs text-[#68746c]">Select the starting layout and style for this website.</p>
         </div>
         {selectedTemplate ? (
           <a
@@ -523,7 +514,7 @@ export function WebsitesAdminDashboard() {
                 <input
                   className="sr-only"
                   type="radio"
-                  name={isEdit ? "edit-template" : "create-template"}
+                  name="create-template"
                   value={template.slug}
                   checked={isSelected}
                   onChange={() => updateField('template_slug', template.slug)}
@@ -699,6 +690,12 @@ export function WebsitesAdminDashboard() {
                       placeholder="e.g. Copper Chimney or Artisanal Studio"
                       required
                     />
+                    <Field
+                      label="Website slug"
+                      value={form.slug}
+                      onChange={(value) => updateField('slug', value)}
+                      placeholder="Auto-generated from business name if blank"
+                    />
                     <div className="sm:col-span-2">
                       <CategorySelectField
                         label="Category"
@@ -710,7 +707,7 @@ export function WebsitesAdminDashboard() {
                     </div>
                   </FormSection>
 
-                  {renderTemplateSelector(false)}
+                  {renderTemplateSelector()}
 
                   <FormSection title="Owner login credentials">
                     <Field
@@ -765,11 +762,6 @@ export function WebsitesAdminDashboard() {
                         label="Category"
                         value={form.category}
                         onChange={(value) => updateField('category', value)}
-                        onTemplateSuggest={(templateSlug) => {
-                          if (!form.template_slug || form.template_slug === 'modern-business') {
-                            updateField('template_slug', templateSlug);
-                          }
-                        }}
                         required
                       />
                     </div>
@@ -782,7 +774,6 @@ export function WebsitesAdminDashboard() {
                     <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
                     <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
                   </FormSection>
-                  {formMode === 'edit' ? renderTemplateSelector(true) : null}
                   {formMode === 'edit' ? (
                     <FormSection title="Contact, Location & Social Links">
                       <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />

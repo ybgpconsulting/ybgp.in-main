@@ -187,6 +187,10 @@ router.patch('/me', async (request, response) => {
     response.status(400).json({ error: 'Business payload is required' });
     return;
   }
+  if (body.template_id !== undefined || body.template_slug !== undefined) {
+    response.status(400).json({ error: 'A template can only be selected when a super admin creates a business' });
+    return;
+  }
 
   const businessFields = [
     'name',
@@ -326,25 +330,6 @@ router.patch('/me', async (request, response) => {
           return field === 'email' ? value.toLowerCase() || null : value || null;
         }), businessId]
       );
-    }
-
-    const templateInput = typeof body.template_id === 'string' || typeof body.template_id === 'number'
-      ? String(body.template_id)
-      : typeof body.template_slug === 'string'
-        ? body.template_slug.trim()
-        : null;
-
-    if (templateInput) {
-      const [templateRows] = await connection.execute<RowDataPacket[]>(
-        'SELECT id FROM templates WHERE slug = ? OR id = ? LIMIT 1',
-        [templateInput, templateInput]
-      );
-      if (templateRows[0]) {
-        await connection.execute(
-          'UPDATE businesses SET template_id = ? WHERE id = ?',
-          [templateRows[0].id, businessId]
-        );
-      }
     }
 
     const settings: Array<[string, string | null]> = [

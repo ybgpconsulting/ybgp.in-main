@@ -482,6 +482,10 @@ router.patch('/businesses/:id', async (request, response) => {
     response.status(400).json({ error: 'No changes supplied' });
     return;
   }
+  if (body.template_id !== undefined || body.template_slug !== undefined || body.template !== undefined) {
+    response.status(400).json({ error: 'A template can only be selected when creating a business' });
+    return;
+  }
   const seoSettings = validateSeoSettings(body);
   if (seoSettings.error) {
     response.status(400).json({ error: seoSettings.error });
@@ -557,20 +561,6 @@ router.patch('/businesses/:id', async (request, response) => {
   if (typeof body.google_maps_url === 'string') {
     updates.push('google_maps_url = ?');
     values.push(body.google_maps_url.trim() || null);
-  }
-
-  const templateInput = typeof body.template_id === 'string' || typeof body.template_id === 'number'
-    ? body.template_id
-    : typeof body.template_slug === 'string'
-      ? body.template_slug
-      : undefined;
-
-  if (templateInput !== undefined) {
-    const template = await findTemplate(templateInput);
-    if (template) {
-      updates.push('template_id = ?');
-      values.push(template.id);
-    }
   }
 
   const socialUrlFields = ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const;
