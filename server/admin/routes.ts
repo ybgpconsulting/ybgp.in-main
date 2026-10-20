@@ -5,6 +5,7 @@ import { hashPassword } from '../auth/password.js';
 import { requireRoleAuth } from '../auth/middleware.js';
 import { isValidSubscriptionPeriod } from './dates.js';
 import { validateSeoSettings } from '../seo/settings.js';
+import { inferTemplateSlugFromCategory } from '../templates/catalog.js';
 
 const router = Router();
 
@@ -48,6 +49,7 @@ interface BusinessRow extends RowDataPacket {
   created_at: string;
   updated_at: string;
   template_name: string | null;
+  template_slug: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   amount: string | null;
@@ -219,6 +221,7 @@ router.get('/businesses/:id', async (request, response) => {
       b.created_at,
       b.updated_at,
       t.name AS template_name,
+      t.slug AS template_slug,
       s.plan,
       CASE WHEN s.status = 'EXPIRED' OR s.expiry_date < UTC_DATE()
         THEN 'EXPIRED' ELSE s.status END AS subscription_status,
@@ -322,13 +325,19 @@ router.post('/businesses', async (request, response) => {
     return;
   }
 
-  const template = await findTemplate(typeof body.template_id === 'string' || typeof body.template_id === 'number'
+  const requestedTemplate = typeof body.template_id === 'string' || typeof body.template_id === 'number'
     ? body.template_id
     : typeof body.template_slug === 'string'
       ? body.template_slug
       : typeof body.template === 'string'
         ? body.template
-        : undefined);
+        : undefined;
+
+  let template = await findTemplate(requestedTemplate);
+  if (!template) {
+    const inferred = inferTemplateSlugFromCategory(category);
+    template = await findTemplate(inferred);
+  }
 
   if (!template) {
     response.status(400).json({ error: 'A valid template is required' });
@@ -524,6 +533,20 @@ router.patch('/businesses/:id', async (request, response) => {
   if (typeof body.google_maps_url === 'string') {
     updates.push('google_maps_url = ?');
     values.push(body.google_maps_url.trim() || null);
+  }
+
+  const templateInput = typeof body.template_id === 'string' || typeof body.template_id === 'number'
+    ? body.template_id
+    : typeof body.template_slug === 'string'
+      ? body.template_slug
+      : undefined;
+
+  if (templateInput !== undefined) {
+    const template = await findTemplate(templateInput);
+    if (template) {
+      updates.push('template_id = ?');
+      values.push(template.id);
+    }
   }
 
   const socialUrlFields = ['google_maps_url', 'instagram_url', 'facebook_url', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const;

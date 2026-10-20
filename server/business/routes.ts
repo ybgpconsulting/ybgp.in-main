@@ -30,6 +30,7 @@ interface BusinessRow extends RowDataPacket {
   created_at: string;
   updated_at: string;
   template_name: string | null;
+  template_slug: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   expiry_date: string | null;
@@ -128,6 +129,7 @@ const getBusiness = async (businessId: string): Promise<BusinessRow | null> => {
       b.created_at,
       b.updated_at,
       t.name AS template_name,
+      t.slug AS template_slug,
       s.plan,
       CASE WHEN s.status = 'EXPIRED' OR s.expiry_date < UTC_DATE()
         THEN 'EXPIRED' ELSE s.status END AS subscription_status,
@@ -308,6 +310,25 @@ router.patch('/me', async (request, response) => {
           return field === 'email' ? value.toLowerCase() || null : value || null;
         }), businessId]
       );
+    }
+
+    const templateInput = typeof body.template_id === 'string' || typeof body.template_id === 'number'
+      ? String(body.template_id)
+      : typeof body.template_slug === 'string'
+        ? body.template_slug.trim()
+        : null;
+
+    if (templateInput) {
+      const [templateRows] = await connection.execute<RowDataPacket[]>(
+        'SELECT id FROM templates WHERE slug = ? OR id = ? LIMIT 1',
+        [templateInput, templateInput]
+      );
+      if (templateRows[0]) {
+        await connection.execute(
+          'UPDATE businesses SET template_id = ? WHERE id = ?',
+          [templateRows[0].id, businessId]
+        );
+      }
     }
 
     const settings: Array<[string, string | null]> = [

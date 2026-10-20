@@ -82,7 +82,7 @@ const businesses: BusinessSeed[] = [
     whatsapp: '12025550122',
     email: 'hello@maison-gloss.demo.test',
     address: null,
-    templateSlug: 'modern-business',
+    templateSlug: 'salon-studio',
     ownerName: 'Maison Gloss Demo Owner',
     ownerEmail: 'owner@maison-gloss.demo.test',
     categories: [

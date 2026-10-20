@@ -1,4 +1,4 @@
-import type { WebsiteTemplateDesign } from './templateDesigns';
+import { inferTemplateSlugFromCategory, type WebsiteTemplateDesign } from './templateDesigns';
 
 export interface WebsiteTheme {
   pageBg: string;
@@ -17,7 +17,7 @@ export interface WebsiteTheme {
   cta: string;
 }
 
-export const demoThemes: Record<'modern' | 'bakery' | 'salon' | 'jewellery' | 'food', WebsiteTheme> = {
+export const demoThemes: Record<'modern' | 'bakery' | 'salon' | 'jewellery' | 'food' | 'clinic' | 'astrology' | 'travel', WebsiteTheme> = {
   modern: {
     pageBg: '#f4f7f4',
     panel: '#ffffff',
@@ -83,20 +83,68 @@ export const demoThemes: Record<'modern' | 'bakery' | 'salon' | 'jewellery' | 'f
     cta: '#8f5c54',
   },
   jewellery: {
-    pageBg: '#f5f2ee',
-    panel: '#fdfbf9',
-    panelStrong: '#efe5dc',
-    headerSurface: 'rgba(255,255,255,0.74)',
-    text: '#1b1715',
-    muted: '#625b57',
-    accent: '#9d7655',
-    accentSoft: '#efe5d9',
-    accentDark: '#1a1818',
-    accentStrong: '#876444',
-    border: '#e7e0da',
-    label: '#8d6a4d',
-    heroOverlay: 'linear-gradient(90deg, rgba(13,13,13,0.68), rgba(13,13,13,0.22))',
-    cta: '#8d6a4d',
+    pageBg: '#0e0c0a',
+    panel: '#181512',
+    panelStrong: '#25201a',
+    headerSurface: 'rgba(14,12,10,0.88)',
+    text: '#f7f4ee',
+    muted: '#b0a698',
+    accent: '#c5a77e',
+    accentSoft: '#29221a',
+    accentDark: '#ffffff',
+    accentStrong: '#e0c297',
+    border: '#2e2720',
+    label: '#c5a77e',
+    heroOverlay: 'linear-gradient(90deg, rgba(14,12,10,0.92), rgba(14,12,10,0.35))',
+    cta: '#c5a77e',
+  },
+  clinic: {
+    pageBg: '#f4f8f6',
+    panel: '#ffffff',
+    panelStrong: '#e5f1ec',
+    headerSurface: 'rgba(255,255,255,0.85)',
+    text: '#122620',
+    muted: '#4a665d',
+    accent: '#1e6654',
+    accentSoft: '#e0f0ea',
+    accentDark: '#0d382d',
+    accentStrong: '#175445',
+    border: '#d4e6df',
+    label: '#1e6654',
+    heroOverlay: 'linear-gradient(90deg, rgba(13,56,45,0.76), rgba(13,56,45,0.12))',
+    cta: '#124538',
+  },
+  astrology: {
+    pageBg: '#f8f6f2',
+    panel: '#ffffff',
+    panelStrong: '#eee7d8',
+    headerSurface: 'rgba(255,255,255,0.85)',
+    text: '#1b1928',
+    muted: '#635e75',
+    accent: '#8c6d32',
+    accentSoft: '#f5edd9',
+    accentDark: '#1c1836',
+    accentStrong: '#7a5a22',
+    border: '#e4ddd0',
+    label: '#8c6d32',
+    heroOverlay: 'linear-gradient(90deg, rgba(28,24,54,0.78), rgba(28,24,54,0.18))',
+    cta: '#252147',
+  },
+  travel: {
+    pageBg: '#f3f7fa',
+    panel: '#ffffff',
+    panelStrong: '#e0edf5',
+    headerSurface: 'rgba(255,255,255,0.85)',
+    text: '#102330',
+    muted: '#4d6575',
+    accent: '#1f6d91',
+    accentSoft: '#e1eff5',
+    accentDark: '#0d2d3e',
+    accentStrong: '#175876',
+    border: '#d2e4ed',
+    label: '#1f6d91',
+    heroOverlay: 'linear-gradient(90deg, rgba(13,45,62,0.76), rgba(13,45,62,0.14))',
+    cta: '#12435c',
   },
 };
 
@@ -352,32 +400,224 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
       button: 'Enquire now',
     },
   },
+  'demo-clinic': {
+    slug: 'demo-clinic',
+    template: 'modern',
+    templateName: 'Clinic & Healthcare',
+    name: 'Apex Healthcare Clinic',
+    category: 'Clinic / Doctor',
+    seoTitle: 'Apex Healthcare Clinic | Multispecialty Consultation Demo',
+    summary: 'Dedicated outpatient medical clinic providing compassionate doctor consultations, diagnostics, and patient-centered health care.',
+    location: { label: 'Near Civic Centre, Delhi NCR · By appointment', query: 'Delhi NCR, India' },
+    openingHours: 'Monday – Saturday · 9:00 AM – 8:00 PM · Sunday by appointment',
+    hero: {
+      eyebrow: 'Specialist Healthcare & Clinical Care',
+      title: 'Dedicated medical care centered around you.',
+      description: 'Consult experienced specialist doctors in a calm, modern clinical setting designed for your health, comfort, and peace of mind.',
+      primaryCta: 'Book an appointment',
+      image: '/demo-sites/modern/workspace.jpg',
+      alt: 'Clean, modern medical consultation desk',
+    },
+    highlights: [
+      { title: 'Specialist consultation', subtitle: 'Experienced physicians across general medicine, pediatrics, and preventive care.', image: '/demo-sites/modern/meeting.jpg', alt: 'Doctor consulting with patient' },
+      { title: 'Diagnostics & health check', subtitle: 'On-site routine screening, vitals monitoring, and pathology collection support.', image: '/demo-sites/modern/workspace.jpg', alt: 'Modern clinical equipment' },
+      { title: 'Chronic care management', subtitle: 'Personalized treatment protocols for diabetes, hypertension, and long-term vitality.', image: '/demo-sites/modern/studio.jpg', alt: 'Medical consultation chamber' },
+      { title: 'Emergency & tele-consult', subtitle: 'Prompt WhatsApp medical support and follow-up guidance for existing patients.', image: '/demo-sites/modern/team.jpg', alt: 'Healthcare staff' },
+    ],
+    story: {
+      eyebrow: 'Our clinical philosophy',
+      title: 'Evidence-based healthcare that begins with careful listening.',
+      description: 'We believe good clinical outcomes depend on clear doctor-patient communication, accurate diagnosis, and thoughtful ongoing follow-up tailored to each family.',
+      image: '/demo-sites/modern/team.jpg',
+      alt: 'Clinical consultation team',
+      points: ['Experienced, verified specialists', 'Hygienic, appointment-driven facility', 'Transparent prescriptions and honest advice'],
+      cta: 'Meet our doctors',
+    },
+    bestsellers: [
+      { name: 'Specialist Doctor Consultation', image: '/demo-sites/modern/meeting.jpg', alt: 'Doctor consultation room', description: 'Comprehensive 30-minute medical assessment and diagnosis.', price: '₹600' },
+      { name: 'Complete Annual Health Package', image: '/demo-sites/modern/workspace.jpg', alt: 'Health checkup diagnostics', description: 'Full screening including CBC, blood sugar, lipid profile, and doctor review.', price: '₹1,999' },
+      { name: 'Follow-up Consultation & Review', image: '/demo-sites/modern/studio.jpg', alt: 'Patient review', description: 'Progress review and prescription adjustments for ongoing care.', price: '₹350' },
+    ],
+    gallery: [
+      { image: '/demo-sites/modern/gallery-1.jpg', alt: 'Reception lounge' },
+      { image: '/demo-sites/modern/gallery-2.jpg', alt: 'Consultation room' },
+      { image: '/demo-sites/modern/gallery-3.jpg', alt: 'Diagnostics room' },
+      { image: '/demo-sites/modern/gallery-4.jpg', alt: 'Pharmacy counter' },
+    ],
+    finalCta: {
+      title: 'Schedule your clinic visit today.',
+      description: 'Reach out via WhatsApp or phone to reserve your preferred consultation time slot with our doctors.',
+      button: 'Book appointment',
+    },
+  },
+  'demo-astrology': {
+    slug: 'demo-astrology',
+    template: 'modern',
+    templateName: 'Astrology & Spiritual',
+    name: 'Nakshatra Vedic Astrology',
+    category: 'Astrology & Horoscope',
+    seoTitle: 'Nakshatra Vedic Astrology | Horoscope & Vastu Consultation Demo',
+    summary: 'Authentic Vedic astrology consultations, birth chart analysis, and practical Vastu guidance for life milestones.',
+    location: { label: 'Sector 18, Noida, Uttar Pradesh · In-person & Online', query: 'Noida, Uttar Pradesh' },
+    openingHours: 'Monday – Sunday · 10:00 AM – 7:30 PM · By appointment',
+    hero: {
+      eyebrow: 'Vedic Astrology & Vastu Guidance',
+      title: 'Clarity for life’s decisive moments.',
+      description: 'In-depth birth chart analysis, career forecasting, matchmaking, and time-tested Vedic remedies to help you move forward with confidence.',
+      primaryCta: 'Consult Astrologer',
+      image: '/demo-sites/jewellery/hero.jpg',
+      alt: 'Vedic astrology chart and astronomical instruments',
+    },
+    highlights: [
+      { title: 'Kundli & birth chart', subtitle: 'Detailed analysis of planetary positions, Dasha cycles, and upcoming life trends.', image: '/demo-sites/jewellery/collection-1.jpg', alt: 'Astrological chart reading' },
+      { title: 'Career & finance guidance', subtitle: 'Identify auspicious periods for career switches, business ventures, and investments.', image: '/demo-sites/jewellery/collection-2.jpg', alt: 'Consultation setup' },
+      { title: 'Kundli matching (Kundli Milan)', subtitle: 'Comprehensive 36 Guna Ashtakoot matching for harmony and marital compatibility.', image: '/demo-sites/jewellery/collection-3.jpg', alt: 'Matchmaking horoscope' },
+      { title: 'Vastu Shastra consultation', subtitle: 'Balancing planetary and directional energies for homes, retail, and workplaces.', image: '/demo-sites/jewellery/collection-4.jpg', alt: 'Vastu layout' },
+    ],
+    story: {
+      eyebrow: 'Our ancient tradition',
+      title: 'Time-tested Jyotish wisdom interpreted for modern life.',
+      description: 'We practice authentic Parashari and Jaimini Vedic astrology with a calm, grounded approach focused on practical remedies and constructive life guidance.',
+      image: '/demo-sites/jewellery/story.jpg',
+      alt: 'Astrologer explaining birth chart',
+      points: ['Pure Vedic calculations without superstition', 'Practical, positive remedies and gemstone advice', 'Confidential 1-on-1 audio, video or in-person sessions'],
+      cta: 'Explore consultations',
+    },
+    bestsellers: [
+      { name: 'Full Kundli & Life Forecast (45 min)', image: '/demo-sites/jewellery/bestseller-1.jpg', alt: 'Horoscope chart', description: 'Comprehensive reading covering health, career, family, and remedies.', price: '₹1,500' },
+      { name: 'Career & Business Astro Consultation', image: '/demo-sites/jewellery/bestseller-2.jpg', alt: 'Business astrology', description: 'Targeted analysis for job change, startup timing, and partnership compatibility.', price: '₹1,200' },
+      { name: 'Home / Office Vastu Assessment', image: '/demo-sites/jewellery/collection-2.jpg', alt: 'Vastu floor plan', description: 'Detailed layout audit with non-destructive energy harmonizing remedies.', price: 'From ₹3,500' },
+    ],
+    gallery: [
+      { image: '/demo-sites/jewellery/gallery-1.jpg', alt: 'Astrology consultation room' },
+      { image: '/demo-sites/jewellery/gallery-2.jpg', alt: 'Horoscope manuscript' },
+      { image: '/demo-sites/jewellery/gallery-3.jpg', alt: 'Vastu yantra' },
+      { image: '/demo-sites/jewellery/gallery-4.jpg', alt: 'Planetary gemstones' },
+    ],
+    finalCta: {
+      title: 'Book your personal consultation.',
+      description: 'Share your birth date, time, and location on WhatsApp to book an in-person or remote video appointment.',
+      button: 'WhatsApp Consultation',
+    },
+  },
+  'demo-travel': {
+    slug: 'demo-travel',
+    template: 'modern',
+    templateName: 'Tours & Travels',
+    name: 'Horizon Explorer Travels',
+    category: 'Tour and Travels',
+    seoTitle: 'Horizon Explorer Travels | Curated Holidays & Tour Packages Demo',
+    summary: 'Custom holiday tour packages, outstation car rentals, flight bookings, and personalized travel itineraries across India and abroad.',
+    location: { label: 'Connaught Place, New Delhi · 24/7 Travel Desk', query: 'New Delhi, India' },
+    openingHours: 'Monday – Sunday · 24/7 Customer & Booking Desk',
+    hero: {
+      eyebrow: 'Curated Holiday Tours & Travel Desk',
+      title: 'Journeys designed to be remembered.',
+      description: 'Discover handcrafted holiday packages, reliable cab services, and verified stays tailored for family vacations, honeymoons, and group adventures.',
+      primaryCta: 'Explore Tour Packages',
+      image: '/demo-sites/modern/workspace.jpg',
+      alt: 'Scenic mountain landscape and travel planner',
+    },
+    highlights: [
+      { title: 'Custom holiday packages', subtitle: 'Handcrafted itineraries for Himachal, Kashmir, Kerala, Goa, and international destinations.', image: '/demo-sites/modern/meeting.jpg', alt: 'Scenic holiday destination' },
+      { title: 'Outstation cabs & rentals', subtitle: 'Verified AC sedans, SUVs, and tempo travelers with courteous, experienced drivers.', image: '/demo-sites/modern/workspace.jpg', alt: 'Travel vehicle on scenic route' },
+      { title: 'Hotel & resort bookings', subtitle: 'Handpicked stays with verified hygiene, scenic views, and authentic local dining.', image: '/demo-sites/modern/studio.jpg', alt: 'Resort view' },
+      { title: 'Flight & train ticketing', subtitle: 'Instant ticketing, visa documentation support, and 24/7 on-trip helpline.', image: '/demo-sites/modern/team.jpg', alt: 'Travel planning desk' },
+    ],
+    story: {
+      eyebrow: 'Why travel with us',
+      title: 'Hassle-free vacations backed by 24/7 on-ground assistance.',
+      description: 'From your first itinerary draft to your safe return home, we manage every detail of your journey so you can focus on making memories.',
+      image: '/demo-sites/modern/team.jpg',
+      alt: 'Travel experts at work',
+      points: ['Customized itineraries shaped around your pace', 'All-inclusive transparent pricing with zero surprises', 'Dedicated trip manager available on call throughout your journey'],
+      cta: 'Plan your trip',
+    },
+    bestsellers: [
+      { name: 'Himachal Scenic Escapes (5N/6D)', image: '/demo-sites/modern/meeting.jpg', alt: 'Mountain tour package', description: 'Shimla, Kullu & Manali package with private cab, 4-star hotels, and sightseeing.', price: '₹14,999 / person' },
+      { name: 'Kerala Backwaters & Hills (4N/5D)', image: '/demo-sites/modern/workspace.jpg', alt: 'Kerala houseboat and hills', description: 'Munnar tea gardens, Thekkady, and private Alleppey houseboat cruise.', price: '₹12,499 / person' },
+      { name: 'Outstation Cab Rental (Per Day)', image: '/demo-sites/modern/studio.jpg', alt: 'Outstation car rental', description: 'Sedan or SUV with polite driver for round-trips or one-way drops.', price: 'From ₹2,800 / day' },
+    ],
+    gallery: [
+      { image: '/demo-sites/modern/gallery-1.jpg', alt: 'Scenic mountain peaks' },
+      { image: '/demo-sites/modern/gallery-2.jpg', alt: 'Heritage monument' },
+      { image: '/demo-sites/modern/gallery-3.jpg', alt: 'Beach resort' },
+      { image: '/demo-sites/modern/gallery-4.jpg', alt: 'Comfortable tourist vehicle' },
+    ],
+    finalCta: {
+      title: 'Ready for your next holiday?',
+      description: 'Tell us your destination, travel dates, and group size on WhatsApp for an instant custom itinerary and quote.',
+      button: 'Get Travel Quote',
+    },
+  },
 };
 
-export const getTemplateDefaults = (slugOrDesign: string): DemoBusiness => {
-  const normalized = (slugOrDesign || '').toLowerCase();
-  if (normalized.includes('bake') || normalized.includes('food') || normalized === 'food-bakery') {
+export const getTemplateDefaults = (slugOrDesign: string, category?: string | null): DemoBusiness => {
+  let normalized = (slugOrDesign || '').toLowerCase();
+  if ((!normalized || normalized === 'modern-business') && category) {
+    const inferred = inferTemplateSlugFromCategory(category);
+    if (inferred !== 'modern-business') {
+      normalized = inferred;
+    }
+  }
+
+  if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {
     return demoBusinesses['demo-bakery'];
   }
-  if (normalized.includes('salon') || normalized.includes('well') || normalized.includes('beauty') || normalized === 'salon-studio') {
+  if (normalized.includes('salon') || normalized.includes('well') || normalized.includes('beauty') || normalized.includes('spa') || normalized === 'salon-studio') {
     return demoBusinesses['demo-salon'];
   }
   if (normalized.includes('jewel') || normalized === 'jewellery-boutique') {
     return demoBusinesses['demo-jewellery'];
   }
+
+  if (category) {
+    const cat = category.toLowerCase();
+    if (cat.includes('clinic') || cat.includes('doctor') || cat.includes('dental') || cat.includes('health') || cat.includes('physio') || cat.includes('medical') || cat.includes('hospital')) {
+      return demoBusinesses['demo-clinic'];
+    }
+    if (cat.includes('astrolog') || cat.includes('jyotish') || cat.includes('horoscope') || cat.includes('vastu') || cat.includes('tarot') || cat.includes('kundli')) {
+      return demoBusinesses['demo-astrology'];
+    }
+    if (cat.includes('tour') || cat.includes('travel') || cat.includes('trip') || cat.includes('holiday') || cat.includes('taxi') || cat.includes('cab')) {
+      return demoBusinesses['demo-travel'];
+    }
+  }
+
   return demoBusinesses['demo-modern'];
 };
 
-export const getTemplateTheme = (slugOrDesign: string): WebsiteTheme => {
-  const normalized = (slugOrDesign || '').toLowerCase();
-  if (normalized.includes('bake') || normalized.includes('food') || normalized === 'food-bakery') {
+export const getTemplateTheme = (slugOrDesign: string, category?: string | null): WebsiteTheme => {
+  let normalized = (slugOrDesign || '').toLowerCase();
+  if ((!normalized || normalized === 'modern-business') && category) {
+    const inferred = inferTemplateSlugFromCategory(category);
+    if (inferred !== 'modern-business') {
+      normalized = inferred;
+    }
+  }
+
+  if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {
     return demoThemes.bakery;
   }
-  if (normalized.includes('salon') || normalized.includes('well') || normalized.includes('beauty') || normalized === 'salon-studio') {
+  if (normalized.includes('salon') || normalized.includes('well') || normalized.includes('beauty') || normalized.includes('spa') || normalized === 'salon-studio') {
     return demoThemes.salon;
   }
   if (normalized.includes('jewel') || normalized === 'jewellery-boutique') {
     return demoThemes.jewellery;
   }
+
+  if (category) {
+    const cat = category.toLowerCase();
+    if (cat.includes('clinic') || cat.includes('doctor') || cat.includes('dental') || cat.includes('health') || cat.includes('physio') || cat.includes('medical')) {
+      return demoThemes.clinic;
+    }
+    if (cat.includes('astrolog') || cat.includes('jyotish') || cat.includes('horoscope') || cat.includes('vastu') || cat.includes('tarot')) {
+      return demoThemes.astrology;
+    }
+    if (cat.includes('tour') || cat.includes('travel') || cat.includes('trip') || cat.includes('holiday') || cat.includes('taxi') || cat.includes('cab')) {
+      return demoThemes.travel;
+    }
+  }
+
   return demoThemes.modern;
 };

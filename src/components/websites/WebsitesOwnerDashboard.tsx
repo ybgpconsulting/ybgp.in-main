@@ -36,6 +36,8 @@ interface BusinessSummary {
   category: string;
   description: string | null;
   template_name: string | null;
+  template_slug?: string | null;
+  template_id?: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   expiry_date: string | null;

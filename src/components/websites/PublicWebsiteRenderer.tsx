@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowRight, ChevronRight, Link2, MapPin, Menu, MessageCircle, X } from 'lucide-react';
 import { SocialBrandIcon, type SocialPlatform } from './SocialBrandIcon';
-import { getWebsiteTemplateDesign } from './templateDesigns';
-import { getTemplateDefaults, getTemplateTheme } from './templateDefaults';
+import { getWebsiteTemplateDesign, type WebsiteTemplateDesign } from './templateDesigns';
+import { getTemplateDefaults, getTemplateTheme, type WebsiteTheme } from './templateDefaults';
 import { inferPrimaryAction, resolvePrimaryActionUrl, type PrimaryAction } from '../../../server/business/cta';
 import { formatWorkingHours } from '../../../server/business/hours';
 import { resolveBusinessImageUrl } from '../../../server/business/images';
@@ -110,9 +110,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   }
 
   const { business, template, settings, categories, products, gallery, seo } = data;
-  const design = getWebsiteTemplateDesign(template.slug);
-  const defaults = getTemplateDefaults(template.slug);
-  const theme = getTemplateTheme(template.slug);
+  const design = getWebsiteTemplateDesign(template.slug, business.category);
+  const defaults = getTemplateDefaults(template.slug, business.category);
+  const theme = getTemplateTheme(template.slug, business.category);
   const foodLayout = design === 'food';
   const salonLayout = design === 'salon';
   const jewelleryLayout = design === 'jewellery';
@@ -351,7 +351,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                     <a href={ctaUrl} className="mt-4 inline-flex rounded-full bg-[#183629] px-4 py-2 text-xs font-semibold text-white">{ctaText}</a>
                   </div>
                   <div className="flex flex-col justify-center gap-2">
-                    {defaults.highlights.slice(0, 3).map((item, idx) => (
+                    {(categories.length > 0 ? categories.map((c) => ({ title: c.name })) : defaults.highlights).slice(0, 3).map((item, idx) => (
                       <div key={item.title} className="flex items-center gap-2.5 rounded-xl border border-[#e6ece7] p-2.5 text-xs">
                         <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e9f1eb] font-bold text-[#294a38]">0{idx + 1}</span>
                         <span className="truncate font-medium text-[#52685b]">{item.title}</span>
@@ -428,13 +428,13 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               </div>
             </div>
           ) : (
-            <div className="grid gap-8 bg-[#eae4dc] p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12">
+            <div className={`grid gap-8 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12 ${jewelleryLayout ? 'bg-[#181512] border border-[#2e2720] text-[#f7f4ee]' : 'bg-[#eae4dc]'}`}>
               <div className="flex flex-col justify-center">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
                 <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{defaults.story.title}</h2>
                 <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
                 <div className="mt-6 space-y-2">
-                  {defaults.story.points.map((point) => <p key={point} className="text-sm font-medium text-[#211a13]">✦ {point}</p>)}
+                  {defaults.story.points.map((point) => <p key={point} className={`text-sm font-medium ${jewelleryLayout ? 'text-[#e0c297]' : 'text-[#211a13]'}`}>✦ {point}</p>)}
                 </div>
                 <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
@@ -480,30 +480,32 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           {products.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {products.map((product) => (
-                <ProductCard
+                <TemplateItemCard
                   key={product.id}
                   name={product.name}
                   description={product.description}
                   price={product.price ? `₹${Number(product.price).toLocaleString('en-IN')}` : undefined}
                   image={safeImageUrl(product.image)}
                   whatsapp={whatsapp}
+                  businessName={business.name}
                   theme={theme}
-                  jewelleryLayout={jewelleryLayout}
+                  design={design}
                 />
               ))}
             </div>
           ) : (
             <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
               {defaults.bestsellers.map((item) => (
-                <ProductCard
+                <TemplateItemCard
                   key={item.name}
                   name={item.name}
                   description={item.description}
                   price={item.price}
                   image={item.image}
                   whatsapp={whatsapp}
+                  businessName={business.name}
                   theme={theme}
-                  jewelleryLayout={jewelleryLayout}
+                  design={design}
                 />
               ))}
             </div>
@@ -541,7 +543,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
         {/* Final High-Conversion Banner */}
         <section id="final-cta" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${jewelleryLayout ? 'bg-[#171411] text-white' : ''}`} style={!jewelleryLayout ? { background: theme.panelStrong } : undefined}>
+          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${jewelleryLayout ? 'bg-[#181512] text-white border border-[#2e2720]' : ''}`} style={!jewelleryLayout ? { background: theme.panelStrong } : undefined}>
             <div className="max-w-2xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: jewelleryLayout ? '#c5a77e' : theme.label }}>
                 {salonLayout ? 'Make a little time for you' : isModern ? 'Your next step starts here' : foodLayout ? 'Tell us what you are celebrating' : 'A piece, chosen personally'}
@@ -647,14 +649,263 @@ function safeImageUrl(value: string | null | undefined): string {
   return resolveBusinessImageUrl(value);
 }
 
-function ProductCard({
+function FoodItemCard({
   name,
   description,
   price,
   image,
   whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to order ${name} from ${businessName}.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#ecdccf] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
+      <div className="relative h-56 w-full overflow-hidden bg-[#fbf6f0] sm:h-64">
+        {image ? (
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+        ) : (
+          <div className="grid h-full place-items-center bg-[#fdf2ea]">
+            <span className="font-heading text-4xl font-bold text-[#b25333]">{name.slice(0, 1).toUpperCase()}</span>
+          </div>
+        )}
+        {price ? (
+          <span className="absolute bottom-3 right-3 rounded-full bg-[#a04a2b] px-3.5 py-1 text-xs font-bold text-white shadow-md">
+            {price}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col justify-between p-5">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#a04a2b]">Freshly Prepared</span>
+          <h3 className="mt-1 font-heading text-xl font-bold text-[#2c1810]">{name}</h3>
+          {description ? (
+            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#785648]">{description}</p>
+          ) : null}
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-5 border-t border-[#f4e7dd] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#a04a2b] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Order via WhatsApp
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function SalonTreatmentCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to book an appointment for ${name} at ${businessName}.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#ebe0da] bg-[#faf6f3] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#8f5c54] hover:shadow-md">
+      {image ? (
+        <div className="relative h-60 w-full overflow-hidden sm:h-64">
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+          <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-[10px] font-semibold tracking-wider text-[#8f5c54] backdrop-blur-sm shadow-sm">
+            Treatment Ritual
+          </span>
+        </div>
+      ) : (
+        <div className="grid h-48 place-items-center bg-[#faebe6]">
+          <span className="font-heading text-3xl font-light text-[#8f5c54]">{name.slice(0, 1).toUpperCase()}</span>
+        </div>
+      )}
+      <div className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-heading text-xl font-medium text-[#291e1c]">{name}</h3>
+            {price ? (
+              <span className="shrink-0 font-serif text-base font-semibold text-[#8f5c54]">{price}</span>
+            ) : null}
+          </div>
+          {description ? (
+            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-[#7a605a]">{description}</p>
+          ) : null}
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#ebe0da] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#8f5c54] bg-white px-4 py-2.5 text-xs font-semibold text-[#8f5c54] shadow-sm transition-colors hover:bg-[#8f5c54] hover:text-white"
+            >
+              Reserve Treatment Slot <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function JewelleryItemCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to enquire about the ${name} piece at ${businessName}.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#2e2720] bg-[#181512] text-[#f7f4ee] shadow-[0_16px_36px_rgba(0,0,0,0.45)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#c5a77e]">
+      <div className="relative h-64 w-full overflow-hidden bg-[#221d17] sm:h-72">
+        {image ? (
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+        ) : (
+          <div className="grid h-full place-items-center bg-[#241e17]">
+            <span className="font-heading text-4xl font-light text-[#c5a77e]">{name.slice(0, 1).toUpperCase()}</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#181512] via-transparent to-transparent opacity-60" />
+        <span className="absolute left-3 top-3 rounded-full border border-[#c5a77e]/40 bg-[#181512]/80 px-3 py-0.5 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#e0c297] backdrop-blur-sm">
+          Bespoke Craft
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="font-heading text-xl font-normal text-white">{name}</h3>
+            {price ? (
+              <span className="shrink-0 font-serif text-base tracking-wide text-[#e0c297]">{price}</span>
+            ) : null}
+          </div>
+          {description ? (
+            <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-[#b0a698]">{description}</p>
+          ) : null}
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#2e2720] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-between border-b border-[#c5a77e] pb-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#e0c297] transition-colors hover:text-white"
+            >
+              <span>Enquire About Piece</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function ModernSolutionCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in discussing ${name} with ${businessName}.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#dbe7df] bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#0e2b22] hover:shadow-md">
+      {image ? (
+        <div className="mb-4 h-48 w-full overflow-hidden rounded-xl bg-[#eef4f0]">
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+        </div>
+      ) : null}
+      <div className="flex flex-1 flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="rounded-full bg-[#eef4f0] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#1e523b]">
+              Advisory Solution
+            </span>
+            {price ? (
+              <span className="font-bold text-[#0e2b22] text-sm">{price}</span>
+            ) : null}
+          </div>
+          <h3 className="mt-3 font-heading text-xl font-bold text-[#13281e]">{name}</h3>
+          {description ? (
+            <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[#526b5e]">{description}</p>
+          ) : null}
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#eaf1ec] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0e2b22] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              Discuss Scope <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function TemplateItemCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
   theme,
-  jewelleryLayout,
+  design,
 }: {
   key?: string;
   name: string;
@@ -662,41 +913,58 @@ function ProductCard({
   price?: string;
   image?: string;
   whatsapp?: string | null;
-  theme: ReturnType<typeof getTemplateTheme>;
-  jewelleryLayout: boolean;
+  businessName: string;
+  theme: WebsiteTheme;
+  design: WebsiteTemplateDesign;
 }) {
+  if (design === 'food') {
+    return (
+      <FoodItemCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
+  if (design === 'salon') {
+    return (
+      <SalonTreatmentCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
+  if (design === 'jewellery') {
+    return (
+      <JewelleryItemCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
   return (
-    <article
-      className="overflow-hidden border transition-transform duration-300 hover:-translate-y-1"
-      style={!jewelleryLayout ? { background: theme.panel, borderColor: theme.border } : { borderColor: theme.border }}
-    >
-      {image ? (
-        <img src={image} alt="" className="h-60 sm:h-72 w-full object-cover" loading="lazy" />
-      ) : (
-        <div className="grid h-48 place-items-center" style={{ background: theme.accentSoft }}>
-          <span className="font-heading text-4xl font-light" style={{ color: theme.accent }}>{name.slice(0, 1).toUpperCase()}</span>
-        </div>
-      )}
-      <div className="px-5 py-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-heading text-lg font-semibold sm:text-xl" style={{ color: theme.accentDark }}>{name}</h3>
-            {description ? <p className="mt-2 line-clamp-3 text-sm leading-relaxed" style={{ color: theme.muted }}>{description}</p> : null}
-          </div>
-          {price && <span className="shrink-0 pt-1 text-sm font-bold" style={{ color: theme.label }}>{price}</span>}
-        </div>
-        {whatsapp ? (
-          <a
-            href={`https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello, I am interested in ${name}.`)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider transition-opacity hover:opacity-75"
-            style={{ color: theme.accentStrong }}
-          >
-            Enquire on WhatsApp <ArrowRight className="h-3.5 w-3.5" />
-          </a>
-        ) : null}
-      </div>
-    </article>
+    <ModernSolutionCard
+      name={name}
+      description={description}
+      price={price}
+      image={image}
+      whatsapp={whatsapp}
+      businessName={businessName}
+      theme={theme}
+    />
   );
 }

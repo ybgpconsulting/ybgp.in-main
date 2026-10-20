@@ -14,7 +14,8 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
-import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign, getWebsiteTemplatePreviewImage } from './templateDesigns';
+import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign, getWebsiteTemplatePreviewImage, inferTemplateSlugFromCategory } from './templateDesigns';
+import { CategorySelectField } from './businessCategories';
 import {
   isValidOptionalImageUrl,
   OG_DESCRIPTION_MAX_LENGTH,
@@ -51,7 +52,9 @@ interface BusinessSummary {
   og_title: string | null;
   og_description: string | null;
   og_image: string | null;
+  template_id?: string | null;
   template_name: string | null;
+  template_slug?: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   amount: string | null;
@@ -173,7 +176,18 @@ export function WebsitesAdminDashboard() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const updateField = (key: string, value: string) => setForm((previous) => ({ ...previous, [key]: value }));
+  const updateField = (key: string, value: string) => {
+    setForm((previous) => {
+      const next = { ...previous, [key]: value };
+      if (key === 'category' && formMode === 'create' && value.trim()) {
+        const suggested = inferTemplateSlugFromCategory(value);
+        if (templates.some((t) => t.slug === suggested)) {
+          next.template_slug = suggested;
+        }
+      }
+      return next;
+    });
+  };
   const openCreate = () => {
     businessFormRequestId.current += 1;
     if (businessFormLoading.current) {
@@ -230,6 +244,10 @@ export function WebsitesAdminDashboard() {
         og_title: current.og_title ?? '',
         og_description: current.og_description ?? '',
         og_image: current.og_image ?? '',
+        template_slug: current.template_slug
+          ?? templates.find((t) => t.id === current.template_id)?.slug
+          ?? inferTemplateSlugFromCategory(current.category)
+          ?? 'modern-business',
         plan: current.plan ?? 'YBGP Websites',
         amount: current.amount ?? '1999',
         start_date: current.start_date?.slice(0, 10) ?? today(),
@@ -354,6 +372,7 @@ export function WebsitesAdminDashboard() {
             og_title: form.og_title,
             og_description: form.og_description,
             og_image: form.og_image,
+            template_slug: form.template_slug,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -412,6 +431,101 @@ export function WebsitesAdminDashboard() {
   const enquiries = businesses.reduce((count, business) => count + Number(business.enquiry_count || 0), 0);
   const expiring = businesses.filter(isExpiringSoon).length;
   const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
+
+  const renderTemplateSelector = (isEdit = false) => (
+    <section className={isEdit ? "rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-xs" : ""}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="font-bold">{isEdit ? "Storefront layout & template" : "Choose storefront template"}</h3>
+          <p className="mt-0.5 text-xs text-[#68746c]">
+            {isEdit
+              ? "Change the design, layout, and theme applied to this business website."
+              : "Select the starting layout and style for this website."}
+          </p>
+        </div>
+        {selectedTemplate ? (
+          <a
+            href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
+          >
+            Preview {selectedTemplate.name} demo ↗
+          </a>
+        ) : null}
+      </div>
+
+      {templates.length === 0 ? (
+        <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p>
+      ) : (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {templates.map((template) => {
+            const design = getWebsiteTemplateDesign(template.slug);
+            const isSelected = form.template_slug === template.slug;
+            const previewImage = getWebsiteTemplatePreviewImage(template.slug);
+            return (
+              <label
+                key={template.id}
+                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition duration-200 ${
+                  isSelected
+                    ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
+                    : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
+                }`}
+              >
+                <input
+                  className="sr-only"
+                  type="radio"
+                  name={isEdit ? "edit-template" : "create-template"}
+                  value={template.slug}
+                  checked={isSelected}
+                  onChange={() => updateField('template_slug', template.slug)}
+                />
+                <div className="relative h-24 w-full overflow-hidden bg-[#e5eee7]">
+                  <img
+                    src={previewImage}
+                    alt=""
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <span
+                    className={`absolute bottom-2 left-2.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      design === 'food'
+                        ? 'bg-[#f4e2d3] text-[#603b2c]'
+                        : design === 'salon'
+                        ? 'bg-[#f0e5df] text-[#8f5c54]'
+                        : design === 'jewellery'
+                        ? 'bg-[#c5a77e] text-[#211a13]'
+                        : 'bg-white text-[#173629]'
+                    }`}
+                  >
+                    {design === 'food'
+                      ? 'Food & Bakery'
+                      : design === 'salon'
+                      ? 'Salon & Wellness'
+                      : design === 'jewellery'
+                      ? 'Jewellery Boutique'
+                      : 'Modern Business'}
+                  </span>
+                  {isSelected ? (
+                    <span className="absolute right-2 top-2 rounded-full bg-[#0E2B22] px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                      ✓ Selected
+                    </span>
+                  ) : null}
+                </div>
+                <div className="p-3">
+                  <strong className="block text-sm font-bold text-[#173328]">{template.name}</strong>
+                  <span className="mt-0.5 block line-clamp-1 text-xs text-[#68746c]">
+                    {template.description || 'A clean, responsive business storefront.'}
+                  </span>
+                </div>
+              </label>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 
   return (
     <main className="min-h-screen bg-[#f7f6f2] px-4 py-7 text-[#0E2B22] sm:px-6 sm:py-10">
@@ -537,104 +651,18 @@ export function WebsitesAdminDashboard() {
                       placeholder="e.g. Copper Chimney or Artisanal Studio"
                       required
                     />
-                    <Field
-                      label="Category"
-                      value={form.category}
-                      onChange={(value) => updateField('category', value)}
-                      placeholder="e.g. Bakery, Salon, Restaurant, Retail"
-                      required
-                    />
+                    <div className="sm:col-span-2">
+                      <CategorySelectField
+                        label="Category"
+                        value={form.category}
+                        onChange={(value) => updateField('category', value)}
+                        onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
+                        required
+                      />
+                    </div>
                   </FormSection>
 
-                  <section>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold">Choose storefront template</h3>
-                        <p className="mt-0.5 text-xs text-[#68746c]">Select the starting layout and style for this website.</p>
-                      </div>
-                      {selectedTemplate ? (
-                        <a
-                          href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
-                        >
-                          Preview {selectedTemplate.name} demo ↗
-                        </a>
-                      ) : null}
-                    </div>
-
-                    {templates.length === 0 ? (
-                      <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p>
-                    ) : (
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {templates.map((template) => {
-                          const design = getWebsiteTemplateDesign(template.slug);
-                          const isSelected = form.template_slug === template.slug;
-                          const previewImage = getWebsiteTemplatePreviewImage(template.slug);
-                          return (
-                            <label
-                              key={template.id}
-                              className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition duration-200 ${
-                                isSelected
-                                  ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
-                                  : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
-                              }`}
-                            >
-                              <input
-                                className="sr-only"
-                                type="radio"
-                                name="template"
-                                value={template.slug}
-                                required
-                                checked={isSelected}
-                                onChange={() => updateField('template_slug', template.slug)}
-                              />
-                              <div className="relative h-24 w-full overflow-hidden bg-[#e5eee7]">
-                                <img
-                                  src={previewImage}
-                                  alt=""
-                                  className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                  loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                                <span
-                                  className={`absolute bottom-2 left-2.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                    design === 'food'
-                                      ? 'bg-[#f4e2d3] text-[#603b2c]'
-                                      : design === 'salon'
-                                      ? 'bg-[#f0e5df] text-[#8f5c54]'
-                                      : design === 'jewellery'
-                                      ? 'bg-[#c5a77e] text-[#211a13]'
-                                      : 'bg-white text-[#173629]'
-                                  }`}
-                                >
-                                  {design === 'food'
-                                    ? 'Food & Bakery'
-                                    : design === 'salon'
-                                    ? 'Salon & Wellness'
-                                    : design === 'jewellery'
-                                    ? 'Jewellery Boutique'
-                                    : 'Modern Business'}
-                                </span>
-                                {isSelected ? (
-                                  <span className="absolute right-2 top-2 rounded-full bg-[#0E2B22] px-2 py-0.5 text-[10px] font-bold text-white shadow">
-                                    ✓ Selected
-                                  </span>
-                                ) : null}
-                              </div>
-                              <div className="p-3">
-                                <strong className="block text-sm font-bold text-[#173328]">{template.name}</strong>
-                                <span className="mt-0.5 block line-clamp-1 text-xs text-[#68746c]">
-                                  {template.description || 'A clean, responsive business storefront.'}
-                                </span>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </section>
+                  {renderTemplateSelector(false)}
 
                   <FormSection title="Owner login credentials">
                     <Field
@@ -684,7 +712,19 @@ export function WebsitesAdminDashboard() {
                   <FormSection title="Business profile">
                     <Field label="Business name" value={form.name} onChange={(value) => updateField('name', value)} required />
                     <Field label="Website slug" value={form.slug} onChange={(value) => updateField('slug', value)} required />
-                    <Field label="Category" value={form.category} onChange={(value) => updateField('category', value)} required />
+                    <div className="sm:col-span-2">
+                      <CategorySelectField
+                        label="Category"
+                        value={form.category}
+                        onChange={(value) => updateField('category', value)}
+                        onTemplateSuggest={(templateSlug) => {
+                          if (!form.template_slug || form.template_slug === 'modern-business') {
+                            updateField('template_slug', templateSlug);
+                          }
+                        }}
+                        required
+                      />
+                    </div>
                     <TextAreaField label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
                     <Field label="Phone" value={form.phone} onChange={(value) => updateField('phone', value)} type="tel" />
                     <Field label="WhatsApp" value={form.whatsapp} onChange={(value) => updateField('whatsapp', value)} type="tel" />
@@ -694,6 +734,7 @@ export function WebsitesAdminDashboard() {
                     <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
                     <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
                   </FormSection>
+                  {formMode === 'edit' ? renderTemplateSelector(true) : null}
                   {formMode === 'edit' ? (
                     <FormSection title="Contact, Location & Social Links">
                       <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />

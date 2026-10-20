@@ -23,6 +23,59 @@ export const WEBSITE_TEMPLATES = [
   },
 ] as const;
 
+export const inferTemplateSlugFromCategory = (categoryOrName?: string | null): string => {
+  const s = (categoryOrName || '').toLowerCase();
+  if (
+    s.includes('bake') ||
+    s.includes('food') ||
+    s.includes('cafe') ||
+    s.includes('café') ||
+    s.includes('restraunt') ||
+    s.includes('restaurant') ||
+    s.includes('sweet') ||
+    s.includes('cake') ||
+    s.includes('coffee') ||
+    s.includes('snack') ||
+    s.includes('kitchen') ||
+    s.includes('dine') ||
+    s.includes('catering') ||
+    s.includes('pizza') ||
+    s.includes('burger') ||
+    s.includes('bar')
+  ) {
+    return 'food-bakery';
+  }
+  if (
+    s.includes('salon') ||
+    s.includes('wellness') ||
+    s.includes('beauty') ||
+    s.includes('spa') ||
+    s.includes('hair') ||
+    s.includes('skin') ||
+    s.includes('nail') ||
+    s.includes('parlour') ||
+    s.includes('parlor') ||
+    s.includes('barber') ||
+    s.includes('makeup') ||
+    s.includes('massage') ||
+    s.includes('laser')
+  ) {
+    return 'salon-studio';
+  }
+  if (
+    s.includes('jewel') ||
+    s.includes('gold') ||
+    s.includes('silver') ||
+    s.includes('diamond') ||
+    s.includes('gem') ||
+    s.includes('ornament') ||
+    s.includes('luxury boutique')
+  ) {
+    return 'jewellery-boutique';
+  }
+  return 'modern-business';
+};
+
 export const ensureWebsiteTemplateCatalog = async (): Promise<void> => {
   const placeholders = WEBSITE_TEMPLATES.map(() => '(?, ?, ?, NULL, \'ACTIVE\')').join(', ');
   const values = WEBSITE_TEMPLATES.flatMap(({ name, slug, description }) => [name, slug, description]);
