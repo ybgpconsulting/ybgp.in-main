@@ -259,15 +259,12 @@ export function WebsitesAdminDashboard() {
 
   const createBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (form.seo_title.length > SEO_TITLE_MAX_LENGTH ||
-      form.seo_description.length > SEO_DESCRIPTION_MAX_LENGTH ||
-      form.og_title.length > OG_TITLE_MAX_LENGTH ||
-      form.og_description.length > OG_DESCRIPTION_MAX_LENGTH) {
-      setError('Please correct the highlighted SEO field limits before saving.');
+    if (!form.name.trim() || !form.category.trim() || !form.owner_name.trim() || !form.owner_email.trim()) {
+      setError('Business name, category, owner name, and owner email are required.');
       return;
     }
-    if (!isValidOptionalImageUrl(form.og_image.trim())) {
-      setError('Open Graph image must be a valid http or https URL or an image path under /uploads.');
+    if (form.owner_password.length < 8) {
+      setError('Owner temporary password must be at least 8 characters.');
       return;
     }
     if (form.expiry_date < form.start_date) {
@@ -282,8 +279,15 @@ export function WebsitesAdminDashboard() {
         method: 'POST',
         body: JSON.stringify({
           ...form,
-          slug: form.slug || form.name,
-          amount: Number(form.amount),
+          name: form.name.trim(),
+          category: form.category.trim(),
+          slug: form.slug.trim() || form.name.trim(),
+          phone: form.phone.trim(),
+          whatsapp: form.whatsapp.trim() || form.phone.trim(),
+          owner_name: form.owner_name.trim(),
+          owner_email: form.owner_email.trim(),
+          owner_password: form.owner_password,
+          amount: Number(form.amount || 1999),
           subscription_active: form.subscription_active === 'true',
           published: form.published === 'true',
         }),
@@ -519,42 +523,74 @@ export function WebsitesAdminDashboard() {
                 </section>
               ) : formMode === 'create' ? (
                 <>
-                  <FormSection title="Business">
-                    <Field label="Business name" value={form.name} onChange={(value) => updateField('name', value)} required />
-                    <Field label="Website slug" value={form.slug} onChange={(value) => updateField('slug', value)} placeholder="Auto-generated if left blank" />
-                    <Field label="Category" value={form.category} onChange={(value) => updateField('category', value)} required />
-                    <TextAreaField label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
-                    <Field label="Business phone" value={form.phone} onChange={(value) => updateField('phone', value)} type="tel" />
-                    <Field label="WhatsApp number" value={form.whatsapp} onChange={(value) => updateField('whatsapp', value)} type="tel" />
-                    <Field label="Business email" value={form.email} onChange={(value) => updateField('email', value)} type="email" />
-                    <Field label="Address" value={form.address} onChange={(value) => updateField('address', value)} />
-                    <Field label="City" value={form.city} onChange={(value) => updateField('city', value)} />
-                    <Field label="Pincode" value={form.pincode} onChange={(value) => updateField('pincode', value)} inputMode="numeric" />
-                    <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
+                  <div className="rounded-2xl border border-[#0E2B22]/15 bg-[#f4f7f5] p-4 text-xs leading-relaxed text-[#213f32]">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-base leading-none">✨</span>
+                      <div>
+                        <p className="font-bold text-[#0E2B22]">Quick Onboarding</p>
+                        <p className="mt-0.5 text-[#43594e]">
+                          Only essential details are required to launch this business website. Full profile details, operating hours, catalogue, gallery, social media links, SEO tags, and subscription settings can be managed anytime from the dashboard.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <FormSection title="Business details">
+                    <Field
+                      label="Business name"
+                      value={form.name}
+                      onChange={(value) => updateField('name', value)}
+                      placeholder="e.g. Copper Chimney or Artisanal Studio"
+                      required
+                    />
+                    <Field
+                      label="Category"
+                      value={form.category}
+                      onChange={(value) => updateField('category', value)}
+                      placeholder="e.g. Bakery, Salon, Restaurant, Retail"
+                      required
+                    />
+                    <Field
+                      label="Website slug"
+                      value={form.slug}
+                      onChange={(value) => updateField('slug', value)}
+                      placeholder="Auto-generated from name if blank"
+                    />
+                    <Field
+                      label="Business phone / WhatsApp"
+                      value={form.phone}
+                      onChange={(value) => {
+                        updateField('phone', value);
+                        if (!form.whatsapp || form.whatsapp === form.phone) {
+                          updateField('whatsapp', value);
+                        }
+                      }}
+                      type="tel"
+                      placeholder="e.g. +91 98765 43210 (optional)"
+                    />
                   </FormSection>
-                  <FormSection title="Social profiles">
-                    <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />
-                    <Field label="Facebook URL" value={form.facebook_url} onChange={(value) => updateField('facebook_url', value)} type="url" />
-                    <Field label="YouTube URL" value={form.youtube_url} onChange={(value) => updateField('youtube_url', value)} type="url" />
-                    <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
-                    <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
-                    <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
-                    <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" />
-                    <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
-                    <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
-                  </FormSection>
-                  <SeoSettingsSection
-                    form={form}
-                    onChange={updateField}
-                    businessName={form.name}
-                    slug={form.slug}
-                    category={form.category}
-                    description={form.description}
-                  />
+
                   <section>
-                    <h3 className="font-bold">Choose a template</h3>
-                    <p className="mt-1 text-sm text-[#68746c]">Choose a layout for this website. The preview below changes with your selection.</p>
-                    {templates.length === 0 ? <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p> : (
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 className="font-bold">Choose storefront template</h3>
+                        <p className="mt-0.5 text-xs text-[#68746c]">Select the starting layout and style for this website.</p>
+                      </div>
+                      {selectedTemplate ? (
+                        <a
+                          href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
+                        >
+                          Preview {selectedTemplate.name} demo ↗
+                        </a>
+                      ) : null}
+                    </div>
+
+                    {templates.length === 0 ? (
+                      <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p>
+                    ) : (
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {templates.map((template) => {
                           const design = getWebsiteTemplateDesign(template.slug);
@@ -563,7 +599,7 @@ export function WebsitesAdminDashboard() {
                           return (
                             <label
                               key={template.id}
-                              className={`group relative cursor-pointer overflow-hidden rounded-2xl border transition duration-200 ${
+                              className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition duration-200 ${
                                 isSelected
                                   ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
                                   : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
@@ -578,7 +614,7 @@ export function WebsitesAdminDashboard() {
                                 checked={isSelected}
                                 onChange={() => updateField('template_slug', template.slug)}
                               />
-                              <div className="relative h-28 w-full overflow-hidden bg-[#e5eee7] sm:h-32">
+                              <div className="relative h-24 w-full overflow-hidden bg-[#e5eee7]">
                                 <img
                                   src={previewImage}
                                   alt=""
@@ -586,26 +622,35 @@ export function WebsitesAdminDashboard() {
                                   loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                                <span className={`absolute bottom-2.5 left-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                  design === 'food' ? 'bg-[#f4e2d3] text-[#603b2c]' : design === 'salon' ? 'bg-[#f0e5df] text-[#8f5c54]' : design === 'jewellery' ? 'bg-[#c5a77e] text-[#211a13]' : 'bg-white text-[#173629]'
-                                }`}>
-                                  {design === 'food' ? 'Food & Bakery' : design === 'salon' ? 'Salon & Wellness' : design === 'jewellery' ? 'Jewellery Boutique' : 'Modern Business'}
+                                <span
+                                  className={`absolute bottom-2 left-2.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                    design === 'food'
+                                      ? 'bg-[#f4e2d3] text-[#603b2c]'
+                                      : design === 'salon'
+                                      ? 'bg-[#f0e5df] text-[#8f5c54]'
+                                      : design === 'jewellery'
+                                      ? 'bg-[#c5a77e] text-[#211a13]'
+                                      : 'bg-white text-[#173629]'
+                                  }`}
+                                >
+                                  {design === 'food'
+                                    ? 'Food & Bakery'
+                                    : design === 'salon'
+                                    ? 'Salon & Wellness'
+                                    : design === 'jewellery'
+                                    ? 'Jewellery Boutique'
+                                    : 'Modern Business'}
                                 </span>
                                 {isSelected ? (
-                                  <span className="absolute right-2.5 top-2.5 rounded-full bg-[#0E2B22] px-2.5 py-1 text-[11px] font-bold text-white shadow">
+                                  <span className="absolute right-2 top-2 rounded-full bg-[#0E2B22] px-2 py-0.5 text-[10px] font-bold text-white shadow">
                                     ✓ Selected
                                   </span>
-                                ) : (
-                                  <span className="absolute right-2.5 top-2.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-semibold text-[#526158] backdrop-blur-sm">
-                                    Select
-                                  </span>
-                                )}
+                                ) : null}
                               </div>
-                              <div className="p-4">
-                                <strong className="block text-base font-bold text-[#173328]">{template.name}</strong>
-                                <span className="mt-1 block text-xs leading-relaxed text-[#68746c]">{template.description || 'A clean, responsive business website template.'}</span>
-                                <span className="mt-2.5 block text-[11px] font-semibold text-[#526158]">
-                                  {design === 'food' ? 'Warm, product-led storefront' : design === 'salon' ? 'Calm, appointment-led storefront' : design === 'jewellery' ? 'Refined, gallery-led storefront' : 'Clean, flexible business storefront'}
+                              <div className="p-3">
+                                <strong className="block text-sm font-bold text-[#173328]">{template.name}</strong>
+                                <span className="mt-0.5 block line-clamp-1 text-xs text-[#68746c]">
+                                  {template.description || 'A clean, responsive business storefront.'}
                                 </span>
                               </div>
                             </label>
@@ -613,49 +658,50 @@ export function WebsitesAdminDashboard() {
                         })}
                       </div>
                     )}
-                    {selectedTemplate ? (
-                      <section className="mt-4 overflow-hidden rounded-xl border border-[#ded9cd] bg-white" aria-live="polite" aria-label={`${selectedTemplate.name} live template preview`}>
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#eee9df] px-4 py-3">
-                          <div><p className="text-[11px] font-bold uppercase tracking-wide text-[#8a958e]">Selected template</p><h4 className="mt-0.5 font-semibold text-[#173328]">{selectedTemplate.name}</h4></div>
-                          <a href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-[#173328] underline decoration-[#c6b676] underline-offset-4">Open full demo</a>
-                        </div>
-                        <iframe
-                          key={selectedTemplate.slug}
-                          title={`${selectedTemplate.name} live storefront preview`}
-                          src={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
-                          loading="lazy"
-                          className="h-80 w-full border-0 bg-[#f4f5f2] sm:h-[28rem]"
-                        />
-                      </section>
-                    ) : null}
-                    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                      <span className="font-semibold text-[#526158]">Explore storefront demos:</span>
-                      {[
-                        ['Modern', 'demo-modern'],
-                        ['Bakery', 'demo-bakery'],
-                        ['Salon', 'demo-salon'],
-                        ['Jewellery', 'demo-jewellery'],
-                      ].map(([label, slug]) => (
-                        <a key={slug} href={`/websites/${slug}`} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]">
-                          {label}
-                        </a>
-                      ))}
-                    </div>
                   </section>
-                  <FormSection title="Business owner">
-                    <Field label="Owner name" value={form.owner_name} onChange={(value) => updateField('owner_name', value)} required autoComplete="name" />
-                    <Field label="Owner email" value={form.owner_email} onChange={(value) => updateField('owner_email', value)} type="email" required autoComplete="email" />
-                    <Field label="Owner phone" value={form.owner_phone} onChange={(value) => updateField('owner_phone', value)} type="tel" />
-                    <Field label="Temporary password" value={form.owner_password} onChange={(value) => updateField('owner_password', value)} type="password" required min="8" autoComplete="new-password" />
+
+                  <FormSection title="Owner login credentials">
+                    <Field
+                      label="Owner name"
+                      value={form.owner_name}
+                      onChange={(value) => updateField('owner_name', value)}
+                      placeholder="e.g. Ramesh Patel"
+                      required
+                      autoComplete="name"
+                    />
+                    <Field
+                      label="Owner email"
+                      value={form.owner_email}
+                      onChange={(value) => updateField('owner_email', value)}
+                      type="email"
+                      placeholder="owner@example.com"
+                      required
+                      autoComplete="email"
+                    />
+                    <div className="sm:col-span-2">
+                      <Field
+                        label="Temporary password"
+                        value={form.owner_password}
+                        onChange={(value) => updateField('owner_password', value)}
+                        type="password"
+                        placeholder="Minimum 8 characters"
+                        required
+                        minLength={8}
+                        autoComplete="new-password"
+                      />
+                      <p className="mt-1 text-xs text-[#758078]">
+                        The owner will use this email and password to log into their website dashboard.
+                      </p>
+                    </div>
                   </FormSection>
-                  <FormSection title="Subscription · ₹1,999/year">
-                    <Field label="Plan" value={form.plan} onChange={(value) => updateField('plan', value)} required />
-                    <Field label="Annual price (₹)" value={form.amount} onChange={(value) => updateField('amount', value)} type="number" min="0" step="1" required />
-                    <Field label="Start date" value={form.start_date} onChange={(value) => updateField('start_date', value)} type="date" required />
-                    <Field label="Expiry date" value={form.expiry_date} onChange={(value) => updateField('expiry_date', value)} type="date" required />
-                    <SelectField label="Subscription" value={form.subscription_active} onChange={(value) => updateField('subscription_active', value)} options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Expired / inactive' }]} />
-                    <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
-                  </FormSection>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#ded9cd] bg-[#fbfaf7] px-4 py-3 text-xs text-[#526158]">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-[#173328]">Default Plan:</span>
+                      <span>{form.plan || 'YBGP Websites'} · ₹{Number(form.amount || 1999).toLocaleString('en-IN')}/year · Active</span>
+                    </div>
+                    <span className="text-[#818b84]">Billing and subscription terms can be customized in the dashboard.</span>
+                  </div>
                 </>
               ) : formMode === 'subscription' ? (
                 <FormSection title={`${selectedBusiness?.name ?? 'Business'} · annual subscription`}>
