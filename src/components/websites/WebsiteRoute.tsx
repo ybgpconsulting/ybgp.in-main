@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { PublicWebsiteRenderer, type BusinessWebsiteResponse } from './PublicWebsiteRenderer';
 
 const BusinessWebsitePage = lazy(() => import('../BusinessWebsitePage').then((module) => ({ default: module.BusinessWebsitePage })));
-const showcaseSlugs = ['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery'];
+const showcaseSlugs = ['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery', 'demo-clinic', 'demo-astrology', 'demo-travel'];
 
 export function WebsiteRoute({ slug }: { slug: string }) {
   const [state, setState] = useState<'checking' | 'tenant' | 'showcase' | 'unavailable'>('checking');

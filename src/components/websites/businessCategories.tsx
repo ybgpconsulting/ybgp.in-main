@@ -6,7 +6,14 @@ export interface PredefinedCategory {
   id: string;
   name: string;
   group: string;
-  templateSlug: 'modern-business' | 'food-bakery' | 'salon-studio' | 'jewellery-boutique';
+  templateSlug:
+    | 'modern-business'
+    | 'food-bakery'
+    | 'salon-studio'
+    | 'jewellery-boutique'
+    | 'clinic-healthcare'
+    | 'astrology-horoscope'
+    | 'tour-travel';
   descriptionPlaceholder: string;
   badge?: string;
 }
@@ -23,7 +30,7 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'clinic-doctor',
     name: 'Clinic / Doctor',
     group: 'Healthcare & Clinics',
-    templateSlug: 'modern-business',
+    templateSlug: 'clinic-healthcare',
     descriptionPlaceholder: 'Dedicated outpatient clinic offering expert medical consultations, health diagnostics, and compassionate patient care.',
     badge: 'Popular',
   },
@@ -31,21 +38,21 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'dental-clinic',
     name: 'Dental Clinic',
     group: 'Healthcare & Clinics',
-    templateSlug: 'modern-business',
+    templateSlug: 'clinic-healthcare',
     descriptionPlaceholder: 'Modern dental practice providing advanced dental care, smile designing, root canal treatments, and preventative oral health.',
   },
   {
     id: 'ayurveda-homeopathy',
     name: 'Ayurveda & Homeopathy Clinic',
     group: 'Healthcare & Clinics',
-    templateSlug: 'modern-business',
+    templateSlug: 'clinic-healthcare',
     descriptionPlaceholder: 'Holistic wellness clinic specializing in classical Ayurvedic therapies, herbal medicine, and natural root-cause healing.',
   },
   {
     id: 'physiotherapy-wellness',
     name: 'Physiotherapy & Rehabilitation',
     group: 'Healthcare & Clinics',
-    templateSlug: 'modern-business',
+    templateSlug: 'clinic-healthcare',
     descriptionPlaceholder: 'Professional physiotherapy clinic offering sports injury rehab, posture correction, pain management, and mobility care.',
   },
 
@@ -54,7 +61,7 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'astrology-horoscope',
     name: 'Astrology & Horoscope',
     group: 'Astrology & Spiritual',
-    templateSlug: 'modern-business',
+    templateSlug: 'astrology-horoscope',
     descriptionPlaceholder: 'Vedic astrology centre offering detailed Kundli analysis, career forecasts, relationship matchmaking, and life guidance.',
     badge: 'Popular',
   },
@@ -62,14 +69,14 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'vastu-consultation',
     name: 'Vastu Consultation',
     group: 'Astrology & Spiritual',
-    templateSlug: 'modern-business',
+    templateSlug: 'astrology-horoscope',
     descriptionPlaceholder: 'Expert Vastu Shastra consultation for homes, commercial offices, and industrial setups without structural demolition.',
   },
   {
     id: 'tarot-numerology',
     name: 'Tarot & Numerology',
     group: 'Astrology & Spiritual',
-    templateSlug: 'modern-business',
+    templateSlug: 'astrology-horoscope',
     descriptionPlaceholder: 'Intuitive tarot readings, spiritual energy counseling, and name numerology analysis for clarity and peace of mind.',
   },
 
@@ -78,7 +85,7 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'tour-and-travels',
     name: 'Tour and Travels',
     group: 'Tours & Travel',
-    templateSlug: 'modern-business',
+    templateSlug: 'tour-travel',
     descriptionPlaceholder: 'Trusted travel agency offering curated domestic and international holiday packages, flight bookings, and local sightseeing.',
     badge: 'Popular',
   },
@@ -86,21 +93,21 @@ export const PREDEFINED_CATEGORIES: PredefinedCategory[] = [
     id: 'travel-agency',
     name: 'Travel Agency & Holiday Packages',
     group: 'Tours & Travel',
-    templateSlug: 'modern-business',
+    templateSlug: 'tour-travel',
     descriptionPlaceholder: 'Complete holiday planning, customized family itineraries, honeymoon packages, and visa assistance.',
   },
   {
     id: 'taxi-cab-rental',
     name: 'Taxi & Car Rental Services',
     group: 'Tours & Travel',
-    templateSlug: 'modern-business',
+    templateSlug: 'tour-travel',
     descriptionPlaceholder: 'Reliable outstation cab booking, airport transfers, luxury car rentals, and round-the-clock chauffeur services.',
   },
   {
     id: 'hotel-resort-stay',
     name: 'Hotel, Resort & Homestay',
     group: 'Tours & Travel',
-    templateSlug: 'modern-business',
+    templateSlug: 'tour-travel',
     descriptionPlaceholder: 'Scenic getaway retreat and boutique accommodations with premium hospitality, dining, and scenic surroundings.',
   },
 

@@ -80,9 +80,13 @@ const normalizeSlug = (value: string): string => value
 const reservedSlugs = new Set([
   'admin',
   'dashboard',
+  'demo-modern',
   'demo-bakery',
   'demo-salon',
   'demo-jewellery',
+  'demo-clinic',
+  'demo-astrology',
+  'demo-travel',
 ]);
 
 const isValidEmail = (value: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

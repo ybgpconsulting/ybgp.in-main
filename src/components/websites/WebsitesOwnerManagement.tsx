@@ -316,6 +316,9 @@ export function BusinessProfileManager({
                   { id: '2', name: 'Food & Bakery', slug: 'food-bakery', description: 'Warm artisanal bakery and cafe showcase with WhatsApp ordering.', preview_image: null },
                   { id: '3', name: 'Salon & Wellness', slug: 'salon-studio', description: 'High-end beauty atelier with treatment cards and booking focus.', preview_image: null },
                   { id: '4', name: 'Jewellery Boutique', slug: 'jewellery-boutique', description: 'Obsidian & gold luxury showroom for bespoke jewellery.', preview_image: null },
+                  { id: '5', name: 'Clinic & Healthcare', slug: 'clinic-healthcare', description: 'Trusted clinical layout with doctor consultation & emergency timings.', preview_image: null },
+                  { id: '6', name: 'Astrology & Horoscope', slug: 'astrology-horoscope', description: 'Vedic astrology studio with kundli, horoscopes & birth chart sessions.', preview_image: null },
+                  { id: '7', name: 'Tour & Travel', slug: 'tour-travel', description: 'Vibrant holiday packages, custom cab itineraries & travel bookings.', preview_image: null },
                 ]
             ).map((template) => {
               const design = getWebsiteTemplateDesign(template.slug);
@@ -354,6 +357,12 @@ export function BusinessProfileManager({
                           ? 'bg-[#f0e5df] text-[#8f5c54]'
                           : design === 'jewellery'
                           ? 'bg-[#c5a77e] text-[#211a13]'
+                          : design === 'clinic'
+                          ? 'bg-[#dcfce7] text-[#166534]'
+                          : design === 'astrology'
+                          ? 'bg-[#1e1b4b] text-[#fef08a] border border-[#fef08a]/30'
+                          : design === 'travel'
+                          ? 'bg-[#ffedd5] text-[#9a3412]'
                           : 'bg-white text-[#173629]'
                       }`}
                     >

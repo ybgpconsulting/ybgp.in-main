@@ -544,6 +544,12 @@ export function WebsitesAdminDashboard() {
                         ? 'bg-[#f0e5df] text-[#8f5c54]'
                         : design === 'jewellery'
                         ? 'bg-[#c5a77e] text-[#211a13]'
+                        : design === 'clinic'
+                        ? 'bg-[#dcfce7] text-[#166534]'
+                        : design === 'astrology'
+                        ? 'bg-[#1e1b4b] text-[#fef08a] border border-[#fef08a]/30'
+                        : design === 'travel'
+                        ? 'bg-[#ffedd5] text-[#9a3412]'
                         : 'bg-white text-[#173629]'
                     }`}
                   >
@@ -553,6 +559,12 @@ export function WebsitesAdminDashboard() {
                       ? 'Salon & Wellness'
                       : design === 'jewellery'
                       ? 'Jewellery Boutique'
+                      : design === 'clinic'
+                      ? 'Clinic & Healthcare'
+                      : design === 'astrology'
+                      ? 'Astrology & Horoscope'
+                      : design === 'travel'
+                      ? 'Tour & Travel'
                       : 'Modern Business'}
                   </span>
                   {isSelected ? (

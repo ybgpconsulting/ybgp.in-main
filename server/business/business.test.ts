@@ -77,7 +77,7 @@ test('templates API lists active templates', async () => {
   assert.ok(Array.isArray(body.templates));
   assert.deepEqual(
     body.templates.map((template) => template.slug).sort(),
-    ['modern-business', 'food-bakery', 'salon-studio', 'jewellery-boutique'].sort()
+    ['modern-business', 'food-bakery', 'salon-studio', 'jewellery-boutique', 'clinic-healthcare', 'astrology-horoscope', 'tour-travel'].sort()
   );
 });
 

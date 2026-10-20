@@ -165,7 +165,7 @@ export type DemoProduct = {
 
 export type DemoBusiness = {
   slug: string;
-  template: 'modern' | 'bakery' | 'salon' | 'jewellery';
+  template: 'modern' | 'bakery' | 'salon' | 'jewellery' | 'clinic' | 'astrology' | 'travel';
   templateName: string;
   name: string;
   category: string;
@@ -402,7 +402,7 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
   },
   'demo-clinic': {
     slug: 'demo-clinic',
-    template: 'modern',
+    template: 'clinic',
     templateName: 'Clinic & Healthcare',
     name: 'Apex Healthcare Clinic',
     category: 'Clinic / Doctor',
@@ -452,7 +452,7 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
   },
   'demo-astrology': {
     slug: 'demo-astrology',
-    template: 'modern',
+    template: 'astrology',
     templateName: 'Astrology & Spiritual',
     name: 'Nakshatra Vedic Astrology',
     category: 'Astrology & Horoscope',
@@ -502,7 +502,7 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
   },
   'demo-travel': {
     slug: 'demo-travel',
-    template: 'modern',
+    template: 'travel',
     templateName: 'Tours & Travels',
     name: 'Horizon Explorer Travels',
     category: 'Tour and Travels',
@@ -558,6 +558,15 @@ export const getTemplateDefaults = (slugOrDesign: string, category?: string | nu
     normalized = inferTemplateSlugFromCategory(category);
   }
 
+  if (normalized.includes('clinic') || normalized.includes('health') || normalized.includes('doctor') || normalized === 'clinic-healthcare') {
+    return demoBusinesses['demo-clinic'];
+  }
+  if (normalized.includes('astrolog') || normalized.includes('horoscope') || normalized.includes('jyotish') || normalized === 'astrology-horoscope') {
+    return demoBusinesses['demo-astrology'];
+  }
+  if (normalized.includes('travel') || normalized.includes('tour') || normalized.includes('trip') || normalized === 'tour-travel') {
+    return demoBusinesses['demo-travel'];
+  }
   if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {
     return demoBusinesses['demo-bakery'];
   }
@@ -577,6 +586,15 @@ export const getTemplateTheme = (slugOrDesign: string, category?: string | null)
     normalized = inferTemplateSlugFromCategory(category);
   }
 
+  if (normalized.includes('clinic') || normalized.includes('health') || normalized.includes('doctor') || normalized === 'clinic-healthcare') {
+    return demoThemes.clinic;
+  }
+  if (normalized.includes('astrolog') || normalized.includes('horoscope') || normalized.includes('jyotish') || normalized === 'astrology-horoscope') {
+    return demoThemes.astrology;
+  }
+  if (normalized.includes('travel') || normalized.includes('tour') || normalized.includes('trip') || normalized === 'tour-travel') {
+    return demoThemes.travel;
+  }
   if (normalized.includes('bake') || normalized.includes('food') || normalized.includes('restraunt') || normalized.includes('restaurant') || normalized === 'food-bakery') {
     return demoThemes.bakery;
   }

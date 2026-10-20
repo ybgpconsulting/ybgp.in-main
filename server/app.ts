@@ -14,7 +14,7 @@ import { resolveTenantSeo } from './seo/settings.js';
 
 const app = express();
 const frontendDirectory = resolve(process.cwd(), 'dist');
-const showcaseSlugs = new Set(['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery']);
+const showcaseSlugs = new Set(['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery', 'demo-clinic', 'demo-astrology', 'demo-travel']);
 
 const safeErrorDetails = (error: unknown): Record<string, string | number> => {
   const details: Record<string, string | number> = {};

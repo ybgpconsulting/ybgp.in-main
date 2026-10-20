@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, ChevronRight, Link2, MapPin, Menu, MessageCircle, X } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronRight, Compass, Link2, MapPin, Menu, MessageCircle, Sparkles, X } from 'lucide-react';
 import { SocialBrandIcon, type SocialPlatform } from './SocialBrandIcon';
 import { getWebsiteTemplateDesign, type WebsiteTemplateDesign } from './templateDesigns';
 import { getTemplateDefaults, getTemplateTheme, type WebsiteTheme } from './templateDefaults';
@@ -116,9 +116,12 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const foodLayout = design === 'food';
   const salonLayout = design === 'salon';
   const jewelleryLayout = design === 'jewellery';
+  const clinicLayout = design === 'clinic';
+  const astrologyLayout = design === 'astrology';
+  const travelLayout = design === 'travel';
   const isModern = design === 'modern';
-  const isService = isModern || salonLayout;
-  const collectionId = isService ? 'services' : 'collections';
+  const isService = isModern || salonLayout || clinicLayout || astrologyLayout;
+  const collectionId = clinicLayout ? 'departments' : astrologyLayout ? 'consultations' : travelLayout ? 'packages' : isService ? 'services' : 'collections';
 
   const whatsapp = business.whatsapp || settings.whatsapp;
   const phone = business.phone || settings.call_phone;
@@ -131,7 +134,15 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     : '');
   const primaryActionType = data.primaryAction?.type ?? inferPrimaryAction(settings, business);
   const ctaUrl = data.primaryAction?.url ?? resolvePrimaryActionUrl(primaryActionType, business, settings.cta_url) ?? (whatsapp ? `https://wa.me/${whatsapp.replace(/\D/g, '')}` : '#contact');
-  const ctaText = data.primaryAction?.text || settings.cta_text || (foodLayout ? 'Order on WhatsApp' : salonLayout ? 'Book Appointment' : jewelleryLayout ? 'Explore Collection' : 'Start a conversation');
+  const ctaText = data.primaryAction?.text || settings.cta_text || (
+    clinicLayout ? 'Book Consultation' :
+    astrologyLayout ? 'Consult Astrologer' :
+    travelLayout ? 'Get Travel Quote' :
+    foodLayout ? 'Order on WhatsApp' :
+    salonLayout ? 'Book Appointment' :
+    jewelleryLayout ? 'Explore Collection' :
+    'Start a conversation'
+  );
   const displayWorkingHours = formatWorkingHours(settings.working_hours) || defaults.openingHours;
 
   const socialLinks = [
@@ -165,8 +176,24 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     ? settings.about_points.split('\n').map((p) => p.trim()).filter(Boolean)
     : defaults.story.points;
   const storyImage = safeImageUrl(settings.about_image) || defaults.story.image;
-  const highlightsEyebrow = settings.highlights_eyebrow || (salonLayout ? 'The salon menu' : isModern ? 'What we do' : foodLayout ? 'From the counter' : 'The collection');
-  const highlightsTitle = settings.highlights_title || (foodLayout ? 'A little something for every kind of gathering.' : salonLayout ? 'Care that starts with listening.' : isModern ? 'The right support for your next step.' : 'Pieces with presence. Made for your own story.');
+  const highlightsEyebrow = settings.highlights_eyebrow || (
+    clinicLayout ? 'Clinical care & departments' :
+    astrologyLayout ? 'Jyotish & Vedic consultations' :
+    travelLayout ? 'Curated tour packages & rentals' :
+    salonLayout ? 'The salon menu' :
+    isModern ? 'What we do' :
+    foodLayout ? 'From the counter' :
+    'The collection'
+  );
+  const highlightsTitle = settings.highlights_title || (
+    clinicLayout ? 'Comprehensive medical care for you and your family.' :
+    astrologyLayout ? 'Ancient Vedic wisdom interpreted for modern life.' :
+    travelLayout ? 'Handcrafted holidays and reliable travel services.' :
+    foodLayout ? 'A little something for every kind of gathering.' :
+    salonLayout ? 'Care that starts with listening.' :
+    isModern ? 'The right support for your next step.' :
+    'Pieces with presence. Made for your own story.'
+  );
   const finalCtaTitle = settings.final_cta_title || defaults.finalCta.title;
   const finalCtaDescription = settings.final_cta_description || defaults.finalCta.description;
   const finalCtaButton = settings.final_cta_button || defaults.finalCta.button;
@@ -180,32 +207,59 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
       }))
     : defaults.highlights;
 
-  const navItems = foodLayout
+  const navItems = clinicLayout
     ? [
         { label: 'Home', href: '#home' },
-        { label: 'Menu', href: `#${collectionId}` },
-        { label: 'Bestsellers', href: '#bestsellers' },
-        { label: 'Our story', href: '#about' },
-        { label: 'Gallery', href: '#gallery' },
-        { label: 'Order', href: '#contact' },
+        { label: 'Departments', href: `#${collectionId}` },
+        { label: 'Consultations', href: '#bestsellers' },
+        { label: 'Clinical Care', href: '#about' },
+        { label: 'Facilities', href: '#gallery' },
+        { label: 'Book Visit', href: '#contact' },
       ]
-    : isService
+    : astrologyLayout
       ? [
           { label: 'Home', href: '#home' },
-          { label: isModern ? 'What we do' : 'Services', href: `#${collectionId}` },
-          { label: isModern ? 'Ways to work together' : 'Most booked', href: '#bestsellers' },
-          { label: isModern ? 'Our approach' : 'The studio', href: '#about' },
-          { label: 'Gallery', href: '#gallery' },
-          { label: isModern ? 'Contact' : 'Book', href: '#contact' },
+          { label: 'Consultations', href: `#${collectionId}` },
+          { label: 'Horoscopes', href: '#bestsellers' },
+          { label: 'Vedic Tradition', href: '#about' },
+          { label: 'Astro Gallery', href: '#gallery' },
+          { label: 'Consult Astrologer', href: '#contact' },
         ]
-      : [
-          { label: 'Home', href: '#home' },
-          { label: 'Collections', href: `#${collectionId}` },
-          { label: 'New pieces', href: '#bestsellers' },
-          { label: 'Craft', href: '#about' },
-          { label: 'Gallery', href: '#gallery' },
-          { label: 'Enquire', href: '#contact' },
-        ];
+      : travelLayout
+        ? [
+            { label: 'Home', href: '#home' },
+            { label: 'Tour Packages', href: `#${collectionId}` },
+            { label: 'Popular Trips', href: '#bestsellers' },
+            { label: 'Why Travel With Us', href: '#about' },
+            { label: 'Travel Gallery', href: '#gallery' },
+            { label: 'Plan Journey', href: '#contact' },
+          ]
+        : foodLayout
+          ? [
+              { label: 'Home', href: '#home' },
+              { label: 'Menu', href: `#${collectionId}` },
+              { label: 'Bestsellers', href: '#bestsellers' },
+              { label: 'Our story', href: '#about' },
+              { label: 'Gallery', href: '#gallery' },
+              { label: 'Order', href: '#contact' },
+            ]
+          : isService
+            ? [
+                { label: 'Home', href: '#home' },
+                { label: isModern ? 'What we do' : 'Services', href: `#${collectionId}` },
+                { label: isModern ? 'Ways to work together' : 'Most booked', href: '#bestsellers' },
+                { label: isModern ? 'Our approach' : 'The studio', href: '#about' },
+                { label: 'Gallery', href: '#gallery' },
+                { label: isModern ? 'Contact' : 'Book', href: '#contact' },
+              ]
+            : [
+                { label: 'Home', href: '#home' },
+                { label: 'Collections', href: `#${collectionId}` },
+                { label: 'New pieces', href: '#bestsellers' },
+                { label: 'Craft', href: '#about' },
+                { label: 'Gallery', href: '#gallery' },
+                { label: 'Enquire', href: '#contact' },
+              ];
 
   return (
     <div className={`min-h-screen ${foodLayout ? 'font-sans' : ''}`} style={{ background: theme.pageBg, color: theme.text }}>
@@ -283,7 +337,136 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
       <main>
         {/* Full Storefront Hero */}
-        {foodLayout ? (
+        {clinicLayout ? (
+          <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[660px] lg:grid-cols-[0.88fr_1.12fr]">
+            <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1 text-xs font-semibold" style={{ background: theme.accentSoft, color: theme.accentDark }}>
+                <span className="h-2 w-2 rounded-full bg-[#1e6654] animate-pulse" />
+                <span>Verified Outpatient &amp; Specialist Care</span>
+              </div>
+              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]" style={{ color: theme.accentDark }}>{heroTitle}</h1>
+              <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {ctaText} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
+                  View Departments
+                </a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>Clinic Directions</a> : null}
+              </div>
+              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>
+                {displayWorkingHours || 'Experienced Doctors · Sanitized Facility · Compassionate Care'}
+              </div>
+            </div>
+            <div className="order-1 flex h-[340px] items-center justify-center overflow-hidden bg-[#e6f1ed] p-6 sm:h-[450px] lg:order-2 lg:h-[660px]">
+              <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_24px_60px_rgba(18,70,54,0.14)] sm:p-8">
+                <div className="flex items-center justify-between border-b border-[#e1ede8] pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e0f0ea] text-sm font-bold text-[#1e6654]">⚕</span>
+                    <div>
+                      <span className="block text-xs font-bold uppercase tracking-[0.16em] text-[#175445]">{business.name}</span>
+                      <span className="block text-[10px] text-[#587464]">{business.category}</span>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-[#e0f0ea] px-3 py-1 text-[10px] font-bold text-[#175445]">OPD Open</span>
+                </div>
+                <div className="mt-5 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1e6654]">Patient-Centered Care</p>
+                    <p className="mt-2 font-heading text-xl font-bold leading-snug text-[#0d382d] sm:text-2xl">Consult specialist doctors with complete peace of mind.</p>
+                    <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[#4a665d]">{business.description || defaults.hero.description}</p>
+                    <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-medium text-[#175445]">
+                      <span className="rounded-md bg-[#eaf4f0] px-2.5 py-1">✓ Verified Doctors</span>
+                      <span className="rounded-md bg-[#eaf4f0] px-2.5 py-1">✓ In-house Labs</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center gap-2">
+                    {(categories.length > 0 ? categories.map((c) => ({ title: c.name })) : defaults.highlights).slice(0, 3).map((item, idx) => (
+                      <div key={item.title} className="flex items-center gap-2.5 rounded-xl border border-[#e1ede8] bg-[#f8fbf9] p-2.5 text-xs">
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e0f0ea] font-bold text-[#175445]">0{idx + 1}</span>
+                        <span className="truncate font-semibold text-[#122620]">{item.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : astrologyLayout ? (
+          <section id="home" className="relative mx-auto mt-3 min-h-[580px] max-w-[1440px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#16122c] via-[#211a42] to-[#120f24] text-[#f7f5ee] shadow-[0_24px_70px_rgba(20,16,40,0.35)] sm:mt-6 sm:min-h-[640px] lg:min-h-[700px]">
+            <div className="absolute inset-0 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
+            <div className="relative mx-auto grid min-h-[580px] max-w-7xl items-center gap-8 px-6 py-14 sm:min-h-[640px] sm:px-10 lg:min-h-[700px] lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#1c1836]/80 px-4 py-1.5 text-xs font-semibold text-[#f0d48f] backdrop-blur-sm">
+                  <span>✦ Authentic Vedic Jyotish &amp; Vastu Shastra</span>
+                </div>
+                <h1 className="mt-5 font-heading text-4xl font-normal leading-[1.02] tracking-[-0.03em] text-[#fffdf7] sm:text-5xl lg:text-[4.75rem]">{heroTitle}</h1>
+                <p className="mt-6 max-w-lg text-base leading-relaxed text-[#d6d0e8] sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-[#181432] shadow-lg transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: '#e0c297' }}>
+                    {ctaText} <ArrowRight className="h-4 w-4" />
+                  </a>
+                  <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border border-[#d4af37]/50 px-5 py-3 text-sm font-semibold text-[#f5edd9] transition-colors hover:bg-white/10 sm:text-base">
+                    Explore Consultations
+                  </a>
+                  {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/20 px-5 py-3 text-sm font-semibold text-[#e4ddd0] transition-colors hover:bg-white/10 sm:text-base">Directions</a> : null}
+                </div>
+                <p className="mt-10 text-xs font-medium uppercase tracking-[0.24em] text-[#c5a77e]">
+                  {displayWorkingHours || 'Vedic Kundli Analysis · Career Forecasting · Vastu Consultation'}
+                </p>
+              </div>
+              <div className="relative overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#1e193d]/90 p-6 shadow-2xl backdrop-blur-md sm:p-8">
+                <div className="flex items-center justify-between border-b border-[#d4af37]/20 pb-4">
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#e0c297]">{business.name}</span>
+                  <span className="rounded-full border border-[#d4af37]/40 bg-[#d4af37]/15 px-3 py-0.5 text-[10px] font-semibold text-[#f5edd9]">Kundli Milan</span>
+                </div>
+                <div className="mt-6 space-y-3.5">
+                  {[
+                    { icon: '☀️', title: 'Birth Chart & Planetary Dasha', desc: 'Detailed transit predictions and auspicious timing for key decisions.' },
+                    { icon: '⚖️', title: 'Kundli Matching (36 Guna)', desc: 'Ashtakoot compatibility analysis for marriage and partnership harmony.' },
+                    { icon: '🏡', title: 'Vastu Energy Harmonization', desc: 'Practical remedies for residential and workspace prosperity without demolition.' },
+                  ].map((item) => (
+                    <div key={item.title} className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5">
+                      <span className="text-xl">{item.icon}</span>
+                      <div>
+                        <p className="text-xs font-bold text-[#f5edd9]">{item.title}</p>
+                        <p className="mt-1 text-[11px] leading-relaxed text-[#b6aed1]">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-5 text-center text-[11px] font-semibold text-[#e0c297]">✦ 100% Confidential 1-on-1 Consultations</p>
+              </div>
+            </div>
+          </section>
+        ) : travelLayout ? (
+          <section id="home" className="relative mx-auto mt-3 min-h-[580px] max-w-[1440px] overflow-hidden rounded-3xl sm:mt-6 sm:min-h-[630px] lg:min-h-[700px]">
+            <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(13,45,62,0.92) 0%, rgba(13,45,62,0.65) 50%, rgba(13,45,62,0.2) 100%)' }} />
+            <div className="relative flex min-h-[580px] max-w-3xl flex-col justify-center px-5 py-14 sm:min-h-[630px] sm:px-10 lg:min-h-[700px] lg:px-16 text-white">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/30 bg-white/15 px-4 py-1.5 text-xs font-semibold text-[#e0edf5] backdrop-blur-md">
+                <span>✈️ Curated Holiday Tours &amp; Outstation Cab Desk</span>
+              </div>
+              <h1 className="mt-5 max-w-[680px] font-heading text-[clamp(2.5rem,7vw,5.5rem)] font-extrabold leading-[0.96] tracking-[-0.04em] text-white">{heroTitle}</h1>
+              <p className="mt-6 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
+                  {ctaText} <ArrowRight className="h-4 w-4" />
+                </a>
+                <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:text-base">
+                  Explore Tour Packages
+                </a>
+                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/40 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10 sm:text-base">Travel Desk Directions</a> : null}
+              </div>
+              <div className="mt-10 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/20 pt-4 text-xs font-medium text-white/80">
+                <span>✓ 24/7 On-Trip Assistance</span>
+                <span>✓ Verified AC Cabs</span>
+                <span>✓ Handpicked Verified Stays</span>
+              </div>
+            </div>
+          </section>
+        ) : foodLayout ? (
           <section id="home" className="relative mx-auto mt-3 min-h-[570px] max-w-[1440px] overflow-hidden sm:mt-6 sm:min-h-[620px] sm:rounded-[28px] lg:min-h-[700px]">
             <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(31,17,10,0.85) 0%, rgba(39,22,14,0.55) 50%, rgba(39,22,14,0.15) 100%)' }} />
@@ -440,7 +623,17 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
               <div className="relative">
                 <img src={storyImage} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
-                <span className="absolute bottom-4 left-4 max-w-[240px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>{isModern ? 'Thoughtful work, made personal.' : 'A softer kind of salon day.'}</span>
+                <span className="absolute bottom-4 left-4 max-w-[260px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>
+                  {clinicLayout
+                    ? 'Patient-first clinical care.'
+                    : astrologyLayout
+                    ? 'Ancient wisdom, modern clarity.'
+                    : travelLayout
+                    ? 'Wanderlust planned to perfection.'
+                    : isModern
+                    ? 'Thoughtful work, made personal.'
+                    : 'A softer kind of salon day.'}
+                </span>
               </div>
               <div className="max-w-xl py-3 lg:py-10">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
@@ -473,22 +666,52 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div className="max-w-2xl">
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
-                {salonLayout ? 'Most requested' : isModern ? 'Ways to work together' : foodLayout ? 'Customer favourites' : 'A few beloved pieces'}
+                {clinicLayout
+                  ? 'Consultations & Care'
+                  : astrologyLayout
+                  ? 'Astro Consultations'
+                  : travelLayout
+                  ? 'Popular Holiday Packages'
+                  : salonLayout
+                  ? 'Most requested'
+                  : isModern
+                  ? 'Ways to work together'
+                  : foodLayout
+                  ? 'Customer favourites'
+                  : 'A few beloved pieces'}
               </p>
               <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
                 {products.length > 0
                   ? 'Our products & services'
+                  : clinicLayout
+                  ? 'Dedicated healthcare consultations & tests.'
+                  : astrologyLayout
+                  ? 'Consultations shaped around your birth chart.'
+                  : travelLayout
+                  ? 'Curated holiday packages & private rides.'
                   : salonLayout
-                    ? 'The appointments guests return for.'
-                    : isModern
-                      ? 'Focused support, built around you.'
-                      : foodLayout
-                        ? 'The ones that disappear first.'
-                        : 'The signatures that stay with you.'}
+                  ? 'The appointments guests return for.'
+                  : isModern
+                  ? 'Focused support, built around you.'
+                  : foodLayout
+                  ? 'The ones that disappear first.'
+                  : 'The signatures that stay with you.'}
               </h2>
             </div>
             <a href={ctaUrl} className="inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>
-              {salonLayout ? 'Book a visit' : isModern ? 'Talk through your goals' : foodLayout ? 'Order a favourite' : 'Ask about a piece'} <ArrowRight className="h-4 w-4" />
+              {clinicLayout
+                ? 'Book a consultation'
+                : astrologyLayout
+                ? 'Consult astrologer'
+                : travelLayout
+                ? 'Inquire for package quote'
+                : salonLayout
+                ? 'Book a visit'
+                : isModern
+                ? 'Talk through your goals'
+                : foodLayout
+                ? 'Order a favourite'
+                : 'Ask about a piece'} <ArrowRight className="h-4 w-4" />
             </a>
           </div>
 
@@ -552,16 +775,40 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
         {/* Gallery Section */}
         <section id="gallery" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`mb-8 ${jewelleryLayout ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
+          <div className={`mb-8 ${jewelleryLayout || astrologyLayout ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
-              {salonLayout ? 'Inside the studio' : isModern ? 'Selected work' : foodLayout ? 'A peek behind the counter' : 'Details in their own light'}
+              {clinicLayout
+                ? 'Clinical infrastructure'
+                : astrologyLayout
+                ? 'Sacred methodology & insights'
+                : travelLayout
+                ? 'Travel moments & expedition fleet'
+                : salonLayout
+                ? 'Inside the studio'
+                : isModern
+                ? 'Selected work'
+                : foodLayout
+                ? 'A peek behind the counter'
+                : 'Details in their own light'}
             </p>
             <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
-              {salonLayout ? 'A little of the studio feeling.' : isModern ? 'A few things we are proud of.' : foodLayout ? 'Made, dressed and shared with care.' : 'A closer look at the little things.'}
+              {clinicLayout
+                ? 'Modern clinical facilities & diagnostic care.'
+                : astrologyLayout
+                ? 'Precision astrological charts & consultations.'
+                : travelLayout
+                ? 'Journeys designed for discovery, comfort & wonder.'
+                : salonLayout
+                ? 'A little of the studio feeling.'
+                : isModern
+                ? 'A few things we are proud of.'
+                : foodLayout
+                ? 'Made, dressed and shared with care.'
+                : 'A closer look at the little things.'}
             </h2>
           </div>
 
-          <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${foodLayout ? 'lg:grid-cols-4' : isService ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+          <div className={`grid grid-cols-2 gap-3 sm:gap-4 ${foodLayout || travelLayout ? 'lg:grid-cols-4' : isService ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
             {gallery.length > 0 ? (
               gallery.map((item, index) => (
                 <figure key={item.id} className={`${index === 0 ? 'col-span-2 row-span-2' : ''} overflow-hidden rounded-2xl border`} style={{ borderColor: theme.border, background: theme.panel }}>
@@ -588,15 +835,50 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
         {/* Final High-Conversion Banner */}
         <section id="final-cta" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between ${jewelleryLayout ? 'bg-[#181512] text-white border border-[#2e2720]' : ''}`} style={!jewelleryLayout ? { background: theme.panelStrong } : undefined}>
+          <div
+            className={`flex flex-col gap-6 p-6 sm:p-10 lg:flex-row lg:items-center lg:justify-between rounded-2xl ${
+              jewelleryLayout
+                ? 'bg-[#181512] text-white border border-[#2e2720]'
+                : astrologyLayout
+                ? 'bg-[#0f172a] text-[#f8fafc] border border-[#233554] shadow-[0_20px_50px_rgba(10,18,36,0.35)]'
+                : ''
+            }`}
+            style={!jewelleryLayout && !astrologyLayout ? { background: theme.panelStrong } : undefined}
+          >
             <div className="max-w-2xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: jewelleryLayout ? '#c5a77e' : theme.label }}>
-                {salonLayout ? 'Make a little time for you' : isModern ? 'Your next step starts here' : foodLayout ? 'Tell us what you are celebrating' : 'A piece, chosen personally'}
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.24em]"
+                style={{ color: jewelleryLayout ? '#c5a77e' : astrologyLayout ? '#f59e0b' : theme.label }}
+              >
+                {clinicLayout
+                  ? 'Your health, in trusted hands'
+                  : astrologyLayout
+                  ? 'Align your stars & destiny'
+                  : travelLayout
+                  ? 'Plan your journey seamlessly'
+                  : salonLayout
+                  ? 'Make a little time for you'
+                  : isModern
+                  ? 'Your next step starts here'
+                  : foodLayout
+                  ? 'Tell us what you are celebrating'
+                  : 'A piece, chosen personally'}
               </p>
               <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{finalCtaTitle}</h2>
-              <p className="mt-3 text-base leading-relaxed" style={{ color: jewelleryLayout ? 'rgba(255,255,255,0.68)' : theme.muted }}>{finalCtaDescription}</p>
+              <p
+                className="mt-3 text-base leading-relaxed"
+                style={{ color: jewelleryLayout ? 'rgba(255,255,255,0.68)' : astrologyLayout ? 'rgba(226,232,240,0.75)' : theme.muted }}
+              >
+                {finalCtaDescription}
+              </p>
             </div>
-            <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base shadow-sm" style={{ background: theme.cta }}>
+            <a
+              href={whatsappDirectUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base shadow-sm"
+              style={{ background: astrologyLayout ? '#d97706' : theme.cta }}
+            >
               {finalCtaButton} <MessageCircle className="h-5 w-5" />
             </a>
           </div>
@@ -942,6 +1224,205 @@ function ModernSolutionCard({
   );
 }
 
+function ClinicServiceCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to book an appointment for ${name} at ${businessName}.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#cbe7e3] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-[#0284c7] hover:shadow-md">
+      {image ? (
+        <div className="relative h-56 w-full overflow-hidden bg-[#f0f9f8] sm:h-60">
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#0284c7] shadow-sm backdrop-blur-sm">
+            Clinical Consultation
+          </span>
+        </div>
+      ) : (
+        <div className="grid h-44 place-items-center bg-[#f0fdfa]">
+          <span className="font-heading text-3xl font-semibold text-[#0d9488]">{name.slice(0, 1).toUpperCase()}</span>
+        </div>
+      )}
+      <div className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-heading text-xl font-bold text-[#0f172a]">{name}</h3>
+            {price ? (
+              <span className="shrink-0 rounded-md bg-[#e0f2fe] px-2.5 py-1 text-xs font-bold text-[#0369a1]">{price}</span>
+            ) : null}
+          </div>
+          {description ? (
+            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-[#475569]">{description}</p>
+          ) : null}
+          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-[#0d9488]">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Doctor Consultation &amp; Care
+          </div>
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#e2e8f0] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0284c7] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Book Consultation Slot
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function AstrologyConsultationCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to schedule an astrological consultation for ${name} with ${businessName}. Please share available slots.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#1e293b] bg-[#0b1120] text-[#f1f5f9] shadow-[0_16px_36px_rgba(2,6,23,0.5)] transition-all duration-300 hover:-translate-y-1.5 hover:border-[#f59e0b]">
+      {image ? (
+        <div className="relative h-56 w-full overflow-hidden bg-[#0f172a] sm:h-60">
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1120] via-transparent to-transparent opacity-70" />
+          <span className="absolute left-3 top-3 rounded-full border border-[#f59e0b]/40 bg-[#0f172a]/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#fbbf24] backdrop-blur-sm">
+            Vedic Guidance
+          </span>
+        </div>
+      ) : (
+        <div className="grid h-44 place-items-center bg-[#0f172a]">
+          <span className="font-heading text-4xl text-[#fbbf24]">✦</span>
+        </div>
+      )}
+      <div className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="font-heading text-xl font-medium text-[#fef3c7]">{name}</h3>
+            {price ? (
+              <span className="shrink-0 font-serif text-base font-semibold text-[#f59e0b]">{price}</span>
+            ) : null}
+          </div>
+          {description ? (
+            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-[#94a3b8]">{description}</p>
+          ) : null}
+          <div className="mt-4 flex items-center gap-2 text-xs text-[#cbd5e1]">
+            <Sparkles className="h-3.5 w-3.5 text-[#f59e0b]" /> Birth Chart Analysis Included
+          </div>
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#1e293b] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d97706] to-[#b45309] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Consult Astrologer
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function TravelPackageCard({
+  name,
+  description,
+  price,
+  image,
+  whatsapp,
+  businessName,
+}: {
+  name: string;
+  description: string | null;
+  price?: string;
+  image?: string;
+  whatsapp?: string | null;
+  businessName: string;
+  theme: WebsiteTheme;
+}) {
+  const whatsappUrl = whatsapp
+    ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'm interested in the ${name} package from ${businessName}. Please share itinerary and quote.`)}`
+    : null;
+
+  return (
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-[#fed7aa] bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-[#ea580c] hover:shadow-md">
+      {image ? (
+        <div className="relative h-60 w-full overflow-hidden bg-[#fff7ed] sm:h-64">
+          <img src={image} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+          <span className="absolute left-3 top-3 rounded-full bg-[#c2410c] px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-sm">
+            Curated Tour
+          </span>
+          {price ? (
+            <span className="absolute bottom-3 right-3 rounded-full bg-white/95 px-3 py-1 text-xs font-bold text-[#c2410c] shadow-md backdrop-blur-sm">
+              {price}
+            </span>
+          ) : null}
+        </div>
+      ) : (
+        <div className="grid h-44 place-items-center bg-[#fff7ed]">
+          <span className="font-heading text-4xl text-[#ea580c]">✈</span>
+        </div>
+      )}
+      <div className="flex flex-1 flex-col justify-between p-6">
+        <div>
+          <h3 className="font-heading text-xl font-bold text-[#292524]">{name}</h3>
+          {description ? (
+            <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed text-[#57534e]">{description}</p>
+          ) : null}
+          <div className="mt-4 flex items-center gap-2 text-xs font-medium text-[#c2410c]">
+            <Compass className="h-3.5 w-3.5" /> Transport, Guide &amp; Custom Schedule
+          </div>
+        </div>
+        {whatsappUrl ? (
+          <div className="mt-6 border-t border-[#ffedd5] pt-4">
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#ea580c] px-4 py-2.5 text-xs font-semibold text-white shadow-sm transition-opacity hover:opacity-90"
+            >
+              <MessageCircle className="h-3.5 w-3.5" /> Inquire Package Quote
+            </a>
+          </div>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
 function TemplateItemCard({
   name,
   description,
@@ -991,6 +1472,45 @@ function TemplateItemCard({
   if (design === 'jewellery') {
     return (
       <JewelleryItemCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
+  if (design === 'clinic') {
+    return (
+      <ClinicServiceCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
+  if (design === 'astrology') {
+    return (
+      <AstrologyConsultationCard
+        name={name}
+        description={description}
+        price={price}
+        image={image}
+        whatsapp={whatsapp}
+        businessName={businessName}
+        theme={theme}
+      />
+    );
+  }
+  if (design === 'travel') {
+    return (
+      <TravelPackageCard
         name={name}
         description={description}
         price={price}
