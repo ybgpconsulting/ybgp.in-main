@@ -21,7 +21,8 @@ const websiteSteps = [
   ['03', 'Get Your Website', 'Launch your online presence with a link you can share with customers.']
 ];
 
-import { demoThemes, demoBusinesses, type DemoBusiness, type DemoHighlight, type DemoProduct } from './websites/templateDefaults';
+import { demoThemes, demoBusinesses, createDemoWebsiteResponse, type DemoBusiness, type DemoHighlight, type DemoProduct } from './websites/templateDefaults';
+import { PublicWebsiteRenderer } from './websites/PublicWebsiteRenderer';
 
 const faqs = [
   ['What is included in the ₹1,999/year plan?', 'A mobile-friendly business website with supported business details, products or services, a gallery and contact features. The final website depends on the selected design and the information you provide.'],
@@ -433,9 +434,7 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
   }, [demoBusiness]);
 
   if (demoBusiness) {
-    const theme = demoThemes[demoBusiness.template] ?? demoThemes.modern;
-
-    return <DemoStorefront business={demoBusiness} theme={theme} />;
+    return <PublicWebsiteRenderer slug={demoBusiness.slug} initialData={createDemoWebsiteResponse(demoBusiness.slug)} />;
   }
 
   return (
@@ -515,15 +514,15 @@ export const BusinessWebsitePage: React.FC<{ demoSlug?: string }> = ({ demoSlug 
               <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Silver Elara</h3><p className="mt-1 text-sm text-[#68746C]">Jewellery &amp; luxury showroom</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
             <a href="/websites/demo-clinic/" aria-label="Open live demo: Apex Healthcare Clinic, healthcare and doctors" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
-              <div className="relative aspect-[16/10] overflow-hidden bg-[#e0f0ea]"><img src="/demo-sites/modern/workspace.jpg" alt="Apex Healthcare Clinic doctor consultation chamber" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#124538]">Live demo</span></div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#e0f0ea]"><img src="/demo-sites/clinic/hero.jpg" alt="Apex Healthcare Clinic doctor consultation chamber" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#124538]">Live demo</span></div>
               <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Apex Healthcare</h3><p className="mt-1 text-sm text-[#68746C]">Clinics, doctors &amp; healthcare</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
             <a href="/websites/demo-astrology/" aria-label="Open live demo: Nakshatra Vani, astrology and spiritual" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none">
-              <div className="relative aspect-[16/10] overflow-hidden bg-[#0d1326]"><img src="/demo-sites/jewellery/hero.jpg" alt="Nakshatra Vani vedic astrology chart" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-[#18213d] border border-[#f59e0b]/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#fbbf24]">Live demo</span></div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#0d1326]"><img src="/demo-sites/astrology/hero.jpg" alt="Nakshatra Vani vedic astrology chart" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-[#18213d] border border-[#f59e0b]/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#fbbf24]">Live demo</span></div>
               <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Nakshatra Vani</h3><p className="mt-1 text-sm text-[#68746C]">Astrology &amp; spiritual guidance</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
             <a href="/websites/demo-travel/" aria-label="Open live demo: Wanderlust India, travel and tours" className="group block overflow-hidden rounded-2xl border border-[#E8E3D9] bg-white shadow-[0_8px_24px_rgba(14,43,34,0.05)] transition-shadow hover:shadow-[0_16px_36px_rgba(14,43,34,0.12)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0E2B22] motion-reduce:transition-none sm:col-span-2 lg:col-span-1">
-              <div className="relative aspect-[16/10] overflow-hidden bg-[#fff7ed]"><img src="/demo-sites/modern/meeting.jpg" alt="Wanderlust India tours and cab bookings" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ea580c]">Live demo</span></div>
+              <div className="relative aspect-[16/10] overflow-hidden bg-[#fff7ed]"><img src="/demo-sites/travel/hero.jpg" alt="Wanderlust India tours and cab bookings" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] motion-reduce:transition-none" loading="lazy" /><span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#ea580c]">Live demo</span></div>
               <div className="flex items-center justify-between gap-3 p-4 sm:p-5"><div><h3 className="font-heading text-lg font-bold text-[#0E2B22]">Wanderlust India</h3><p className="mt-1 text-sm text-[#68746C]">Tours, travels &amp; private cabs</p></div><ArrowRight className="h-5 w-5 shrink-0 text-[#8D7026] transition-transform group-hover:translate-x-1 motion-reduce:transition-none" aria-hidden="true" /></div>
             </a>
           </div>

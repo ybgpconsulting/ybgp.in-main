@@ -263,6 +263,42 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
   return (
     <div className={`min-h-screen ${foodLayout ? 'font-sans' : ''}`} style={{ background: theme.pageBg, color: theme.text }}>
+      {/* Sticky Top Demo Notice Banner */}
+      {isDemo ? (
+        <aside
+          role="region"
+          aria-label="Demo website notice"
+          className="relative z-[60] border-b border-[#fef08a]/30 bg-[#1c1917] px-4 py-2.5 text-white shadow-md"
+        >
+          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 sm:px-6 lg:px-10">
+            <div className="flex items-center gap-2.5 text-xs sm:text-sm">
+              <span className="rounded-full bg-[#f59e0b] px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-black shadow-sm">
+                FOR DEMO ONLY
+              </span>
+              <span className="font-medium text-amber-100">
+                You are viewing the <strong className="text-white">{template.name}</strong> template demo. All offerings, credentials &amp; numbers are sample data.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href="/websites"
+                className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition hover:bg-white/20"
+              >
+                ← All Templates
+              </a>
+              <a
+                href={`https://wa.me/919953270270?text=${encodeURIComponent(`Hi YBGP, I want to get a website using the ${template.name} template for ₹1,999/yr.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#f59e0b] px-3.5 py-1 text-xs font-bold text-black shadow-sm transition hover:bg-[#fbbf24]"
+              >
+                Get This Website (₹1,999/yr) <ArrowRight className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+        </aside>
+      ) : null}
+
       {/* Sticky Blurred Brand Header */}
       <header className="sticky top-0 z-50 border-b transition-colors" style={{ background: theme.headerSurface, borderColor: theme.border, backdropFilter: 'blur(18px)' }}>
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-10">
@@ -679,6 +715,11 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                   : foodLayout
                   ? 'Customer favourites'
                   : 'A few beloved pieces'}
+                {isDemo ? (
+                  <span className="ml-2.5 inline-block rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 text-[9px] font-bold tracking-wider text-amber-700">
+                    Sample Offerings · For Demo Only
+                  </span>
+                ) : null}
               </p>
               <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.03em] sm:text-4xl">
                 {products.length > 0
@@ -937,6 +978,11 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
       {/* Branded Footer */}
       <footer className="border-t" style={{ background: theme.panel, borderColor: theme.border }}>
+        {isDemo ? (
+          <div className="border-b border-dashed px-4 py-3 text-center text-xs" style={{ borderColor: theme.border, color: theme.muted }}>
+            ⚠ <strong>Demonstration Website:</strong> This storefront is a live preview of the {template.name} template by YBGP. All offerings, services, prices, and sample photos shown are for demonstration purposes only.
+          </div>
+        ) : null}
         <div className="mx-auto flex max-w-[1440px] flex-col gap-5 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
           <div>
             <p className="font-heading text-lg font-semibold" style={{ color: theme.accentDark }}>{business.name}</p>

@@ -1,21 +1,27 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PublicWebsiteRenderer, type BusinessWebsiteResponse } from './PublicWebsiteRenderer';
+import { createDemoWebsiteResponse } from './templateDefaults';
 
-const BusinessWebsitePage = lazy(() => import('../BusinessWebsitePage').then((module) => ({ default: module.BusinessWebsitePage })));
 const showcaseSlugs = ['demo-modern', 'demo-bakery', 'demo-salon', 'demo-jewellery', 'demo-clinic', 'demo-astrology', 'demo-travel'];
 
 export function WebsiteRoute({ slug }: { slug: string }) {
-  const [state, setState] = useState<'checking' | 'tenant' | 'showcase' | 'unavailable'>('checking');
-  const [tenant, setTenant] = useState<BusinessWebsiteResponse | null>(null);
   const isShowcaseSlug = showcaseSlugs.includes(slug);
+  const [state, setState] = useState<'checking' | 'tenant' | 'showcase' | 'unavailable'>(
+    isShowcaseSlug ? 'showcase' : 'checking'
+  );
+  const [tenant, setTenant] = useState<BusinessWebsiteResponse | null>(
+    isShowcaseSlug ? createDemoWebsiteResponse(slug) : null
+  );
 
   useEffect(() => {
-    setState('checking');
-    setTenant(null);
     if (isShowcaseSlug) {
       setState('showcase');
+      setTenant(createDemoWebsiteResponse(slug));
+      document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
       return;
     }
+    setState('checking');
+    setTenant(null);
     const controller = new AbortController();
     const resolveRoute = async () => {
       try {
@@ -46,8 +52,8 @@ export function WebsiteRoute({ slug }: { slug: string }) {
     }
   }, [state]);
 
-  if (state === 'showcase') {
-    return <Suspense fallback={<div className="min-h-screen bg-white" />}><BusinessWebsitePage demoSlug={slug} /></Suspense>;
+  if (state === 'showcase' || (state === 'tenant' && tenant)) {
+    return <PublicWebsiteRenderer slug={slug} initialData={tenant ?? createDemoWebsiteResponse(slug)} />;
   }
   if (state === 'checking') {
     return <main className="grid min-h-screen place-items-center bg-[#f7f5f2] text-[#0E2B22]"><p role="status">Loading website…</p></main>;

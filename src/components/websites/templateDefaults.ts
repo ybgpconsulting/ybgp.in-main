@@ -415,34 +415,34 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
       title: 'Dedicated medical care centered around you.',
       description: 'Consult experienced specialist doctors in a calm, modern clinical setting designed for your health, comfort, and peace of mind.',
       primaryCta: 'Book an appointment',
-      image: '/demo-sites/modern/workspace.jpg',
-      alt: 'Clean, modern medical consultation desk',
+      image: '/demo-sites/clinic/hero.jpg',
+      alt: 'Clean, modern medical clinic consultation desk and doctor chamber',
     },
     highlights: [
-      { title: 'Specialist consultation', subtitle: 'Experienced physicians across general medicine, pediatrics, and preventive care.', image: '/demo-sites/modern/meeting.jpg', alt: 'Doctor consulting with patient' },
-      { title: 'Diagnostics & health check', subtitle: 'On-site routine screening, vitals monitoring, and pathology collection support.', image: '/demo-sites/modern/workspace.jpg', alt: 'Modern clinical equipment' },
-      { title: 'Chronic care management', subtitle: 'Personalized treatment protocols for diabetes, hypertension, and long-term vitality.', image: '/demo-sites/modern/studio.jpg', alt: 'Medical consultation chamber' },
-      { title: 'Emergency & tele-consult', subtitle: 'Prompt WhatsApp medical support and follow-up guidance for existing patients.', image: '/demo-sites/modern/team.jpg', alt: 'Healthcare staff' },
+      { title: 'Specialist consultation', subtitle: 'Experienced physicians across general medicine, pediatrics, and preventive care.', image: '/demo-sites/clinic/hero.jpg', alt: 'Doctor consulting with patient' },
+      { title: 'Diagnostics & health check', subtitle: 'On-site routine screening, vitals monitoring, and pathology collection support.', image: '/demo-sites/clinic/story.jpg', alt: 'Doctor reviewing medical health reports' },
+      { title: 'Chronic care management', subtitle: 'Personalized treatment protocols for diabetes, hypertension, and long-term vitality.', image: '/demo-sites/clinic/collection-1.jpg', alt: 'Modern clinical consultation chamber' },
+      { title: 'Emergency & tele-consult', subtitle: 'Prompt WhatsApp medical support and follow-up guidance for existing patients.', image: '/demo-sites/clinic/bestseller-1.jpg', alt: 'Clinical healthcare specialist review' },
     ],
     story: {
       eyebrow: 'Our clinical philosophy',
       title: 'Evidence-based healthcare that begins with careful listening.',
       description: 'We believe good clinical outcomes depend on clear doctor-patient communication, accurate diagnosis, and thoughtful ongoing follow-up tailored to each family.',
-      image: '/demo-sites/modern/team.jpg',
-      alt: 'Clinical consultation team',
+      image: '/demo-sites/clinic/story.jpg',
+      alt: 'Doctor reviewing clinical consultation notes',
       points: ['Experienced, verified specialists', 'Hygienic, appointment-driven facility', 'Transparent prescriptions and honest advice'],
       cta: 'Meet our doctors',
     },
     bestsellers: [
-      { name: 'Specialist Doctor Consultation', image: '/demo-sites/modern/meeting.jpg', alt: 'Doctor consultation room', description: 'Comprehensive 30-minute medical assessment and diagnosis.', price: '₹600' },
-      { name: 'Complete Annual Health Package', image: '/demo-sites/modern/workspace.jpg', alt: 'Health checkup diagnostics', description: 'Full screening including CBC, blood sugar, lipid profile, and doctor review.', price: '₹1,999' },
-      { name: 'Follow-up Consultation & Review', image: '/demo-sites/modern/studio.jpg', alt: 'Patient review', description: 'Progress review and prescription adjustments for ongoing care.', price: '₹350' },
+      { name: 'Specialist Doctor Consultation', image: '/demo-sites/clinic/hero.jpg', alt: 'Doctor consultation room', description: 'Comprehensive 30-minute medical assessment and diagnosis.', price: '₹600' },
+      { name: 'Complete Annual Health Package', image: '/demo-sites/clinic/story.jpg', alt: 'Health checkup diagnostics', description: 'Full screening including CBC, blood sugar, lipid profile, and doctor review.', price: '₹1,999' },
+      { name: 'Follow-up Consultation & Review', image: '/demo-sites/clinic/bestseller-1.jpg', alt: 'Patient review', description: 'Progress review and prescription adjustments for ongoing care.', price: '₹350' },
     ],
     gallery: [
-      { image: '/demo-sites/modern/gallery-1.jpg', alt: 'Reception lounge' },
-      { image: '/demo-sites/modern/gallery-2.jpg', alt: 'Consultation room' },
-      { image: '/demo-sites/modern/gallery-3.jpg', alt: 'Diagnostics room' },
-      { image: '/demo-sites/modern/gallery-4.jpg', alt: 'Pharmacy counter' },
+      { image: '/demo-sites/clinic/hero.jpg', alt: 'Consultation desk and clinic suite' },
+      { image: '/demo-sites/clinic/story.jpg', alt: 'Physician reviewing health diagnostics' },
+      { image: '/demo-sites/clinic/collection-1.jpg', alt: 'In-clinic consultation area' },
+      { image: '/demo-sites/clinic/bestseller-1.jpg', alt: 'Clinical follow-up desk' },
     ],
     finalCta: {
       title: 'Schedule your clinic visit today.',
@@ -465,34 +465,34 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
       title: 'Clarity for life’s decisive moments.',
       description: 'In-depth birth chart analysis, career forecasting, matchmaking, and time-tested Vedic remedies to help you move forward with confidence.',
       primaryCta: 'Consult Astrologer',
-      image: '/demo-sites/jewellery/hero.jpg',
-      alt: 'Vedic astrology chart and astronomical instruments',
+      image: '/demo-sites/astrology/hero.jpg',
+      alt: 'Vedic astrology celestial mandala and astronomical chart',
     },
     highlights: [
-      { title: 'Kundli & birth chart', subtitle: 'Detailed analysis of planetary positions, Dasha cycles, and upcoming life trends.', image: '/demo-sites/jewellery/collection-1.jpg', alt: 'Astrological chart reading' },
-      { title: 'Career & finance guidance', subtitle: 'Identify auspicious periods for career switches, business ventures, and investments.', image: '/demo-sites/jewellery/collection-2.jpg', alt: 'Consultation setup' },
-      { title: 'Kundli matching (Kundli Milan)', subtitle: 'Comprehensive 36 Guna Ashtakoot matching for harmony and marital compatibility.', image: '/demo-sites/jewellery/collection-3.jpg', alt: 'Matchmaking horoscope' },
-      { title: 'Vastu Shastra consultation', subtitle: 'Balancing planetary and directional energies for homes, retail, and workplaces.', image: '/demo-sites/jewellery/collection-4.jpg', alt: 'Vastu layout' },
+      { title: 'Kundli & birth chart', subtitle: 'Detailed analysis of planetary positions, Dasha cycles, and upcoming life trends.', image: '/demo-sites/astrology/story.jpg', alt: 'Sacred celestial star chart' },
+      { title: 'Career & finance guidance', subtitle: 'Identify auspicious periods for career switches, business ventures, and investments.', image: '/demo-sites/astrology/hero.jpg', alt: 'Vedic planetary chart analysis' },
+      { title: 'Kundli matching (Kundli Milan)', subtitle: 'Comprehensive 36 Guna Ashtakoot matching for harmony and marital compatibility.', image: '/demo-sites/astrology/collection-1.jpg', alt: 'Matchmaking horoscope reading' },
+      { title: 'Vastu Shastra consultation', subtitle: 'Balancing planetary and directional energies for homes, retail, and workplaces.', image: '/demo-sites/astrology/bestseller-1.jpg', alt: 'Vastu energy mandala' },
     ],
     story: {
       eyebrow: 'Our ancient tradition',
       title: 'Time-tested Jyotish wisdom interpreted for modern life.',
       description: 'We practice authentic Parashari and Jaimini Vedic astrology with a calm, grounded approach focused on practical remedies and constructive life guidance.',
-      image: '/demo-sites/jewellery/story.jpg',
-      alt: 'Astrologer explaining birth chart',
+      image: '/demo-sites/astrology/story.jpg',
+      alt: 'Astrologer sacred chart desk with crystals and candlelight',
       points: ['Pure Vedic calculations without superstition', 'Practical, positive remedies and gemstone advice', 'Confidential 1-on-1 audio, video or in-person sessions'],
       cta: 'Explore consultations',
     },
     bestsellers: [
-      { name: 'Full Kundli & Life Forecast (45 min)', image: '/demo-sites/jewellery/bestseller-1.jpg', alt: 'Horoscope chart', description: 'Comprehensive reading covering health, career, family, and remedies.', price: '₹1,500' },
-      { name: 'Career & Business Astro Consultation', image: '/demo-sites/jewellery/bestseller-2.jpg', alt: 'Business astrology', description: 'Targeted analysis for job change, startup timing, and partnership compatibility.', price: '₹1,200' },
-      { name: 'Home / Office Vastu Assessment', image: '/demo-sites/jewellery/collection-2.jpg', alt: 'Vastu floor plan', description: 'Detailed layout audit with non-destructive energy harmonizing remedies.', price: 'From ₹3,500' },
+      { name: 'Full Kundli & Life Forecast (45 min)', image: '/demo-sites/astrology/hero.jpg', alt: 'Horoscope chart reading', description: 'Comprehensive reading covering health, career, family, and remedies.', price: '₹1,500' },
+      { name: 'Career & Business Astro Consultation', image: '/demo-sites/astrology/story.jpg', alt: 'Business astrology chart', description: 'Targeted analysis for job change, startup timing, and partnership compatibility.', price: '₹1,200' },
+      { name: 'Home / Office Vastu Assessment', image: '/demo-sites/astrology/bestseller-1.jpg', alt: 'Vastu chart layout', description: 'Detailed layout audit with non-destructive energy harmonizing remedies.', price: 'From ₹3,500' },
     ],
     gallery: [
-      { image: '/demo-sites/jewellery/gallery-1.jpg', alt: 'Astrology consultation room' },
-      { image: '/demo-sites/jewellery/gallery-2.jpg', alt: 'Horoscope manuscript' },
-      { image: '/demo-sites/jewellery/gallery-3.jpg', alt: 'Vastu yantra' },
-      { image: '/demo-sites/jewellery/gallery-4.jpg', alt: 'Planetary gemstones' },
+      { image: '/demo-sites/astrology/hero.jpg', alt: 'Celestial Vedic mandala' },
+      { image: '/demo-sites/astrology/story.jpg', alt: 'Sacred horoscope parchment chart' },
+      { image: '/demo-sites/astrology/collection-1.jpg', alt: 'Astrology reading chamber' },
+      { image: '/demo-sites/astrology/bestseller-1.jpg', alt: 'Planetary energy mandala' },
     ],
     finalCta: {
       title: 'Book your personal consultation.',
@@ -515,34 +515,34 @@ export const demoBusinesses: Record<string, DemoBusiness> = {
       title: 'Journeys designed to be remembered.',
       description: 'Discover handcrafted holiday packages, reliable cab services, and verified stays tailored for family vacations, honeymoons, and group adventures.',
       primaryCta: 'Explore Tour Packages',
-      image: '/demo-sites/modern/workspace.jpg',
-      alt: 'Scenic mountain landscape and travel planner',
+      image: '/demo-sites/travel/hero.jpg',
+      alt: 'Scenic Himalayan mountain highway with private travel tourist cab',
     },
     highlights: [
-      { title: 'Custom holiday packages', subtitle: 'Handcrafted itineraries for Himachal, Kashmir, Kerala, Goa, and international destinations.', image: '/demo-sites/modern/meeting.jpg', alt: 'Scenic holiday destination' },
-      { title: 'Outstation cabs & rentals', subtitle: 'Verified AC sedans, SUVs, and tempo travelers with courteous, experienced drivers.', image: '/demo-sites/modern/workspace.jpg', alt: 'Travel vehicle on scenic route' },
-      { title: 'Hotel & resort bookings', subtitle: 'Handpicked stays with verified hygiene, scenic views, and authentic local dining.', image: '/demo-sites/modern/studio.jpg', alt: 'Resort view' },
-      { title: 'Flight & train ticketing', subtitle: 'Instant ticketing, visa documentation support, and 24/7 on-trip helpline.', image: '/demo-sites/modern/team.jpg', alt: 'Travel planning desk' },
+      { title: 'Custom holiday packages', subtitle: 'Handcrafted itineraries for Himachal, Kashmir, Kerala, Goa, and international destinations.', image: '/demo-sites/travel/hero.jpg', alt: 'Scenic mountain holiday route' },
+      { title: 'Outstation cabs & rentals', subtitle: 'Verified AC sedans, SUVs, and tempo travelers with courteous, experienced drivers.', image: '/demo-sites/travel/story.jpg', alt: 'Private tour tourist vehicle at Rajasthan Lake Palace' },
+      { title: 'Hotel & resort bookings', subtitle: 'Handpicked stays with verified hygiene, scenic views, and authentic local dining.', image: '/demo-sites/travel/collection-1.jpg', alt: 'Scenic destination travel' },
+      { title: 'Flight & train ticketing', subtitle: 'Instant ticketing, visa documentation support, and 24/7 on-trip helpline.', image: '/demo-sites/travel/bestseller-1.jpg', alt: 'Tour itinerary and travel desk' },
     ],
     story: {
       eyebrow: 'Why travel with us',
       title: 'Hassle-free vacations backed by 24/7 on-ground assistance.',
       description: 'From your first itinerary draft to your safe return home, we manage every detail of your journey so you can focus on making memories.',
-      image: '/demo-sites/modern/team.jpg',
-      alt: 'Travel experts at work',
+      image: '/demo-sites/travel/story.jpg',
+      alt: 'Luxury heritage tour in Rajasthan with tourist cab',
       points: ['Customized itineraries shaped around your pace', 'All-inclusive transparent pricing with zero surprises', 'Dedicated trip manager available on call throughout your journey'],
       cta: 'Plan your trip',
     },
     bestsellers: [
-      { name: 'Himachal Scenic Escapes (5N/6D)', image: '/demo-sites/modern/meeting.jpg', alt: 'Mountain tour package', description: 'Shimla, Kullu & Manali package with private cab, 4-star hotels, and sightseeing.', price: '₹14,999 / person' },
-      { name: 'Kerala Backwaters & Hills (4N/5D)', image: '/demo-sites/modern/workspace.jpg', alt: 'Kerala houseboat and hills', description: 'Munnar tea gardens, Thekkady, and private Alleppey houseboat cruise.', price: '₹12,499 / person' },
-      { name: 'Outstation Cab Rental (Per Day)', image: '/demo-sites/modern/studio.jpg', alt: 'Outstation car rental', description: 'Sedan or SUV with polite driver for round-trips or one-way drops.', price: 'From ₹2,800 / day' },
+      { name: 'Himachal Scenic Escapes (5N/6D)', image: '/demo-sites/travel/hero.jpg', alt: 'Mountain highway tour package', description: 'Shimla, Kullu & Manali package with private cab, 4-star hotels, and sightseeing.', price: '₹14,999 / person' },
+      { name: 'Rajasthan Heritage & Palaces (5N/6D)', image: '/demo-sites/travel/story.jpg', alt: 'Rajasthan Lake Palace tour', description: 'Jaipur, Jodhpur & Udaipur with dedicated chauffeur and royal hotel stays.', price: '₹16,499 / person' },
+      { name: 'Outstation Cab Rental (Per Day)', image: '/demo-sites/travel/bestseller-1.jpg', alt: 'Outstation tourist cab', description: 'Sedan or SUV with polite driver for round-trips or one-way drops.', price: 'From ₹2,800 / day' },
     ],
     gallery: [
-      { image: '/demo-sites/modern/gallery-1.jpg', alt: 'Scenic mountain peaks' },
-      { image: '/demo-sites/modern/gallery-2.jpg', alt: 'Heritage monument' },
-      { image: '/demo-sites/modern/gallery-3.jpg', alt: 'Beach resort' },
-      { image: '/demo-sites/modern/gallery-4.jpg', alt: 'Comfortable tourist vehicle' },
+      { image: '/demo-sites/travel/hero.jpg', alt: 'Scenic mountain pass' },
+      { image: '/demo-sites/travel/story.jpg', alt: 'Rajasthan Lake Palace sunset' },
+      { image: '/demo-sites/travel/collection-1.jpg', alt: 'Scenic highway journey' },
+      { image: '/demo-sites/travel/bestseller-1.jpg', alt: 'Tourist cab at scenic viewpoint' },
     ],
     finalCta: {
       title: 'Ready for your next holiday?',
@@ -619,4 +619,84 @@ export const getTemplateTheme = (slugOrDesign: string, category?: string | null)
   }
 
   return demoThemes.modern;
+};
+
+export const createDemoWebsiteResponse = (slug: string) => {
+  const demo = demoBusinesses[slug] ?? getTemplateDefaults(slug);
+  const templateSlug = demo.template === 'clinic'
+    ? 'clinic-healthcare'
+    : demo.template === 'astrology'
+    ? 'astrology-horoscope'
+    : demo.template === 'travel'
+    ? 'tour-travel'
+    : demo.template === 'bakery'
+    ? 'food-bakery'
+    : demo.template === 'salon'
+    ? 'salon-studio'
+    : demo.template === 'jewellery'
+    ? 'jewellery-boutique'
+    : 'modern-business';
+
+  return {
+    business: {
+      name: demo.name,
+      slug: demo.slug,
+      category: demo.category,
+      logo: null,
+      description: demo.summary,
+      phone: '+91 99532 70270',
+      whatsapp: '919953270270',
+      email: 'support@ybgp.in',
+      address: demo.location.label,
+      google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(demo.location.query)}`,
+      instagram_url: 'https://instagram.com/ybgp.in',
+      facebook_url: 'https://facebook.com/ybgp.in',
+    },
+    template: {
+      name: demo.templateName,
+      slug: templateSlug,
+    },
+    settings: {
+      hero_title: demo.hero.title,
+      hero_eyebrow: demo.hero.eyebrow,
+      about_title: demo.story.title,
+      about_eyebrow: demo.story.eyebrow,
+      about_description: demo.story.description,
+      about_points: demo.story.points.join('\n'),
+      about_image: demo.story.image,
+      working_hours: demo.openingHours,
+      final_cta_title: demo.finalCta.title,
+      final_cta_description: demo.finalCta.description,
+      final_cta_button: demo.finalCta.button,
+    },
+    categories: demo.highlights.map((h, index) => ({
+      id: `cat-${index + 1}`,
+      name: h.title,
+      status: 'ACTIVE',
+    })),
+    products: demo.bestsellers.map((item, index) => ({
+      id: `prod-${index + 1}`,
+      category_id: `cat-${(index % demo.highlights.length) + 1}`,
+      name: item.name,
+      slug: `item-${index + 1}`,
+      description: item.description,
+      price: item.price ? item.price.replace(/[^\d]/g, '') : null,
+      image: item.image,
+      status: 'ACTIVE',
+    })),
+    gallery: demo.gallery.map((g, index) => ({
+      id: `gal-${index + 1}`,
+      title: g.alt,
+      image: g.image,
+      status: 'ACTIVE',
+    })),
+    seo: {
+      title: demo.seoTitle,
+      description: demo.summary,
+      canonicalUrl: `https://ybgp.in/websites/${demo.slug}`,
+      ogTitle: demo.seoTitle,
+      ogDescription: demo.summary,
+      ogImage: demo.hero.image,
+    },
+  };
 };
