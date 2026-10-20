@@ -104,7 +104,13 @@ app.get('/websites/:slug', async (request, response, next) => {
     const tenant = rows[0];
     if (!tenant) {
       if (showcaseSlugs.has(slug)) {
-        next();
+        const demoPath = resolve(frontendDirectory, 'websites', slug, 'index.html');
+        response.sendFile(demoPath, (error) => {
+          if (!error) return;
+          response.sendFile(resolve(frontendDirectory, 'index.html'), (fallbackError) => {
+            if (fallbackError) next(fallbackError);
+          });
+        });
         return;
       }
       response.status(404).sendFile(resolve(frontendDirectory, '404.html'));
@@ -126,7 +132,13 @@ app.get('/websites/:slug', async (request, response, next) => {
     response.type('html').send(renderTenantHtml(template, metadata));
   } catch (error) {
     if (showcaseSlugs.has(slug)) {
-      next();
+      const demoPath = resolve(frontendDirectory, 'websites', slug, 'index.html');
+      response.sendFile(demoPath, (sendErr) => {
+        if (!sendErr) return;
+        response.sendFile(resolve(frontendDirectory, 'index.html'), (fallbackError) => {
+          if (fallbackError) next(fallbackError);
+        });
+      });
       return;
     }
     next(error);

@@ -79,9 +79,13 @@ test('private dashboards, demos and thin location templates are excluded from in
   const paths = [
     '/websites/admin/',
     '/websites/dashboard/',
+    '/websites/demo-modern/',
     '/websites/demo-bakery/',
     '/websites/demo-salon/',
     '/websites/demo-jewellery/',
+    '/websites/demo-clinic/',
+    '/websites/demo-astrology/',
+    '/websites/demo-travel/',
     '/website-development-company-gurugram/',
     '/digital-marketing-agency-ghaziabad/',
     '/work/gandhinagar-wholesale/',
