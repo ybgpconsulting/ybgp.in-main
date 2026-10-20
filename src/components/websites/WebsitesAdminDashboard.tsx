@@ -183,7 +183,9 @@ export function WebsitesAdminDashboard() {
     setSelectedBusiness(null);
     setForm({
       ...emptyForm(),
-      template_slug: templates[0]?.slug ?? 'modern-business',
+      template_slug: templates.find((template) => template.slug === 'modern-business')?.slug
+        ?? templates[0]?.slug
+        ?? 'modern-business',
     });
     setNotice('');
     setError('');
@@ -267,10 +269,6 @@ export function WebsitesAdminDashboard() {
       setError('Owner temporary password must be at least 8 characters.');
       return;
     }
-    if (form.expiry_date < form.start_date) {
-      setError('Expiry date must be on or after the subscription start date.');
-      return;
-    }
     setBusy(true);
     setError('');
     setNotice('');
@@ -278,18 +276,14 @@ export function WebsitesAdminDashboard() {
       const result = await apiRequest<{ publicUrl: string }>('/api/admin/businesses', {
         method: 'POST',
         body: JSON.stringify({
-          ...form,
           name: form.name.trim(),
           category: form.category.trim(),
-          slug: form.slug.trim() || form.name.trim(),
-          phone: form.phone.trim(),
-          whatsapp: form.whatsapp.trim() || form.phone.trim(),
+          slug: form.name.trim(),
+          template_slug: form.template_slug,
           owner_name: form.owner_name.trim(),
           owner_email: form.owner_email.trim(),
           owner_password: form.owner_password,
-          amount: Number(form.amount || 1999),
-          subscription_active: form.subscription_active === 'true',
-          published: form.published === 'true',
+          published: true,
         }),
       });
       setNotice(`Business created. Public website: ${window.location.origin}${result.publicUrl}`);
@@ -550,24 +544,6 @@ export function WebsitesAdminDashboard() {
                       placeholder="e.g. Bakery, Salon, Restaurant, Retail"
                       required
                     />
-                    <Field
-                      label="Website slug"
-                      value={form.slug}
-                      onChange={(value) => updateField('slug', value)}
-                      placeholder="Auto-generated from name if blank"
-                    />
-                    <Field
-                      label="Business phone / WhatsApp"
-                      value={form.phone}
-                      onChange={(value) => {
-                        updateField('phone', value);
-                        if (!form.whatsapp || form.whatsapp === form.phone) {
-                          updateField('whatsapp', value);
-                        }
-                      }}
-                      type="tel"
-                      placeholder="e.g. +91 98765 43210 (optional)"
-                    />
                   </FormSection>
 
                   <section>
@@ -694,14 +670,6 @@ export function WebsitesAdminDashboard() {
                       </p>
                     </div>
                   </FormSection>
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#ded9cd] bg-[#fbfaf7] px-4 py-3 text-xs text-[#526158]">
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-[#173328]">Default Plan:</span>
-                      <span>{form.plan || 'YBGP Websites'} · ₹{Number(form.amount || 1999).toLocaleString('en-IN')}/year · Active</span>
-                    </div>
-                    <span className="text-[#818b84]">Billing and subscription terms can be customized in the dashboard.</span>
-                  </div>
                 </>
               ) : formMode === 'subscription' ? (
                 <FormSection title={`${selectedBusiness?.name ?? 'Business'} · annual subscription`}>
