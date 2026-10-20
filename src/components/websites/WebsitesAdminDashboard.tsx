@@ -52,6 +52,18 @@ interface BusinessSummary {
   og_title: string | null;
   og_description: string | null;
   og_image: string | null;
+  hero_title?: string | null;
+  hero_eyebrow?: string | null;
+  about_title?: string | null;
+  about_eyebrow?: string | null;
+  about_description?: string | null;
+  about_points?: string | null;
+  about_image?: string | null;
+  highlights_title?: string | null;
+  highlights_eyebrow?: string | null;
+  final_cta_title?: string | null;
+  final_cta_description?: string | null;
+  final_cta_button?: string | null;
   template_id?: string | null;
   template_name: string | null;
   template_slug?: string | null;
@@ -104,6 +116,18 @@ const emptyForm = (): FormValues => ({
   tiktok_url: '',
   x_url: '',
   pinterest_url: '',
+  hero_title: '',
+  hero_eyebrow: '',
+  about_title: '',
+  about_eyebrow: '',
+  about_description: '',
+  about_points: '',
+  about_image: '',
+  highlights_title: '',
+  highlights_eyebrow: '',
+  final_cta_title: '',
+  final_cta_description: '',
+  final_cta_button: '',
   seo_title: '',
   seo_description: '',
   og_title: '',
@@ -239,6 +263,18 @@ export function WebsitesAdminDashboard() {
         tiktok_url: current.tiktok_url ?? '',
         x_url: current.x_url ?? '',
         pinterest_url: current.pinterest_url ?? '',
+        hero_title: current.hero_title ?? '',
+        hero_eyebrow: current.hero_eyebrow ?? '',
+        about_title: current.about_title ?? '',
+        about_eyebrow: current.about_eyebrow ?? '',
+        about_description: current.about_description ?? '',
+        about_points: current.about_points ?? '',
+        about_image: current.about_image ?? '',
+        highlights_title: current.highlights_title ?? '',
+        highlights_eyebrow: current.highlights_eyebrow ?? '',
+        final_cta_title: current.final_cta_title ?? '',
+        final_cta_description: current.final_cta_description ?? '',
+        final_cta_button: current.final_cta_button ?? '',
         seo_title: current.seo_title ?? '',
         seo_description: current.seo_description ?? '',
         og_title: current.og_title ?? '',
@@ -367,6 +403,18 @@ export function WebsitesAdminDashboard() {
             tiktok_url: form.tiktok_url,
             x_url: form.x_url,
             pinterest_url: form.pinterest_url,
+            hero_title: form.hero_title,
+            hero_eyebrow: form.hero_eyebrow,
+            about_title: form.about_title,
+            about_eyebrow: form.about_eyebrow,
+            about_description: form.about_description,
+            about_points: form.about_points,
+            about_image: form.about_image,
+            highlights_title: form.highlights_title,
+            highlights_eyebrow: form.highlights_eyebrow,
+            final_cta_title: form.final_cta_title,
+            final_cta_description: form.final_cta_description,
+            final_cta_button: form.final_cta_button,
             seo_title: form.seo_title,
             seo_description: form.seo_description,
             og_title: form.og_title,
@@ -746,6 +794,30 @@ export function WebsitesAdminDashboard() {
                       <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" />
                       <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
                       <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
+                    </FormSection>
+                  ) : null}
+                  {formMode === 'edit' ? (
+                    <FormSection title="Website Content & Story (Template Overrides)">
+                      <Field label="Custom hero headline (optional)" value={form.hero_title} onChange={(value) => updateField('hero_title', value)} placeholder={`Defaults to "${form.name}"`} maxLength={300} />
+                      <Field label="Hero eyebrow / tagline (optional)" value={form.hero_eyebrow} onChange={(value) => updateField('hero_eyebrow', value)} placeholder={`Defaults to "${form.category}"`} maxLength={150} />
+                      <Field label="Highlights section eyebrow (optional)" value={form.highlights_eyebrow} onChange={(value) => updateField('highlights_eyebrow', value)} placeholder="e.g. What we do / Specialities / From the counter" maxLength={150} />
+                      <Field label="Highlights section heading (optional)" value={form.highlights_title} onChange={(value) => updateField('highlights_title', value)} placeholder="e.g. Care that starts with listening" maxLength={300} />
+                      <Field label="Story eyebrow (optional)" value={form.about_eyebrow} onChange={(value) => updateField('about_eyebrow', value)} placeholder="e.g. Our story / Craft / The studio" maxLength={150} />
+                      <Field label="Story heading (optional)" value={form.about_title} onChange={(value) => updateField('about_title', value)} placeholder="e.g. Baked fresh every morning" maxLength={300} />
+                      <div className="sm:col-span-2">
+                        <TextAreaField label="Story description (optional)" value={form.about_description} onChange={(value) => updateField('about_description', value)} rows={3} placeholder="Narrative about the business, founders, or philosophy." maxLength={4000} />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <TextAreaField label="Key bullet points / features (one per line)" value={form.about_points} onChange={(value) => updateField('about_points', value)} rows={3} placeholder="Point 1&#10;Point 2&#10;Point 3" maxLength={3000} />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Field label="Story photo URL (optional)" value={form.about_image} onChange={(value) => updateField('about_image', value)} placeholder="https://example.com/photo.jpg or /uploads/image.jpg" maxLength={2048} />
+                      </div>
+                      <Field label="Bottom banner heading (optional)" value={form.final_cta_title} onChange={(value) => updateField('final_cta_title', value)} placeholder="e.g. Ready to plan something special?" maxLength={300} />
+                      <Field label="Bottom button text (optional)" value={form.final_cta_button} onChange={(value) => updateField('final_cta_button', value)} placeholder="e.g. Chat with us on WhatsApp" maxLength={100} />
+                      <div className="sm:col-span-2">
+                        <TextAreaField label="Bottom banner description (optional)" value={form.final_cta_description} onChange={(value) => updateField('final_cta_description', value)} rows={2} placeholder="Subtext for the bottom conversion banner." maxLength={1500} />
+                      </div>
                     </FormSection>
                   ) : null}
                   {formMode === 'edit' ? (

@@ -211,6 +211,18 @@ router.patch('/me', async (request, response) => {
     'tiktok_url',
     'x_url',
     'pinterest_url',
+    'hero_title',
+    'hero_eyebrow',
+    'about_title',
+    'about_eyebrow',
+    'about_description',
+    'about_points',
+    'about_image',
+    'highlights_title',
+    'highlights_eyebrow',
+    'final_cta_title',
+    'final_cta_description',
+    'final_cta_button',
   ] as const;
   const stringFields = [...businessFields, ...settingFields];
   const values = new Map<string, string>();
@@ -230,6 +242,10 @@ router.patch('/me', async (request, response) => {
     instagram_url: 2048, facebook_url: 2048, youtube_url: 2048,
     linkedin_url: 2048, google_business_url: 2048, other_social_url: 2048,
     tiktok_url: 2048, x_url: 2048, pinterest_url: 2048,
+    hero_title: 300, hero_eyebrow: 150,
+    about_title: 300, about_eyebrow: 150, about_description: 4000, about_points: 3000, about_image: 2048,
+    highlights_title: 300, highlights_eyebrow: 150,
+    final_cta_title: 300, final_cta_description: 1500, final_cta_button: 100,
   };
   for (const [field, value] of values) {
     const limit = fieldLimits[field];

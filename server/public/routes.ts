@@ -85,6 +85,18 @@ const PUBLIC_SETTING_KEYS = [
   'other_social_url',
   'working_hours',
   'primary_action',
+  'hero_title',
+  'hero_eyebrow',
+  'about_title',
+  'about_eyebrow',
+  'about_description',
+  'about_points',
+  'about_image',
+  'highlights_title',
+  'highlights_eyebrow',
+  'final_cta_title',
+  'final_cta_description',
+  'final_cta_button',
   ...SEO_SETTING_KEYS,
 ] as const;
 

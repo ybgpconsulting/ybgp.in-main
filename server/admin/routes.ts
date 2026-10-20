@@ -216,6 +216,18 @@ router.get('/businesses/:id', async (request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_title') AS og_title,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_description') AS og_description,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'og_image') AS og_image,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'hero_title') AS hero_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'hero_eyebrow') AS hero_eyebrow,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'about_title') AS about_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'about_eyebrow') AS about_eyebrow,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'about_description') AS about_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'about_points') AS about_points,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'about_image') AS about_image,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'highlights_title') AS highlights_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'highlights_eyebrow') AS highlights_eyebrow,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_title') AS final_cta_title,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_description') AS final_cta_description,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_button') AS final_cta_button,
       b.status,
       b.template_id,
       b.created_at,
@@ -415,6 +427,18 @@ router.post('/businesses', async (request, response) => {
       tiktok_url: tiktok,
       x_url: x,
       pinterest_url: pinterest,
+      hero_title: typeof body.hero_title === 'string' ? body.hero_title.trim() : null,
+      hero_eyebrow: typeof body.hero_eyebrow === 'string' ? body.hero_eyebrow.trim() : null,
+      about_title: typeof body.about_title === 'string' ? body.about_title.trim() : null,
+      about_eyebrow: typeof body.about_eyebrow === 'string' ? body.about_eyebrow.trim() : null,
+      about_description: typeof body.about_description === 'string' ? body.about_description.trim() : null,
+      about_points: typeof body.about_points === 'string' ? body.about_points.trim() : null,
+      about_image: typeof body.about_image === 'string' ? body.about_image.trim() : null,
+      highlights_title: typeof body.highlights_title === 'string' ? body.highlights_title.trim() : null,
+      highlights_eyebrow: typeof body.highlights_eyebrow === 'string' ? body.highlights_eyebrow.trim() : null,
+      final_cta_title: typeof body.final_cta_title === 'string' ? body.final_cta_title.trim() : null,
+      final_cta_description: typeof body.final_cta_description === 'string' ? body.final_cta_description.trim() : null,
+      final_cta_button: typeof body.final_cta_button === 'string' ? body.final_cta_button.trim() : null,
     }).filter(([, value]) => value) as Array<[string, string | null]>;
     settings.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);
     for (const [key, value] of settings) {
@@ -647,7 +671,14 @@ router.patch('/businesses/:id', async (request, response) => {
       subscriptionUpdates.push('status = ?');
       subscriptionValues.push(body.subscription_status);
     }
-    const businessSettingFields = ['address', 'phone', 'whatsapp', 'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'];
+    const businessSettingFields = [
+      'address', 'phone', 'whatsapp', 'city', 'pincode',
+      'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url',
+      'hero_title', 'hero_eyebrow',
+      'about_title', 'about_eyebrow', 'about_description', 'about_points', 'about_image',
+      'highlights_title', 'highlights_eyebrow',
+      'final_cta_title', 'final_cta_description', 'final_cta_button',
+    ];
     if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string') && Object.keys(seoSettings.values).length === 0) {
       await connection.rollback();
       response.status(400).json({ error: 'No valid fields to update' });
@@ -667,7 +698,13 @@ router.patch('/businesses/:id', async (request, response) => {
     if (typeof body.address === 'string') settingsToSave.push(['contact_address', body.address.trim() || null]);
     if (typeof body.phone === 'string') settingsToSave.push(['call_phone', body.phone.trim() || null]);
     if (typeof body.whatsapp === 'string') settingsToSave.push(['whatsapp', body.whatsapp.trim() || null]);
-    for (const field of ['city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url'] as const) {
+    for (const field of [
+      'city', 'pincode', 'youtube_url', 'linkedin_url', 'google_business_url', 'other_social_url', 'tiktok_url', 'x_url', 'pinterest_url',
+      'hero_title', 'hero_eyebrow',
+      'about_title', 'about_eyebrow', 'about_description', 'about_points', 'about_image',
+      'highlights_title', 'highlights_eyebrow',
+      'final_cta_title', 'final_cta_description', 'final_cta_button',
+    ] as const) {
       if (typeof body[field] === 'string') settingsToSave.push([field, body[field].trim() || null]);
     }
     settingsToSave.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);

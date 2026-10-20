@@ -122,17 +122,19 @@ export function TextAreaField({
   onChange,
   rows = 4,
   maxLength,
+  placeholder,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   rows?: number;
   maxLength?: number;
+  placeholder?: string;
 }) {
   return (
     <label className="block text-sm font-medium text-[#33463d]">
       {label}
-      <textarea className={inputClassName} rows={rows} value={value} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} />
+      <textarea className={inputClassName} rows={rows} value={value} placeholder={placeholder} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} />
     </label>
   );
 }

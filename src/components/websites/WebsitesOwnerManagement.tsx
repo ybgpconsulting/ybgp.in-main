@@ -973,3 +973,204 @@ function StatusPill({ active, label }: { active: boolean; label?: string }) {
 function productForm(): StringFields {
   return { name: '', description: '', category_id: '', price: '', image: '', status: 'ACTIVE', sort_order: '0' };
 }
+
+export function WebsiteContentManager({
+  business,
+  initialSettings,
+  onSaved,
+  onDirtyChange,
+}: {
+  business: OwnerBusiness;
+  initialSettings: Record<string, string>;
+  onSaved: () => Promise<void>;
+  onDirtyChange: (dirty: boolean) => void;
+}) {
+  const [form, setForm] = useState({
+    hero_title: '',
+    hero_eyebrow: '',
+    highlights_eyebrow: '',
+    highlights_title: '',
+    about_eyebrow: '',
+    about_title: '',
+    about_description: '',
+    about_points: '',
+    about_image: '',
+    final_cta_title: '',
+    final_cta_description: '',
+    final_cta_button: '',
+  });
+  const [savedForm, setSavedForm] = useState(form);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    const loaded = {
+      hero_title: initialSettings.hero_title ?? '',
+      hero_eyebrow: initialSettings.hero_eyebrow ?? '',
+      highlights_eyebrow: initialSettings.highlights_eyebrow ?? '',
+      highlights_title: initialSettings.highlights_title ?? '',
+      about_eyebrow: initialSettings.about_eyebrow ?? '',
+      about_title: initialSettings.about_title ?? '',
+      about_description: initialSettings.about_description ?? '',
+      about_points: initialSettings.about_points ?? '',
+      about_image: initialSettings.about_image ?? '',
+      final_cta_title: initialSettings.final_cta_title ?? '',
+      final_cta_description: initialSettings.final_cta_description ?? '',
+      final_cta_button: initialSettings.final_cta_button ?? '',
+    };
+    setForm(loaded);
+    setSavedForm(loaded);
+  }, [initialSettings]);
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm);
+  useUnsavedChanges(isDirty, onDirtyChange);
+  const update = (key: keyof typeof form, value: string) =>
+    setForm((current) => ({ ...current, [key]: value }));
+
+  const save = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setBusy(true);
+    setError('');
+    setSuccess('');
+    try {
+      await apiRequest('/api/business/settings', {
+        method: 'PATCH',
+        body: JSON.stringify(form),
+      });
+      setSavedForm(form);
+      await onSaved();
+      setSuccess('Website content saved! Your public website now displays these custom headlines, story, and banner details.');
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save website content');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
+      <PanelHeading
+        title="Website Content & Story"
+        description="Customize the headlines, about story, highlights, and bottom banner on your website. Blank fields will use the theme defaults."
+      />
+      <form onSubmit={save} className="space-y-6">
+        <FormSection title="Hero section (top banner)">
+          <Field
+            label="Custom hero headline (optional)"
+            value={form.hero_title}
+            onChange={(v) => update('hero_title', v)}
+            placeholder={`Defaults to "${business.name}"`}
+            maxLength={300}
+          />
+          <Field
+            label="Hero eyebrow / tagline (optional)"
+            value={form.hero_eyebrow}
+            onChange={(v) => update('hero_eyebrow', v)}
+            placeholder={`Defaults to "${business.category}"`}
+            maxLength={150}
+          />
+        </FormSection>
+
+        <FormSection title="Highlights / features section">
+          <Field
+            label="Highlights section eyebrow (optional)"
+            value={form.highlights_eyebrow}
+            onChange={(v) => update('highlights_eyebrow', v)}
+            placeholder="e.g. What we do / Specialities / From the counter"
+            maxLength={150}
+          />
+          <Field
+            label="Highlights section heading (optional)"
+            value={form.highlights_title}
+            onChange={(v) => update('highlights_title', v)}
+            placeholder="e.g. Care that starts with listening / The right support for your next step"
+            maxLength={300}
+          />
+        </FormSection>
+
+        <FormSection title="Our story / About us section">
+          <Field
+            label="Story eyebrow (optional)"
+            value={form.about_eyebrow}
+            onChange={(v) => update('about_eyebrow', v)}
+            placeholder="e.g. Our story / Craft / The studio"
+            maxLength={150}
+          />
+          <Field
+            label="Story heading (optional)"
+            value={form.about_title}
+            onChange={(v) => update('about_title', v)}
+            placeholder="e.g. Baked fresh every morning / Thoughtful care, made personal"
+            maxLength={300}
+          />
+          <div className="sm:col-span-2">
+            <TextAreaField
+              label="Story description (optional)"
+              value={form.about_description}
+              onChange={(v) => update('about_description', v)}
+              rows={4}
+              placeholder="Tell your visitors the story of your business, what inspires your work, and why customers trust you."
+              maxLength={4000}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <TextAreaField
+              label="Key bullet points / features (one per line)"
+              value={form.about_points}
+              onChange={(v) => update('about_points', v)}
+              rows={3}
+              placeholder="Over 15 years experience&#10;Painless modern procedures&#10;Family-friendly atmosphere"
+              maxLength={3000}
+            />
+            <p className="mt-1 text-xs text-[#78827b]">Each line becomes a verified bullet point on your story section.</p>
+          </div>
+          <div className="sm:col-span-2">
+            <Field
+              label="Story photo URL (optional)"
+              value={form.about_image}
+              onChange={(v) => update('about_image', v)}
+              placeholder="https://example.com/photos/our-team.jpg or /uploads/image.jpg"
+              maxLength={2048}
+            />
+            <p className="mt-1 text-xs text-[#78827b]">A photo of your founders, storefront, clinic, kitchen, or workshop.</p>
+          </div>
+        </FormSection>
+
+        <FormSection title="Bottom call-to-action banner">
+          <Field
+            label="Bottom banner heading (optional)"
+            value={form.final_cta_title}
+            onChange={(v) => update('final_cta_title', v)}
+            placeholder="e.g. Ready to plan something special?"
+            maxLength={300}
+          />
+          <Field
+            label="Bottom button text (optional)"
+            value={form.final_cta_button}
+            onChange={(v) => update('final_cta_button', v)}
+            placeholder="e.g. Chat with us on WhatsApp"
+            maxLength={100}
+          />
+          <div className="sm:col-span-2">
+            <TextAreaField
+              label="Bottom banner description (optional)"
+              value={form.final_cta_description}
+              onChange={(v) => update('final_cta_description', v)}
+              rows={2}
+              placeholder="e.g. Tell us what you are celebrating or reach out to ask any question. We are happy to help."
+              maxLength={1500}
+            />
+          </div>
+        </FormSection>
+
+        {error ? <Notice>{error}</Notice> : null}
+        {success ? <Notice kind="success">{success}</Notice> : null}
+        <button className={buttonClassName} disabled={busy || !isDirty}>
+          {busy ? 'Saving…' : 'Save website content'}
+        </button>
+      </form>
+    </section>
+  );
+}
+

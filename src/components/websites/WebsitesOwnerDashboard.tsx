@@ -27,6 +27,7 @@ import {
   ProductsManager,
   SeoManager,
   SettingsManager,
+  WebsiteContentManager,
 } from './WebsitesOwnerManagement';
 
 interface BusinessSummary {
@@ -53,9 +54,10 @@ interface OwnerSnapshot {
   publicUrl: string;
 }
 
-type Section = 'overview' | 'profile' | 'products' | 'categories' | 'gallery' | 'enquiries' | 'settings' | 'seo';
+type Section = 'overview' | 'content' | 'profile' | 'products' | 'categories' | 'gallery' | 'enquiries' | 'settings' | 'seo';
 const sections: Array<{ id: Section; label: string; detail: string }> = [
   { id: 'overview', label: 'Overview', detail: 'Website and account status' },
+  { id: 'content', label: 'Website Content & Story', detail: 'Hero, story, highlights & banner' },
   { id: 'profile', label: 'Contact, Location & Social Links', detail: 'Address, contact and social links' },
   { id: 'products', label: 'Products / Services', detail: 'Your catalogue' },
   { id: 'categories', label: 'Categories', detail: 'Organize your catalogue' },
@@ -169,7 +171,8 @@ export function WebsitesOwnerDashboard() {
   }
 
   const { business, settings, publicUrl } = snapshot;
-  const content = section === 'profile' ? <BusinessProfileManager business={business} settings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
+  const content = section === 'content' ? <WebsiteContentManager business={business} initialSettings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
+    : section === 'profile' ? <BusinessProfileManager business={business} settings={settings} onSaved={load} onDirtyChange={setHasUnsavedChanges} />
     : section === 'products' ? <ProductsManager onDirtyChange={setHasUnsavedChanges} onNavigate={goTo} />
       : section === 'categories' ? <CategoriesManager onDirtyChange={setHasUnsavedChanges} />
         : section === 'gallery' ? <GalleryManager onDirtyChange={setHasUnsavedChanges} />
@@ -185,7 +188,7 @@ export function WebsitesOwnerDashboard() {
           eyebrow="YBGP Websites · Owner workspace"
           title={business.name}
           description={`Manage your ${business.category.toLowerCase()} website and keep your business information up to date.`}
-          action={<div className="flex flex-wrap gap-2 sm:justify-end"><SignOutButton role="BUSINESS_OWNER" beforeSignOut={canDiscard} /><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Website</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
+          action={<div className="flex flex-wrap gap-2 sm:justify-end"><SignOutButton role="BUSINESS_OWNER" beforeSignOut={canDiscard} /><button type="button" onClick={() => goTo('content')} className={secondaryButtonClassName}>Edit Content</button><button type="button" onClick={() => goTo('profile')} className={secondaryButtonClassName}>Edit Profile</button><a href={publicUrl} target="_blank" rel="noreferrer" className={buttonClassName}>View website ↗</a></div>}
         />
 
         <div className="grid gap-5 lg:grid-cols-[245px_minmax(0,1fr)]">
@@ -237,6 +240,7 @@ function Overview({
     (settings.og_description ?? '').length <= OG_DESCRIPTION_MAX_LENGTH &&
     isValidOptionalImageUrl(settings.og_image ?? '');
   const checklist: Array<{ id: Section; label: string; complete: boolean }> = [
+    { id: 'content', label: 'Customize website headlines and story', complete: Boolean(settings.about_title || settings.hero_title || settings.about_description) },
     { id: 'profile', label: 'Complete business details', complete: Boolean(business.name && business.category && business.description && (business.phone || business.whatsapp || business.email)) },
     { id: 'products', label: 'Add products or services', complete: counts.products > 0 },
     { id: 'categories', label: 'Organize categories where applicable', complete: counts.products === 0 || counts.categories > 0 },

@@ -155,6 +155,31 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     ? `https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi, I'd like to get in touch with ${business.name}.`)}`
     : ctaUrl;
 
+  const isDemo = data.business.slug.startsWith('demo-');
+  const heroEyebrow = settings.hero_eyebrow || business.category || defaults.hero.eyebrow;
+  const heroTitle = settings.hero_title || business.name;
+  const storyEyebrow = settings.about_eyebrow || defaults.story.eyebrow;
+  const storyTitle = settings.about_title || defaults.story.title;
+  const storyDescription = settings.about_description || business.description || defaults.story.description;
+  const storyPoints = settings.about_points
+    ? settings.about_points.split('\n').map((p) => p.trim()).filter(Boolean)
+    : defaults.story.points;
+  const storyImage = safeImageUrl(settings.about_image) || defaults.story.image;
+  const highlightsEyebrow = settings.highlights_eyebrow || (salonLayout ? 'The salon menu' : isModern ? 'What we do' : foodLayout ? 'From the counter' : 'The collection');
+  const highlightsTitle = settings.highlights_title || (foodLayout ? 'A little something for every kind of gathering.' : salonLayout ? 'Care that starts with listening.' : isModern ? 'The right support for your next step.' : 'Pieces with presence. Made for your own story.');
+  const finalCtaTitle = settings.final_cta_title || defaults.finalCta.title;
+  const finalCtaDescription = settings.final_cta_description || defaults.finalCta.description;
+  const finalCtaButton = settings.final_cta_button || defaults.finalCta.button;
+
+  const highlightItems = categories.length > 0
+    ? categories.slice(0, 4).map((cat, idx) => ({
+        title: cat.name,
+        subtitle: `Explore our specialized ${cat.name.toLowerCase()} offerings and solutions.`,
+        image: defaults.highlights[idx % defaults.highlights.length]?.image || heroImage,
+        alt: cat.name,
+      }))
+    : defaults.highlights;
+
   const navItems = foodLayout
     ? [
         { label: 'Home', href: '#home' },
@@ -263,8 +288,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <img src={heroImage} alt="" className="absolute inset-0 h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
             <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(31,17,10,0.85) 0%, rgba(39,22,14,0.55) 50%, rgba(39,22,14,0.15) 100%)' }} />
             <div className="relative flex min-h-[570px] max-w-3xl flex-col justify-center px-5 py-14 sm:min-h-[620px] sm:px-10 lg:min-h-[700px] lg:px-16 text-white">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d5af]">{business.category || defaults.hero.eyebrow}</p>
-              <h1 className="mt-5 max-w-[660px] font-heading text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-white">{business.name}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d5af]">{heroEyebrow}</p>
+              <h1 className="mt-5 max-w-[660px] font-heading text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-[0.95] tracking-[-0.04em] text-white">{heroTitle}</h1>
               <p className="mt-6 max-w-lg text-base leading-relaxed text-white/85 sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-lg transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
@@ -281,8 +306,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         ) : salonLayout ? (
           <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
             <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{business.category || defaults.hero.eyebrow}</p>
-              <h1 className="mt-5 max-w-xl font-heading text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[4.75rem]">{business.name}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{heroEyebrow}</p>
+              <h1 className="mt-5 max-w-xl font-heading text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[4.75rem]">{heroTitle}</h1>
               <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
@@ -304,8 +329,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         ) : jewelleryLayout ? (
           <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden bg-[#171411] lg:min-h-[680px] lg:grid-cols-[0.92fr_1.08fr]">
             <div className="order-2 flex flex-col justify-center px-5 py-12 text-[#f8f5ef] sm:px-12 sm:py-16 lg:order-1 lg:px-20">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#c5a77e]">{business.category || defaults.hero.eyebrow}</p>
-              <h1 className="mt-6 max-w-xl font-heading text-4xl font-normal leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[5rem]">{business.name}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#c5a77e]">{heroEyebrow}</p>
+              <h1 className="mt-6 max-w-xl font-heading text-4xl font-normal leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-[5rem]">{heroTitle}</h1>
               <p className="mt-6 max-w-md text-base leading-relaxed text-white/65 sm:text-lg">{business.description || seo.description || defaults.hero.description}</p>
               <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
                 <a href="#collections" className="inline-flex min-h-12 w-fit items-center gap-3 border-b border-[#c5a77e] pb-2 text-sm font-medium text-[#e8d3b1] transition-colors hover:text-white sm:text-base">
@@ -323,8 +348,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         ) : (
           <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
             <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{business.category || defaults.hero.eyebrow}</p>
-              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]">{business.name}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{heroEyebrow}</p>
+              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]">{heroTitle}</h1>
               <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
@@ -368,17 +393,17 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         <section id={collectionId} className="scroll-mt-24 mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:pb-24">
           <div className={`mb-8 ${jewelleryLayout ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
-              {salonLayout ? 'The salon menu' : isModern ? 'What we do' : foodLayout ? 'From the counter' : 'The collection'}
+              {highlightsEyebrow}
             </p>
             <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
-              {foodLayout ? 'A little something for every kind of gathering.' : salonLayout ? 'Care that starts with listening.' : isModern ? 'The right support for your next step.' : 'Pieces with presence. Made for your own story.'}
+              {highlightsTitle}
             </h2>
             <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.summary}</p>
           </div>
 
           <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-2 xl:grid-cols-4' : isService ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
-            {defaults.highlights.map((item, index) => (
-              <article key={item.title} className={`${isService ? 'group' : foodLayout ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={foodLayout ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
+            {highlightItems.map((item, index) => (
+              <article key={item.title + index} className={`${isService ? 'group' : foodLayout ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={foodLayout ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
                 <div className={`overflow-hidden ${foodLayout ? 'h-[260px] sm:h-[300px]' : isService ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
                   <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
                 </div>
@@ -396,13 +421,13 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
         <section id="about" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
           {foodLayout ? (
             <div className="grid overflow-hidden lg:grid-cols-[1fr_1fr]" style={{ background: theme.panelStrong }}>
-              <img src={defaults.story.image} alt="" className="h-[320px] w-full object-cover sm:h-[420px] lg:h-[560px]" loading="lazy" />
+              <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[420px] lg:h-[560px]" loading="lazy" />
               <div className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
-                <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{defaults.story.title}</h2>
-                <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+                <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{storyTitle}</h2>
+                <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
                 <div className="mt-6 space-y-2.5">
-                  {defaults.story.points.map((point) => (
+                  {storyPoints.map((point) => (
                     <div key={point} className="flex items-center gap-2 text-sm font-medium">
                       <span className="text-[#a04a2b]">✓</span> {point}
                     </div>
@@ -414,15 +439,15 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           ) : isService ? (
             <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
               <div className="relative">
-                <img src={defaults.story.image} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
+                <img src={storyImage} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
                 <span className="absolute bottom-4 left-4 max-w-[240px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>{isModern ? 'Thoughtful work, made personal.' : 'A softer kind of salon day.'}</span>
               </div>
               <div className="max-w-xl py-3 lg:py-10">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
-                <h2 className="mt-4 font-heading text-3xl font-medium leading-tight tracking-[-0.025em] sm:text-4xl lg:text-5xl">{defaults.story.title}</h2>
-                <p className="mt-5 text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+                <h2 className="mt-4 font-heading text-3xl font-medium leading-tight tracking-[-0.025em] sm:text-4xl lg:text-5xl">{storyTitle}</h2>
+                <p className="mt-5 text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
                 <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
-                  {defaults.story.points.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
+                  {storyPoints.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
                 </div>
                 <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
@@ -430,15 +455,15 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           ) : (
             <div className={`grid gap-8 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12 ${jewelleryLayout ? 'bg-[#181512] border border-[#2e2720] text-[#f7f4ee]' : 'bg-[#eae4dc]'}`}>
               <div className="flex flex-col justify-center">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{defaults.story.eyebrow}</p>
-                <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{defaults.story.title}</h2>
-                <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{business.description || defaults.story.description}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+                <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{storyTitle}</h2>
+                <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{storyDescription}</p>
                 <div className="mt-6 space-y-2">
-                  {defaults.story.points.map((point) => <p key={point} className={`text-sm font-medium ${jewelleryLayout ? 'text-[#e0c297]' : 'text-[#211a13]'}`}>✦ {point}</p>)}
+                  {storyPoints.map((point) => <p key={point} className={`text-sm font-medium ${jewelleryLayout ? 'text-[#e0c297]' : 'text-[#211a13]'}`}>✦ {point}</p>)}
                 </div>
                 <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
               </div>
-              <img src={defaults.story.image} alt="" className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
+              <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
             </div>
           )}
         </section>
@@ -493,7 +518,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                 />
               ))}
             </div>
-          ) : (
+          ) : isDemo ? (
             <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-3' : 'md:grid-cols-3'}`}>
               {defaults.bestsellers.map((item) => (
                 <TemplateItemCard
@@ -508,6 +533,19 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                   design={design}
                 />
               ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border p-8 text-center" style={{ borderColor: theme.border, background: theme.panel }}>
+              <p className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: theme.label }}>Our Offerings</p>
+              <h3 className="mt-2 font-heading text-2xl font-semibold" style={{ color: theme.accentDark }}>Catalogue updating soon</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm leading-6" style={{ color: theme.muted }}>
+                We are currently preparing our service menu and catalogue. In the meantime, feel free to reach out to us directly on WhatsApp to ask about options, availability, or pricing.
+              </p>
+              <div className="mt-5 flex justify-center">
+                <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm" style={{ background: theme.cta }}>
+                  Inquire on WhatsApp <MessageCircle className="h-4 w-4" />
+                </a>
+              </div>
             </div>
           )}
         </section>
@@ -531,10 +569,17 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                   {item.title ? <figcaption className="p-3 text-xs font-medium" style={{ color: theme.muted }}>{item.title}</figcaption> : null}
                 </figure>
               ))
-            ) : (
+            ) : isDemo ? (
               defaults.gallery.map((item, index) => (
                 <figure key={item.image} className={`${foodLayout && index === 0 ? 'col-span-2 row-span-2' : ''} ${isService && index === 0 ? 'col-span-2 lg:col-span-1 lg:row-span-2' : ''} ${!foodLayout && !isService && (index === 1 || index === 4) ? 'row-span-2' : ''} overflow-hidden rounded-2xl border`} style={{ borderColor: theme.border, background: theme.panel }}>
                   <img src={item.image} alt={item.alt} className={`h-full w-full object-cover ${foodLayout && index === 0 ? 'min-h-[300px] sm:min-h-[360px]' : 'min-h-[160px] sm:min-h-[220px] lg:min-h-[260px]'}`} loading="lazy" />
+                </figure>
+              ))
+            ) : (
+              [heroImage, storyImage].filter(Boolean).map((imgUrl, index) => (
+                <figure key={imgUrl + index} className="overflow-hidden rounded-2xl border" style={{ borderColor: theme.border, background: theme.panel }}>
+                  <img src={imgUrl} alt={business.name} className="h-full min-h-[200px] w-full object-cover" loading="lazy" />
+                  <figcaption className="p-3 text-xs font-medium" style={{ color: theme.muted }}>{index === 0 ? `${business.name} · ${business.category}` : storyEyebrow}</figcaption>
                 </figure>
               ))
             )}
@@ -548,11 +593,11 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: jewelleryLayout ? '#c5a77e' : theme.label }}>
                 {salonLayout ? 'Make a little time for you' : isModern ? 'Your next step starts here' : foodLayout ? 'Tell us what you are celebrating' : 'A piece, chosen personally'}
               </p>
-              <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{defaults.finalCta.title}</h2>
-              <p className="mt-3 text-base leading-relaxed" style={{ color: jewelleryLayout ? 'rgba(255,255,255,0.68)' : theme.muted }}>{defaults.finalCta.description}</p>
+              <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{finalCtaTitle}</h2>
+              <p className="mt-3 text-base leading-relaxed" style={{ color: jewelleryLayout ? 'rgba(255,255,255,0.68)' : theme.muted }}>{finalCtaDescription}</p>
             </div>
             <a href={whatsappDirectUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base shadow-sm" style={{ background: theme.cta }}>
-              {defaults.finalCta.button} <MessageCircle className="h-5 w-5" />
+              {finalCtaButton} <MessageCircle className="h-5 w-5" />
             </a>
           </div>
         </section>
