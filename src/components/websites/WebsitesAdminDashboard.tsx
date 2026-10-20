@@ -64,6 +64,9 @@ interface BusinessSummary {
   final_cta_title?: string | null;
   final_cta_description?: string | null;
   final_cta_button?: string | null;
+  cta_text?: string | null;
+  cta_url?: string | null;
+  working_hours?: string | null;
   template_id?: string | null;
   template_name: string | null;
   template_slug?: string | null;
@@ -118,6 +121,9 @@ const emptyForm = (): FormValues => ({
   pinterest_url: '',
   hero_title: '',
   hero_eyebrow: '',
+  cta_text: '',
+  cta_url: '',
+  working_hours: '',
   about_title: '',
   about_eyebrow: '',
   about_description: '',
@@ -157,6 +163,8 @@ const isExpiringSoon = (business: BusinessSummary) => {
   return days <= 30;
 };
 
+type EditTab = 'content' | 'contact' | 'profile' | 'social' | 'seo' | 'subscription' | 'danger';
+
 export function WebsitesAdminDashboard() {
   const [businesses, setBusinesses] = useState<BusinessSummary[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -169,6 +177,7 @@ export function WebsitesAdminDashboard() {
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessSummary | null>(null);
   const [form, setForm] = useState<FormValues>(emptyForm);
   const [busy, setBusy] = useState(false);
+  const [editTab, setEditTab] = useState<EditTab>('content');
   const [showCredentialForm, setShowCredentialForm] = useState(false);
   const businessFormRequestId = useRef(0);
   const businessFormLoading = useRef(false);
@@ -269,6 +278,9 @@ export function WebsitesAdminDashboard() {
         pinterest_url: current.pinterest_url ?? '',
         hero_title: current.hero_title ?? '',
         hero_eyebrow: current.hero_eyebrow ?? '',
+        cta_text: current.cta_text ?? '',
+        cta_url: current.cta_url ?? '',
+        working_hours: current.working_hours ?? '',
         about_title: current.about_title ?? '',
         about_eyebrow: current.about_eyebrow ?? '',
         about_description: current.about_description ?? '',
@@ -291,6 +303,7 @@ export function WebsitesAdminDashboard() {
         subscription_active: current.subscription_status === 'EXPIRED' ? 'false' : 'true',
         published: current.status === 'ACTIVE' ? 'true' : 'false',
       });
+      setEditTab(mode === 'subscription' ? 'subscription' : 'content');
       setFormMode(mode);
     } catch (loadError) {
       if (requestId === businessFormRequestId.current) {
@@ -415,6 +428,9 @@ export function WebsitesAdminDashboard() {
             final_cta_title: form.final_cta_title,
             final_cta_description: form.final_cta_description,
             final_cta_button: form.final_cta_button,
+            cta_text: form.cta_text,
+            cta_url: form.cta_url,
+            working_hours: form.working_hours,
             seo_title: form.seo_title,
             seo_description: form.seo_description,
             og_title: form.og_title,
@@ -480,112 +496,48 @@ export function WebsitesAdminDashboard() {
   const expiring = businesses.filter(isExpiringSoon).length;
   const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
 
-  const renderTemplateSelector = (isEdit = false) => (
-    <section className={isEdit ? "rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-xs" : ""}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 className="font-bold">{isEdit ? "Storefront layout & template" : "Choose storefront template"}</h3>
-          <p className="mt-0.5 text-xs text-[#68746c]">
-            {isEdit
-              ? "Change the design, layout, and theme applied to this business website."
-              : "Select the starting layout and style for this website."}
-          </p>
-        </div>
-        {selectedTemplate ? (
+  const renderSynchronizedTemplateBadge = () => {
+    const template = selectedTemplate;
+    const demoSlug = template ? getWebsiteTemplateDemoSlug(template.slug) : 'demo-modern';
+    return (
+      <div className="rounded-2xl border border-[#ded8cc] bg-[#f9f8f4] p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[#cfc8bc] bg-[#e5eee7]">
+              <img
+                src={template ? getWebsiteTemplatePreviewImage(template.slug) : '/demo-sites/modern/workspace.jpg'}
+                alt=""
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8D7026]">Storefront Template</span>
+                <span className="rounded-full bg-[#0E2B22] px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
+                  {template?.name || 'Modern Business'}
+                </span>
+                <span className="rounded-full border border-emerald-600/30 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                  Auto-Synchronized
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-[#68746c]">
+                Design, typography, and colors are automatically locked to <strong>{form.category || 'the business category'}</strong>.
+              </p>
+            </div>
+          </div>
           <a
-            href={`/websites/${getWebsiteTemplateDemoSlug(selectedTemplate.slug)}`}
+            href={`/websites/${demoSlug}/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-semibold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
+            className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
           >
-            Preview {selectedTemplate.name} demo ↗
+            Preview {template?.name || 'Template'} Demo ↗
           </a>
-        ) : null}
-      </div>
-
-      {templates.length === 0 ? (
-        <p className="mt-2 text-sm text-[#68746c]">No active templates are available.</p>
-      ) : (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {templates.map((template) => {
-            const design = getWebsiteTemplateDesign(template.slug);
-            const isSelected = form.template_slug === template.slug;
-            const previewImage = getWebsiteTemplatePreviewImage(template.slug);
-            return (
-              <label
-                key={template.id}
-                className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border transition duration-200 ${
-                  isSelected
-                    ? 'border-[#0E2B22] bg-[#eff4f0] ring-2 ring-[#0E2B22]/15 shadow-sm'
-                    : 'border-[#e2ddd2] bg-white hover:border-[#9aa89f] hover:shadow-sm'
-                }`}
-              >
-                <input
-                  className="sr-only"
-                  type="radio"
-                  name={isEdit ? "edit-template" : "create-template"}
-                  value={template.slug}
-                  checked={isSelected}
-                  onChange={() => updateField('template_slug', template.slug)}
-                />
-                <div className="relative h-24 w-full overflow-hidden bg-[#e5eee7]">
-                  <img
-                    src={previewImage}
-                    alt=""
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                  <span
-                    className={`absolute bottom-2 left-2.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                      design === 'food'
-                        ? 'bg-[#f4e2d3] text-[#603b2c]'
-                        : design === 'salon'
-                        ? 'bg-[#f0e5df] text-[#8f5c54]'
-                        : design === 'jewellery'
-                        ? 'bg-[#c5a77e] text-[#211a13]'
-                        : design === 'clinic'
-                        ? 'bg-[#dcfce7] text-[#166534]'
-                        : design === 'astrology'
-                        ? 'bg-[#1e1b4b] text-[#fef08a] border border-[#fef08a]/30'
-                        : design === 'travel'
-                        ? 'bg-[#ffedd5] text-[#9a3412]'
-                        : 'bg-white text-[#173629]'
-                    }`}
-                  >
-                    {design === 'food'
-                      ? 'Food & Bakery'
-                      : design === 'salon'
-                      ? 'Salon & Wellness'
-                      : design === 'jewellery'
-                      ? 'Jewellery Boutique'
-                      : design === 'clinic'
-                      ? 'Clinic & Healthcare'
-                      : design === 'astrology'
-                      ? 'Astrology & Horoscope'
-                      : design === 'travel'
-                      ? 'Tour & Travel'
-                      : 'Modern Business'}
-                  </span>
-                  {isSelected ? (
-                    <span className="absolute right-2 top-2 rounded-full bg-[#0E2B22] px-2 py-0.5 text-[10px] font-bold text-white shadow">
-                      ✓ Selected
-                    </span>
-                  ) : null}
-                </div>
-                <div className="p-3">
-                  <strong className="block text-sm font-bold text-[#173328]">{template.name}</strong>
-                  <span className="mt-0.5 block line-clamp-1 text-xs text-[#68746c]">
-                    {template.description || 'A clean, responsive business storefront.'}
-                  </span>
-                </div>
-              </label>
-            );
-          })}
         </div>
-      )}
-    </section>
-  );
+      </div>
+    );
+  };
 
   return (
     <main className="min-h-screen bg-[#f7f6f2] px-4 py-7 text-[#0E2B22] sm:px-6 sm:py-10">
@@ -728,7 +680,7 @@ export function WebsitesAdminDashboard() {
                     </div>
                   </FormSection>
 
-                  {renderTemplateSelector()}
+                  {renderSynchronizedTemplateBadge()}
 
                   <FormSection title="Owner login credentials">
                     <Field
@@ -775,66 +727,316 @@ export function WebsitesAdminDashboard() {
                 </FormSection>
               ) : (
                 <>
-                  <FormSection title="Business profile">
-                    <Field label="Business name" value={form.name} onChange={(value) => updateField('name', value)} required />
-                    <Field label="Website slug" value={form.slug} onChange={(value) => updateField('slug', value)} required />
-                    <div className="sm:col-span-2">
-                      <CategorySelectField
-                        label="Category"
-                        value={form.category}
-                        onChange={(value) => updateField('category', value)}
-                        onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
+                  {/* Top quick-access preview bar */}
+                  <div className="flex flex-col gap-2 rounded-2xl border border-[#ded8cc] bg-white p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-[#68746c]">Editing Website for</p>
+                      <p className="text-sm font-bold text-[#0E2B22]">{form.name || selectedBusiness?.name || 'Business'}</p>
+                    </div>
+                    {form.slug ? (
+                      <a
+                        href={`/websites/${form.slug}/`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-[#ded8cc] bg-[#f7f6f2] px-3.5 py-1.5 text-xs font-bold text-[#0E2B22] transition-colors hover:bg-[#eae6dc]"
+                      >
+                        👁 View Live Website ↗
+                      </a>
+                    ) : null}
+                  </div>
+
+                  {/* Clean Tab Navigation Bar */}
+                  <div className="flex overflow-x-auto gap-1 rounded-2xl border border-[#ded8cc] bg-white p-1.5 text-xs font-semibold">
+                    {[
+                      { id: 'content', label: '🎨 Storefront Content' },
+                      { id: 'contact', label: '📞 Contact & Timings' },
+                      { id: 'profile', label: '🏢 Profile & Category' },
+                      { id: 'social', label: '🌐 Social Links' },
+                      { id: 'seo', label: '🔍 Google SEO' },
+                      { id: 'subscription', label: '💳 Subscription' },
+                      { id: 'danger', label: '⚠️ Danger Zone' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setEditTab(tab.id as EditTab)}
+                        className={`shrink-0 rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
+                          editTab === tab.id
+                            ? 'bg-[#0E2B22] text-white shadow-xs'
+                            : 'text-[#58645c] hover:bg-[#f3efe6] hover:text-[#0E2B22]'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tab 1: Storefront Content */}
+                  {editTab === 'content' ? (
+                    <div className="space-y-6">
+                      {renderSynchronizedTemplateBadge()}
+
+                      <div className="rounded-2xl border border-amber-800/15 bg-amber-50/50 p-4 text-xs leading-relaxed text-[#73521e]">
+                        <p className="font-semibold text-[#8D7026]">💡 Easy Customization</p>
+                        <p className="mt-0.5">
+                          Every field below directly changes the live text, headlines, and buttons on your website. Any field left blank automatically uses the template&apos;s tailored defaults.
+                        </p>
+                      </div>
+
+                      <FormSection title="1. Hero Section & Main Action Button">
+                        <Field
+                          label="Custom hero headline"
+                          value={form.hero_title}
+                          onChange={(value) => updateField('hero_title', value)}
+                          placeholder={`Defaults to "${form.name || 'Business Name'}"`}
+                          maxLength={300}
+                        />
+                        <Field
+                          label="Hero tagline / badge"
+                          value={form.hero_eyebrow}
+                          onChange={(value) => updateField('hero_eyebrow', value)}
+                          placeholder={`Defaults to "${form.category || 'Category'}"`}
+                          maxLength={150}
+                        />
+                        <Field
+                          label="Main button text"
+                          value={form.cta_text}
+                          onChange={(value) => updateField('cta_text', value)}
+                          placeholder="e.g. Book Appointment / Order Now / Chat with us"
+                          maxLength={100}
+                        />
+                        <Field
+                          label="Main button link (optional)"
+                          value={form.cta_url}
+                          onChange={(value) => updateField('cta_url', value)}
+                          placeholder="e.g. #contact, https://wa.me/..., or /menu"
+                          maxLength={500}
+                        />
+                      </FormSection>
+
+                      <FormSection title="2. About & Story Section">
+                        <Field
+                          label="Story section heading"
+                          value={form.about_title}
+                          onChange={(value) => updateField('about_title', value)}
+                          placeholder="e.g. Our Heritage & Commitment"
+                          maxLength={300}
+                        />
+                        <Field
+                          label="Story section subtitle / badge"
+                          value={form.about_eyebrow}
+                          onChange={(value) => updateField('about_eyebrow', value)}
+                          placeholder="e.g. Behind the scenes / Our journey"
+                          maxLength={150}
+                        />
+                        <div className="sm:col-span-2">
+                          <TextAreaField
+                            label="Story narrative"
+                            value={form.about_description}
+                            onChange={(value) => updateField('about_description', value)}
+                            rows={3}
+                            placeholder="A short story about your business, founders, craft, or philosophy."
+                            maxLength={4000}
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <TextAreaField
+                            label="Key highlights / bullet points (one per line)"
+                            value={form.about_points}
+                            onChange={(value) => updateField('about_points', value)}
+                            rows={3}
+                            placeholder="Point 1&#10;Point 2&#10;Point 3"
+                            maxLength={3000}
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Field
+                            label="Story photo URL"
+                            value={form.about_image}
+                            onChange={(value) => updateField('about_image', value)}
+                            placeholder="https://example.com/photo.jpg or /demo-sites/..."
+                            maxLength={2048}
+                          />
+                        </div>
+                      </FormSection>
+
+                      <FormSection title="3. Offerings & Specialities Section Heading">
+                        <Field
+                          label="Section heading"
+                          value={form.highlights_title}
+                          onChange={(value) => updateField('highlights_title', value)}
+                          placeholder="e.g. Signature Experiences / Popular Offerings"
+                          maxLength={300}
+                        />
+                        <Field
+                          label="Section eyebrow / tagline"
+                          value={form.highlights_eyebrow}
+                          onChange={(value) => updateField('highlights_eyebrow', value)}
+                          placeholder="e.g. What we offer / Specialities"
+                          maxLength={150}
+                        />
+                      </FormSection>
+
+                      <FormSection title="4. Bottom Call-to-Action Banner">
+                        <Field
+                          label="Banner heading"
+                          value={form.final_cta_title}
+                          onChange={(value) => updateField('final_cta_title', value)}
+                          placeholder="e.g. Ready to plan something special?"
+                          maxLength={300}
+                        />
+                        <Field
+                          label="Banner button text"
+                          value={form.final_cta_button}
+                          onChange={(value) => updateField('final_cta_button', value)}
+                          placeholder="e.g. Chat with us on WhatsApp"
+                          maxLength={100}
+                        />
+                        <div className="sm:col-span-2">
+                          <TextAreaField
+                            label="Banner description"
+                            value={form.final_cta_description}
+                            onChange={(value) => updateField('final_cta_description', value)}
+                            rows={2}
+                            placeholder="Closing invitation before the final action button."
+                            maxLength={1500}
+                          />
+                        </div>
+                      </FormSection>
+                    </div>
+                  ) : null}
+
+                  {/* Tab 2: Contact & Timings */}
+                  {editTab === 'contact' ? (
+                    <FormSection title="Contact Information & Operating Hours">
+                      <Field
+                        label="Phone number (for calls)"
+                        value={form.phone}
+                        onChange={(value) => updateField('phone', value)}
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                      />
+                      <Field
+                        label="WhatsApp number (for chat & orders)"
+                        value={form.whatsapp}
+                        onChange={(value) => updateField('whatsapp', value)}
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                      />
+                      <div className="sm:col-span-2">
+                        <Field
+                          label="Working / Visiting Hours"
+                          value={form.working_hours}
+                          onChange={(value) => updateField('working_hours', value)}
+                          placeholder="e.g. Mon–Sat: 10:00 AM – 8:00 PM | Sun: Closed"
+                        />
+                      </div>
+                      <Field
+                        label="Support email"
+                        value={form.email}
+                        onChange={(value) => updateField('email', value)}
+                        type="email"
+                        placeholder="contact@example.com"
+                      />
+                      <Field
+                        label="City / Town"
+                        value={form.city}
+                        onChange={(value) => updateField('city', value)}
+                        placeholder="e.g. Mumbai, Surat, Bangalore"
+                      />
+                      <Field
+                        label="Pincode"
+                        value={form.pincode}
+                        onChange={(value) => updateField('pincode', value)}
+                        inputMode="numeric"
+                        placeholder="e.g. 400001"
+                      />
+                      <div className="sm:col-span-2">
+                        <Field
+                          label="Google Maps directions link"
+                          value={form.google_maps_url}
+                          onChange={(value) => updateField('google_maps_url', value)}
+                          type="url"
+                          placeholder="https://maps.google.com/?cid=..."
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <TextAreaField
+                          label="Street address"
+                          value={form.address}
+                          onChange={(value) => updateField('address', value)}
+                          rows={2}
+                          placeholder="Shop No., Landmark, Area"
+                        />
+                      </div>
+                    </FormSection>
+                  ) : null}
+
+                  {/* Tab 3: Business Profile & Category */}
+                  {editTab === 'profile' ? (
+                    <FormSection title="Business Profile">
+                      <Field
+                        label="Business name"
+                        value={form.name}
+                        onChange={(value) => updateField('name', value)}
                         required
                       />
-                    </div>
-                    <TextAreaField label="Description" value={form.description} onChange={(value) => updateField('description', value)} />
-                    <Field label="Phone" value={form.phone} onChange={(value) => updateField('phone', value)} type="tel" />
-                    <Field label="WhatsApp" value={form.whatsapp} onChange={(value) => updateField('whatsapp', value)} type="tel" />
-                    <Field label="Email" value={form.email} onChange={(value) => updateField('email', value)} type="email" />
-                    <Field label="City" value={form.city} onChange={(value) => updateField('city', value)} />
-                    <Field label="Pincode" value={form.pincode} onChange={(value) => updateField('pincode', value)} inputMode="numeric" />
-                    <Field label="Google Maps URL" value={form.google_maps_url} onChange={(value) => updateField('google_maps_url', value)} type="url" />
-                    <SelectField label="Publishing" value={form.published} onChange={(value) => updateField('published', value)} options={[{ value: 'true', label: 'Published' }, { value: 'false', label: 'Draft' }]} />
-                  </FormSection>
-                  {formMode === 'edit' ? renderTemplateSelector(true) : null}
-                  {formMode === 'edit' ? (
-                    <FormSection title="Contact, Location & Social Links">
-                      <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" />
-                      <Field label="Facebook URL" value={form.facebook_url} onChange={(value) => updateField('facebook_url', value)} type="url" />
-                      <Field label="YouTube URL" value={form.youtube_url} onChange={(value) => updateField('youtube_url', value)} type="url" />
-                      <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" />
-                      <Field label="Google Business URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" />
-                      <Field label="Other social link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" />
-                      <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" />
-                      <Field label="X URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" />
-                      <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" />
+                      <Field
+                        label="Website slug"
+                        value={form.slug}
+                        onChange={(value) => updateField('slug', value)}
+                        required
+                      />
+                      <div className="sm:col-span-2">
+                        <CategorySelectField
+                          label="Category"
+                          value={form.category}
+                          onChange={(value) => updateField('category', value)}
+                          onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
+                          required
+                        />
+                        <p className="mt-1 text-xs text-[#68746c]">
+                          Note: Selecting a category automatically synchronizes and updates the website template design.
+                        </p>
+                      </div>
+                      <div className="sm:col-span-2">
+                        <TextAreaField
+                          label="Brief business summary"
+                          value={form.description}
+                          onChange={(value) => updateField('description', value)}
+                          rows={3}
+                          placeholder="Short description of what the business does."
+                        />
+                      </div>
+                      <SelectField
+                        label="Website publishing"
+                        value={form.published}
+                        onChange={(value) => updateField('published', value)}
+                        options={[
+                          { value: 'true', label: 'Published (Publicly live)' },
+                          { value: 'false', label: 'Draft (Hidden from public)' },
+                        ]}
+                      />
                     </FormSection>
                   ) : null}
-                  {formMode === 'edit' ? (
-                    <FormSection title="Website Content & Story (Template Overrides)">
-                      <Field label="Custom hero headline (optional)" value={form.hero_title} onChange={(value) => updateField('hero_title', value)} placeholder={`Defaults to "${form.name}"`} maxLength={300} />
-                      <Field label="Hero eyebrow / tagline (optional)" value={form.hero_eyebrow} onChange={(value) => updateField('hero_eyebrow', value)} placeholder={`Defaults to "${form.category}"`} maxLength={150} />
-                      <Field label="Highlights section eyebrow (optional)" value={form.highlights_eyebrow} onChange={(value) => updateField('highlights_eyebrow', value)} placeholder="e.g. What we do / Specialities / From the counter" maxLength={150} />
-                      <Field label="Highlights section heading (optional)" value={form.highlights_title} onChange={(value) => updateField('highlights_title', value)} placeholder="e.g. Care that starts with listening" maxLength={300} />
-                      <Field label="Story eyebrow (optional)" value={form.about_eyebrow} onChange={(value) => updateField('about_eyebrow', value)} placeholder="e.g. Our story / Craft / The studio" maxLength={150} />
-                      <Field label="Story heading (optional)" value={form.about_title} onChange={(value) => updateField('about_title', value)} placeholder="e.g. Baked fresh every morning" maxLength={300} />
-                      <div className="sm:col-span-2">
-                        <TextAreaField label="Story description (optional)" value={form.about_description} onChange={(value) => updateField('about_description', value)} rows={3} placeholder="Narrative about the business, founders, or philosophy." maxLength={4000} />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <TextAreaField label="Key bullet points / features (one per line)" value={form.about_points} onChange={(value) => updateField('about_points', value)} rows={3} placeholder="Point 1&#10;Point 2&#10;Point 3" maxLength={3000} />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <Field label="Story photo URL (optional)" value={form.about_image} onChange={(value) => updateField('about_image', value)} placeholder="https://example.com/photo.jpg or /uploads/image.jpg" maxLength={2048} />
-                      </div>
-                      <Field label="Bottom banner heading (optional)" value={form.final_cta_title} onChange={(value) => updateField('final_cta_title', value)} placeholder="e.g. Ready to plan something special?" maxLength={300} />
-                      <Field label="Bottom button text (optional)" value={form.final_cta_button} onChange={(value) => updateField('final_cta_button', value)} placeholder="e.g. Chat with us on WhatsApp" maxLength={100} />
-                      <div className="sm:col-span-2">
-                        <TextAreaField label="Bottom banner description (optional)" value={form.final_cta_description} onChange={(value) => updateField('final_cta_description', value)} rows={2} placeholder="Subtext for the bottom conversion banner." maxLength={1500} />
-                      </div>
+
+                  {/* Tab 4: Social Links */}
+                  {editTab === 'social' ? (
+                    <FormSection title="Social Media & Online Profiles">
+                      <Field label="Instagram URL" value={form.instagram_url} onChange={(value) => updateField('instagram_url', value)} type="url" placeholder="https://instagram.com/..." />
+                      <Field label="Facebook URL" value={form.facebook_url} onChange={(value) => updateField('facebook_url', value)} type="url" placeholder="https://facebook.com/..." />
+                      <Field label="YouTube URL" value={form.youtube_url} onChange={(value) => updateField('youtube_url', value)} type="url" placeholder="https://youtube.com/..." />
+                      <Field label="LinkedIn URL" value={form.linkedin_url} onChange={(value) => updateField('linkedin_url', value)} type="url" placeholder="https://linkedin.com/in/..." />
+                      <Field label="Google Business Profile URL" value={form.google_business_url} onChange={(value) => updateField('google_business_url', value)} type="url" placeholder="https://business.google.com/..." />
+                      <Field label="Other website / link" value={form.other_social_url} onChange={(value) => updateField('other_social_url', value)} type="url" placeholder="https://..." />
+                      <Field label="X (Twitter) URL" value={form.x_url} onChange={(value) => updateField('x_url', value)} type="url" placeholder="https://x.com/..." />
+                      <Field label="TikTok URL" value={form.tiktok_url} onChange={(value) => updateField('tiktok_url', value)} type="url" placeholder="https://tiktok.com/@..." />
+                      <Field label="Pinterest URL" value={form.pinterest_url} onChange={(value) => updateField('pinterest_url', value)} type="url" placeholder="https://pinterest.com/..." />
                     </FormSection>
                   ) : null}
-                  {formMode === 'edit' ? (
+
+                  {/* Tab 5: Google SEO */}
+                  {editTab === 'seo' ? (
                     <SeoSettingsSection
                       form={form}
                       onChange={updateField}
@@ -844,7 +1046,28 @@ export function WebsitesAdminDashboard() {
                       description={form.description}
                     />
                   ) : null}
-                  {formMode === 'edit' && selectedBusiness ? (
+
+                  {/* Tab 6: Subscription */}
+                  {editTab === 'subscription' ? (
+                    <FormSection title="Annual Subscription & Billing">
+                      <Field label="Plan name" value={form.plan} onChange={(value) => updateField('plan', value)} required />
+                      <Field label="Amount (₹)" value={form.amount} onChange={(value) => updateField('amount', value)} type="number" min="0" step="1" required />
+                      <Field label="Start date" value={form.start_date} onChange={(value) => updateField('start_date', value)} type="date" required />
+                      <Field label="Expiry date" value={form.expiry_date} onChange={(value) => updateField('expiry_date', value)} type="date" required />
+                      <SelectField
+                        label="Subscription status"
+                        value={form.subscription_active}
+                        onChange={(value) => updateField('subscription_active', value)}
+                        options={[
+                          { value: 'true', label: 'Active' },
+                          { value: 'false', label: 'Expired / inactive' },
+                        ]}
+                      />
+                    </FormSection>
+                  ) : null}
+
+                  {/* Tab 7: Danger Zone */}
+                  {editTab === 'danger' && selectedBusiness ? (
                     <DangerZoneSection
                       businessName={selectedBusiness.name}
                       onDelete={() => void deleteBusiness(selectedBusiness)}

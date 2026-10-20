@@ -44,6 +44,12 @@ interface BusinessRow extends RowDataPacket {
   og_title: string | null;
   og_description: string | null;
   og_image: string | null;
+  final_cta_title?: string | null;
+  final_cta_description?: string | null;
+  final_cta_button?: string | null;
+  cta_text?: string | null;
+  cta_url?: string | null;
+  working_hours?: string | null;
   status: 'ACTIVE' | 'INACTIVE';
   template_id: string;
   created_at: string;
@@ -232,6 +238,9 @@ router.get('/businesses/:id', async (request, response) => {
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_title') AS final_cta_title,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_description') AS final_cta_description,
       (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'final_cta_button') AS final_cta_button,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'cta_text') AS cta_text,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'cta_url') AS cta_url,
+      (SELECT setting_value FROM business_settings WHERE business_id = b.id AND setting_key = 'working_hours') AS working_hours,
       b.status,
       b.template_id,
       b.created_at,
@@ -443,6 +452,9 @@ router.post('/businesses', async (request, response) => {
       final_cta_title: typeof body.final_cta_title === 'string' ? body.final_cta_title.trim() : null,
       final_cta_description: typeof body.final_cta_description === 'string' ? body.final_cta_description.trim() : null,
       final_cta_button: typeof body.final_cta_button === 'string' ? body.final_cta_button.trim() : null,
+      cta_text: typeof body.cta_text === 'string' ? body.cta_text.trim() : null,
+      cta_url: typeof body.cta_url === 'string' ? body.cta_url.trim() : null,
+      working_hours: typeof body.working_hours === 'string' ? body.working_hours.trim() : null,
     }).filter(([, value]) => value) as Array<[string, string | null]>;
     settings.push(...Object.entries(seoSettings.values) as Array<[string, string | null]>);
     for (const [key, value] of settings) {
@@ -690,6 +702,7 @@ router.patch('/businesses/:id', async (request, response) => {
       'about_title', 'about_eyebrow', 'about_description', 'about_points', 'about_image',
       'highlights_title', 'highlights_eyebrow',
       'final_cta_title', 'final_cta_description', 'final_cta_button',
+      'cta_text', 'cta_url', 'working_hours',
     ];
     if (updates.length === 0 && subscriptionUpdates.length === 0 && !businessSettingFields.some((field) => typeof body[field] === 'string') && Object.keys(seoSettings.values).length === 0) {
       await connection.rollback();
@@ -716,6 +729,7 @@ router.patch('/businesses/:id', async (request, response) => {
       'about_title', 'about_eyebrow', 'about_description', 'about_points', 'about_image',
       'highlights_title', 'highlights_eyebrow',
       'final_cta_title', 'final_cta_description', 'final_cta_button',
+      'cta_text', 'cta_url', 'working_hours',
     ] as const) {
       if (typeof body[field] === 'string') settingsToSave.push([field, body[field].trim() || null]);
     }
