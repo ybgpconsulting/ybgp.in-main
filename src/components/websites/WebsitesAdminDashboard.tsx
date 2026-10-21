@@ -14,6 +14,7 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
+import { CategorySelectField } from './businessCategories';
 import {
   isValidOptionalImageUrl,
   OG_DESCRIPTION_MAX_LENGTH,
@@ -97,7 +98,7 @@ const yearFromToday = () => {
 const emptyForm = (): FormValues => ({
   name: '',
   slug: '',
-  category: 'Business',
+  category: '',
   description: '',
   phone: '',
   whatsapp: '',
@@ -311,8 +312,8 @@ export function WebsitesAdminDashboard() {
 
   const createBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.owner_name.trim() || !form.owner_email.trim()) {
-      setError('Business name, owner name, and owner email are required.');
+    if (!form.name.trim() || !form.category.trim() || !form.owner_name.trim() || !form.owner_email.trim()) {
+      setError('Business name, category, owner name, and owner email are required.');
       return;
     }
     if (form.owner_password.length < 8) {
@@ -605,6 +606,15 @@ export function WebsitesAdminDashboard() {
                       onChange={(value) => updateField('slug', value)}
                       placeholder="Auto-generated from business name if blank"
                     />
+                    <div className="sm:col-span-2">
+                      <CategorySelectField
+                        label="Category"
+                        value={form.category}
+                        onChange={(value) => updateField('category', value)}
+                        onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
+                        required
+                      />
+                    </div>
                   </FormSection>
 
                   <FormSection title="Owner login credentials">
