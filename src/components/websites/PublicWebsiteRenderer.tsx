@@ -298,7 +298,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
               {storyPoints.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
             </div>
-            <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+            {!clinicLayout ? (
+              <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -566,12 +568,12 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               <img src={heroImage} alt="" className="h-full w-full object-cover object-center" loading="eager" fetchPriority="high" />
             </div>
           </section>
-        ) : (
+        ) : clinicLayout ? null : (
           <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[650px] lg:grid-cols-[0.82fr_1.18fr]">
             <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em]" style={{ color: theme.label }}>{heroEyebrow}</p>
-              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]">{heroTitle}</h1>
-              <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
+              <h1 className="mt-5 w-full font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]">{heroTitle}</h1>
+              <p className="mt-6 w-full text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
                   {ctaText} <ArrowRight className="h-4 w-4" />
@@ -612,7 +614,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
         {/* Highlights Section */}
         <section id={collectionId} className="scroll-mt-24 mx-auto max-w-[1440px] px-4 py-16 sm:px-6 sm:py-20 lg:px-10 lg:pb-24">
-          <div className={`mb-8 ${jewelleryLayout ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
+          <div className={`mb-8 ${clinicLayout ? 'w-full' : jewelleryLayout ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
               {highlightsEyebrow}
             </p>
@@ -766,7 +768,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
         {/* Gallery Section */}
         <section id="gallery" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          <div className={`mb-8 ${jewelleryLayout || astrologyLayout ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
+          <div className={`mb-8 ${clinicLayout ? 'w-full' : jewelleryLayout || astrologyLayout ? 'mx-auto max-w-xl text-center' : 'max-w-2xl'}`}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>
               {clinicLayout
                 ? 'Clinical infrastructure'
@@ -949,7 +951,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 hover:underline"
             >
-              <span>Designed &amp; Powered by YBGP</span>
+              <span>Designed &amp; Powered by</span>
+              <img src="/Black%20and%20Gold%20YBGP%20Logo.png" alt="YBGP" className="h-5 w-auto object-contain" />
             </a>
           </div>
         </div>
