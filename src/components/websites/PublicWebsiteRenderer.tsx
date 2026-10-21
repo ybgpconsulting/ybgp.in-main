@@ -264,7 +264,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           <div className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
             <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{storyTitle}</h2>
-            <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
+            <p className={`mt-5 ${clinicLayout ? 'w-full' : 'max-w-xl'} text-base leading-relaxed`} style={{ color: theme.muted }}>{storyDescription}</p>
             <div className="mt-6 space-y-2.5">
               {storyPoints.map((point) => (
                 <div key={point} className="flex items-center gap-2 text-sm font-medium">
