@@ -204,7 +204,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
 
   const navItems = clinicLayout
     ? [
-        { label: 'Home', href: '#home' },
+        { label: 'Home', href: '#about' },
         { label: 'Departments', href: `#${collectionId}` },
         { label: 'Consultations', href: '#bestsellers' },
         { label: 'Clinical Care', href: '#about' },
@@ -256,6 +256,68 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                 { label: 'Enquire', href: '#contact' },
               ];
 
+  const storySection = (
+    <section id="about" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
+      {foodLayout ? (
+        <div className="grid overflow-hidden lg:grid-cols-[1fr_1fr]" style={{ background: theme.panelStrong }}>
+          <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[420px] lg:h-[560px]" loading="lazy" />
+          <div className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+            <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{storyTitle}</h2>
+            <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
+            <div className="mt-6 space-y-2.5">
+              {storyPoints.map((point) => (
+                <div key={point} className="flex items-center gap-2 text-sm font-medium">
+                  <span className="text-[#a04a2b]">✓</span> {point}
+                </div>
+              ))}
+            </div>
+            <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+          </div>
+        </div>
+      ) : isService ? (
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
+          <div className="relative">
+            <img src={storyImage} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
+            <span className="absolute bottom-4 left-4 max-w-[260px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>
+              {clinicLayout
+                ? 'Patient-first clinical care.'
+                : astrologyLayout
+                ? 'Ancient wisdom, modern clarity.'
+                : travelLayout
+                ? 'Wanderlust planned to perfection.'
+                : isModern
+                ? 'Thoughtful work, made personal.'
+                : 'A softer kind of salon day.'}
+            </span>
+          </div>
+          <div className="max-w-xl py-3 lg:py-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+            <h2 className="mt-4 font-heading text-3xl font-medium leading-tight tracking-[-0.025em] sm:text-4xl lg:text-5xl">{storyTitle}</h2>
+            <p className="mt-5 text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
+            <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
+              {storyPoints.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
+            </div>
+            <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+          </div>
+        </div>
+      ) : (
+        <div className={`grid gap-8 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12 ${jewelleryLayout ? 'bg-[#181512] border border-[#2e2720] text-[#f7f4ee]' : 'bg-[#eae4dc]'}`}>
+          <div className="flex flex-col justify-center">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
+            <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{storyTitle}</h2>
+            <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{storyDescription}</p>
+            <div className="mt-6 space-y-2">
+              {storyPoints.map((point) => <p key={point} className={`text-sm font-medium ${jewelleryLayout ? 'text-[#e0c297]' : 'text-[#211a13]'}`}>✦ {point}</p>)}
+            </div>
+            <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
+          </div>
+          <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
+        </div>
+      )}
+    </section>
+  );
+
   return (
     <div className={`min-h-screen ${foodLayout ? 'font-sans' : ''}`} style={{ background: theme.pageBg, color: theme.text }}>
       {/* Sticky Top Demo Notice Banner */}
@@ -297,7 +359,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
       {/* Sticky Blurred Brand Header */}
       <header className="sticky top-0 z-50 border-b transition-colors" style={{ background: theme.headerSurface, borderColor: theme.border, backdropFilter: 'blur(18px)' }}>
         <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3.5 sm:px-6 lg:px-10">
-          <a href="#home" className="flex min-w-0 items-center gap-3" aria-label={`${business.name} home`}>
+          <a href={clinicLayout ? '#about' : '#home'} className="flex min-w-0 items-center gap-3" aria-label={`${business.name} home`}>
             {safeImageUrl(business.logo) ? (
               <img src={safeImageUrl(business.logo)} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
             ) : (
@@ -367,64 +429,9 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
       </header>
 
       <main>
+        {clinicLayout ? storySection : null}
         {/* Full Storefront Hero */}
-        {clinicLayout ? (
-          <section id="home" className="mx-auto grid max-w-[1440px] overflow-hidden lg:min-h-[660px] lg:grid-cols-[0.88fr_1.12fr]">
-            <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-10 sm:py-16 lg:order-1 lg:px-16">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1 text-xs font-semibold" style={{ background: theme.accentSoft, color: theme.accentDark }}>
-                <span className="h-2 w-2 rounded-full bg-[#1e6654] animate-pulse" />
-                <span>Verified Outpatient &amp; Specialist Care</span>
-              </div>
-              <h1 className="mt-5 max-w-xl font-heading text-4xl font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-5xl lg:text-[4.75rem]" style={{ color: theme.accentDark }}>{heroTitle}</h1>
-              <p className="mt-6 max-w-md text-base leading-relaxed sm:text-lg" style={{ color: theme.muted }}>{business.description || seo.description || defaults.hero.description}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <a href={ctaUrl} target={ctaUrl.startsWith('http') ? '_blank' : undefined} rel={ctaUrl.startsWith('http') ? 'noopener noreferrer' : undefined} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white shadow-sm transition-transform hover:-translate-y-0.5 sm:text-base" style={{ background: theme.cta }}>
-                  {ctaText} <ArrowRight className="h-4 w-4" />
-                </a>
-                <a href={`#${collectionId}`} className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>
-                  View Departments
-                </a>
-                {directionsUrl ? <a href={directionsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-full border px-5 py-3 text-sm font-semibold sm:text-base" style={{ borderColor: theme.border, color: theme.text }}>Clinic Directions</a> : null}
-              </div>
-              <div className="mt-10 border-t pt-5 text-xs font-medium uppercase tracking-[0.18em]" style={{ borderColor: theme.border, color: theme.muted }}>
-                {displayWorkingHours || 'Experienced Doctors · Sanitized Facility · Compassionate Care'}
-              </div>
-            </div>
-            <div className="order-1 flex h-[340px] items-center justify-center overflow-hidden bg-[#e6f1ed] p-6 sm:h-[450px] lg:order-2 lg:h-[660px]">
-              <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/80 bg-white/95 p-6 shadow-[0_24px_60px_rgba(18,70,54,0.14)] sm:p-8">
-                <div className="flex items-center justify-between border-b border-[#e1ede8] pb-4">
-                  <div className="flex items-center gap-2.5">
-                    <span className="grid h-8 w-8 place-items-center rounded-full bg-[#e0f0ea] text-sm font-bold text-[#1e6654]">⚕</span>
-                    <div>
-                      <span className="block text-xs font-bold uppercase tracking-[0.16em] text-[#175445]">{business.name}</span>
-                      <span className="block text-[10px] text-[#587464]">{business.category}</span>
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-[#e0f0ea] px-3 py-1 text-[10px] font-bold text-[#175445]">OPD Open</span>
-                </div>
-                <div className="mt-5 grid gap-4 sm:grid-cols-[1.1fr_0.9fr]">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1e6654]">Patient-Centered Care</p>
-                    <p className="mt-2 font-heading text-xl font-bold leading-snug text-[#0d382d] sm:text-2xl">Consult specialist doctors with complete peace of mind.</p>
-                    <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-[#4a665d]">{business.description || defaults.hero.description}</p>
-                    <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-medium text-[#175445]">
-                      <span className="rounded-md bg-[#eaf4f0] px-2.5 py-1">✓ Verified Doctors</span>
-                      <span className="rounded-md bg-[#eaf4f0] px-2.5 py-1">✓ In-house Labs</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col justify-center gap-2">
-                    {(categories.length > 0 ? categories.map((c) => ({ title: c.name })) : defaults.highlights).slice(0, 3).map((item, idx) => (
-                      <div key={item.title} className="flex items-center gap-2.5 rounded-xl border border-[#e1ede8] bg-[#f8fbf9] p-2.5 text-xs">
-                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#e0f0ea] font-bold text-[#175445]">0{idx + 1}</span>
-                        <span className="truncate font-semibold text-[#122620]">{item.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : astrologyLayout ? (
+        {astrologyLayout ? (
           <section id="home" className="relative mx-auto mt-3 min-h-[580px] max-w-[1440px] overflow-hidden rounded-3xl bg-gradient-to-br from-[#16122c] via-[#211a42] to-[#120f24] text-[#f7f5ee] shadow-[0_24px_70px_rgba(20,16,40,0.35)] sm:mt-6 sm:min-h-[640px] lg:min-h-[700px]">
             <div className="absolute inset-0 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
             <div className="relative mx-auto grid min-h-[580px] max-w-7xl items-center gap-8 px-6 py-14 sm:min-h-[640px] sm:px-10 lg:min-h-[700px] lg:grid-cols-[1.1fr_0.9fr] lg:px-14">
@@ -648,66 +655,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
           )}
         </section>
 
-        {/* Story Section */}
-        <section id="about" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
-          {foodLayout ? (
-            <div className="grid overflow-hidden lg:grid-cols-[1fr_1fr]" style={{ background: theme.panelStrong }}>
-              <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[420px] lg:h-[560px]" loading="lazy" />
-              <div className="flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
-                <h2 className="mt-4 max-w-xl font-heading text-3xl font-semibold leading-tight sm:text-4xl">{storyTitle}</h2>
-                <p className="mt-5 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
-                <div className="mt-6 space-y-2.5">
-                  {storyPoints.map((point) => (
-                    <div key={point} className="flex items-center gap-2 text-sm font-medium">
-                      <span className="text-[#a04a2b]">✓</span> {point}
-                    </div>
-                  ))}
-                </div>
-                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold" style={{ color: theme.accentStrong }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
-              </div>
-            </div>
-          ) : isService ? (
-            <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
-              <div className="relative">
-                <img src={storyImage} alt="" className="h-[380px] w-full object-cover sm:h-[520px] lg:h-[600px]" loading="lazy" />
-                <span className="absolute bottom-4 left-4 max-w-[260px] bg-white/90 px-4 py-3 font-heading text-lg italic shadow-sm sm:bottom-8 sm:left-8 sm:text-xl" style={{ color: theme.accentDark }}>
-                  {clinicLayout
-                    ? 'Patient-first clinical care.'
-                    : astrologyLayout
-                    ? 'Ancient wisdom, modern clarity.'
-                    : travelLayout
-                    ? 'Wanderlust planned to perfection.'
-                    : isModern
-                    ? 'Thoughtful work, made personal.'
-                    : 'A softer kind of salon day.'}
-                </span>
-              </div>
-              <div className="max-w-xl py-3 lg:py-10">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
-                <h2 className="mt-4 font-heading text-3xl font-medium leading-tight tracking-[-0.025em] sm:text-4xl lg:text-5xl">{storyTitle}</h2>
-                <p className="mt-5 text-base leading-relaxed" style={{ color: theme.muted }}>{storyDescription}</p>
-                <div className="mt-7 space-y-3 border-t pt-5" style={{ borderColor: theme.border }}>
-                  {storyPoints.map((point) => <p key={point} className="text-sm font-medium">✓ {point}</p>)}
-                </div>
-                <a href="#contact" className="mt-8 inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold text-white" style={{ background: theme.cta }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
-              </div>
-            </div>
-          ) : (
-            <div className={`grid gap-8 p-5 sm:p-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-12 lg:p-12 ${jewelleryLayout ? 'bg-[#181512] border border-[#2e2720] text-[#f7f4ee]' : 'bg-[#eae4dc]'}`}>
-              <div className="flex flex-col justify-center">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: theme.label }}>{storyEyebrow}</p>
-                <h2 className="mt-4 font-heading text-3xl font-normal leading-tight tracking-[-0.03em] sm:text-4xl">{storyTitle}</h2>
-                <p className="mt-5 text-sm leading-relaxed sm:text-base" style={{ color: theme.muted }}>{storyDescription}</p>
-                <div className="mt-6 space-y-2">
-                  {storyPoints.map((point) => <p key={point} className={`text-sm font-medium ${jewelleryLayout ? 'text-[#e0c297]' : 'text-[#211a13]'}`}>✦ {point}</p>)}
-                </div>
-                <a href="#contact" className="mt-7 inline-flex w-fit items-center gap-2 border-b pb-2 text-sm font-semibold" style={{ borderColor: theme.accent, color: theme.accentDark }}>{defaults.story.cta} <ArrowRight className="h-4 w-4" /></a>
-              </div>
-              <img src={storyImage} alt="" className="h-[320px] w-full object-cover sm:h-[460px] lg:h-[580px]" loading="lazy" />
-            </div>
-          )}
-        </section>
+        {!clinicLayout ? storySection : null}
 
         {/* Offerings & Products Section */}
         <section id="bestsellers" className="scroll-mt-24 mx-auto max-w-[1440px] px-4 pb-16 sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
@@ -888,7 +836,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             }`}
             style={!jewelleryLayout && !astrologyLayout ? { background: theme.panelStrong } : undefined}
           >
-            <div className="max-w-2xl">
+            <div className="min-w-0 flex-1">
               <p
                 className="text-[11px] font-semibold uppercase tracking-[0.24em]"
                 style={{ color: jewelleryLayout ? '#c5a77e' : astrologyLayout ? '#f59e0b' : theme.label }}
@@ -922,7 +870,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 sm:text-base shadow-sm"
               style={{ background: astrologyLayout ? '#d97706' : theme.cta }}
             >
-              {finalCtaButton} <MessageCircle className="h-5 w-5" />
+              {finalCtaButton} <SocialBrandIcon platform="whatsapp" size={20} />
             </a>
           </div>
         </section>
