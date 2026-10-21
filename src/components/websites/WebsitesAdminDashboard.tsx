@@ -14,8 +14,6 @@ import {
   SignOutButton,
   TextAreaField,
 } from './shared';
-import { getWebsiteTemplateDemoSlug, getWebsiteTemplateDesign, getWebsiteTemplatePreviewImage, inferTemplateSlugFromCategory } from './templateDesigns';
-import { CategorySelectField } from './businessCategories';
 import {
   isValidOptionalImageUrl,
   OG_DESCRIPTION_MAX_LENGTH,
@@ -67,9 +65,7 @@ interface BusinessSummary {
   cta_text?: string | null;
   cta_url?: string | null;
   working_hours?: string | null;
-  template_id?: string | null;
   template_name: string | null;
-  template_slug?: string | null;
   plan: string | null;
   subscription_status: 'ACTIVE' | 'EXPIRED' | null;
   amount: string | null;
@@ -101,7 +97,7 @@ const yearFromToday = () => {
 const emptyForm = (): FormValues => ({
   name: '',
   slug: '',
-  category: '',
+  category: 'Business',
   description: '',
   phone: '',
   whatsapp: '',
@@ -210,16 +206,7 @@ export function WebsitesAdminDashboard() {
   useEffect(() => { void load(); }, [load]);
 
   const updateField = (key: string, value: string) => {
-    setForm((previous) => {
-      const next = { ...previous, [key]: value };
-      if (key === 'category' && value.trim()) {
-        const suggested = inferTemplateSlugFromCategory(value);
-        if (templates.some((t) => t.slug === suggested)) {
-          next.template_slug = suggested;
-        }
-      }
-      return next;
-    });
+    setForm((previous) => ({ ...previous, [key]: value }));
   };
   const openCreate = () => {
     businessFormRequestId.current += 1;
@@ -255,10 +242,6 @@ export function WebsitesAdminDashboard() {
         name: current.name,
         slug: current.slug,
         category: current.category,
-        template_slug: current.template_slug
-          ?? templates.find((t) => t.id === current.template_id)?.slug
-          ?? inferTemplateSlugFromCategory(current.category)
-          ?? 'modern-business',
         description: current.description ?? '',
         phone: current.phone ?? '',
         whatsapp: current.whatsapp ?? '',
@@ -328,8 +311,8 @@ export function WebsitesAdminDashboard() {
 
   const createBusiness = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form.name.trim() || !form.category.trim() || !form.owner_name.trim() || !form.owner_email.trim()) {
-      setError('Business name, category, owner name, and owner email are required.');
+    if (!form.name.trim() || !form.owner_name.trim() || !form.owner_email.trim()) {
+      setError('Business name, owner name, and owner email are required.');
       return;
     }
     if (form.owner_password.length < 8) {
@@ -398,7 +381,6 @@ export function WebsitesAdminDashboard() {
         : {
             name: form.name,
             slug: form.slug,
-            category: form.category,
             description: form.description,
             phone: form.phone,
             whatsapp: form.whatsapp,
@@ -436,7 +418,6 @@ export function WebsitesAdminDashboard() {
             og_title: form.og_title,
             og_description: form.og_description,
             og_image: form.og_image,
-            template_slug: form.template_slug,
             status: form.published === 'true' ? 'ACTIVE' : 'INACTIVE',
           };
       await apiRequest(`/api/admin/businesses/${selectedBusiness.id}`, {
@@ -494,51 +475,6 @@ export function WebsitesAdminDashboard() {
   const drafts = businesses.filter((business) => business.status === 'INACTIVE').length;
   const enquiries = businesses.reduce((count, business) => count + Number(business.enquiry_count || 0), 0);
   const expiring = businesses.filter(isExpiringSoon).length;
-  const selectedTemplate = templates.find((template) => template.slug === form.template_slug) ?? null;
-
-  const renderSynchronizedTemplateBadge = () => {
-    const template = selectedTemplate;
-    const demoSlug = template ? getWebsiteTemplateDemoSlug(template.slug) : 'demo-modern';
-    return (
-      <div className="rounded-2xl border border-[#ded8cc] bg-[#f9f8f4] p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[#cfc8bc] bg-[#e5eee7]">
-              <img
-                src={template ? getWebsiteTemplatePreviewImage(template.slug) : '/demo-sites/modern/workspace.jpg'}
-                alt=""
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#8D7026]">Storefront Template</span>
-                <span className="rounded-full bg-[#0E2B22] px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
-                  {template?.name || 'Modern Business'}
-                </span>
-                <span className="rounded-full border border-emerald-600/30 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                  Auto-Synchronized
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-[#68746c]">
-                Design, typography, and colors are automatically locked to <strong>{form.category || 'the business category'}</strong>.
-              </p>
-            </div>
-          </div>
-          <a
-            href={`/websites/${demoSlug}/`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex shrink-0 items-center gap-1.5 text-xs font-bold text-[#0E2B22] underline decoration-[#c6b676] underline-offset-4 hover:text-[#8D7026]"
-          >
-            Preview {template?.name || 'Template'} Demo ↗
-          </a>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <main className="min-h-screen bg-[#f7f6f2] px-4 py-7 text-[#0E2B22] sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl">
@@ -669,18 +605,7 @@ export function WebsitesAdminDashboard() {
                       onChange={(value) => updateField('slug', value)}
                       placeholder="Auto-generated from business name if blank"
                     />
-                    <div className="sm:col-span-2">
-                      <CategorySelectField
-                        label="Category"
-                        value={form.category}
-                        onChange={(value) => updateField('category', value)}
-                        onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
-                        required
-                      />
-                    </div>
                   </FormSection>
-
-                  {renderSynchronizedTemplateBadge()}
 
                   <FormSection title="Owner login credentials">
                     <Field
@@ -750,7 +675,7 @@ export function WebsitesAdminDashboard() {
                     {[
                       { id: 'content', label: '🎨 Storefront Content' },
                       { id: 'contact', label: '📞 Contact & Timings' },
-                      { id: 'profile', label: '🏢 Profile & Category' },
+                      { id: 'profile', label: '🏢 Business Profile' },
                       { id: 'social', label: '🌐 Social Links' },
                       { id: 'seo', label: '🔍 Google SEO' },
                       { id: 'subscription', label: '💳 Subscription' },
@@ -774,8 +699,6 @@ export function WebsitesAdminDashboard() {
                   {/* Tab 1: Storefront Content */}
                   {editTab === 'content' ? (
                     <div className="space-y-6">
-                      {renderSynchronizedTemplateBadge()}
-
                       <div className="rounded-2xl border border-amber-800/15 bg-amber-50/50 p-4 text-xs leading-relaxed text-[#73521e]">
                         <p className="font-semibold text-[#8D7026]">💡 Easy Customization</p>
                         <p className="mt-0.5">
@@ -972,7 +895,7 @@ export function WebsitesAdminDashboard() {
                     </FormSection>
                   ) : null}
 
-                  {/* Tab 3: Business Profile & Category */}
+                  {/* Tab 3: Business Profile */}
                   {editTab === 'profile' ? (
                     <FormSection title="Business Profile">
                       <Field
@@ -987,18 +910,6 @@ export function WebsitesAdminDashboard() {
                         onChange={(value) => updateField('slug', value)}
                         required
                       />
-                      <div className="sm:col-span-2">
-                        <CategorySelectField
-                          label="Category"
-                          value={form.category}
-                          onChange={(value) => updateField('category', value)}
-                          onTemplateSuggest={(templateSlug) => updateField('template_slug', templateSlug)}
-                          required
-                        />
-                        <p className="mt-1 text-xs text-[#68746c]">
-                          Note: Selecting a category automatically synchronizes and updates the website template design.
-                        </p>
-                      </div>
                       <div className="sm:col-span-2">
                         <TextAreaField
                           label="Brief business summary"
