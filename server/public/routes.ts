@@ -37,6 +37,7 @@ interface BusinessRow extends RowDataPacket {
 interface CategoryRow extends RowDataPacket {
   id: string;
   name: string;
+  image: string | null;
   sort_order: number;
   status: 'ACTIVE' | 'INACTIVE';
 }
@@ -166,7 +167,7 @@ router.get('/websites/:slug', async (request, response) => {
   }
 
   const [categoryRows] = await pool.execute<CategoryRow[]>(
-    `SELECT id, name, sort_order, status
+    `SELECT id, name, image, sort_order, status
      FROM categories
      WHERE business_id = ? AND status = 'ACTIVE'
      ORDER BY sort_order ASC, id ASC`,
@@ -233,6 +234,7 @@ router.get('/websites/:slug', async (request, response) => {
     categories: categoryRows.map((item) => ({
       id: item.id,
       name: item.name,
+      image: item.image,
       sort_order: item.sort_order,
       status: item.status,
     })),

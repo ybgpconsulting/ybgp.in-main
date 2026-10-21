@@ -28,7 +28,7 @@ export interface BusinessWebsiteResponse {
   };
   settings: Record<string, string>;
   primaryAction?: { type: PrimaryAction; text: string; url: string | null };
-  categories: Array<{ id: string; name: string; status: string }>;
+  categories: Array<{ id: string; name: string; image?: string | null; status: string }>;
   products: Array<{ id: string; category_id: string | null; name: string; slug: string; description: string | null; price: string | null; image: string | null; status: string }>;
   gallery: Array<{ id: string; title: string; image: string; status: string }>;
   seo: {
@@ -199,10 +199,10 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const finalCtaButton = settings.final_cta_button || defaults.finalCta.button;
 
   const highlightItems = categories.length > 0
-    ? categories.slice(0, 4).map((cat, idx) => ({
+    ? categories.map((cat, idx) => ({
         title: cat.name,
         subtitle: `Explore our specialized ${cat.name.toLowerCase()} offerings and solutions.`,
-        image: defaults.highlights[idx % defaults.highlights.length]?.image || heroImage,
+        image: (cat.image && resolveBusinessImageUrl(cat.image)) || defaults.highlights[idx % defaults.highlights.length]?.image || heroImage,
         alt: cat.name,
       }))
     : defaults.highlights;

@@ -14,7 +14,10 @@ const isExpectedRepeatError = (file: string, statement: string, error: unknown):
       code === 'ER_DUP_KEYNAME') ||
     (file === '002_tenant_safe_product_categories.sql' &&
       statement.startsWith('ALTER TABLE products\n  DROP FOREIGN KEY') &&
-      code === 'ER_CANT_DROP_FIELD_OR_KEY')
+      code === 'ER_CANT_DROP_FIELD_OR_KEY') ||
+    (file === '005_category_images.sql' &&
+      statement.startsWith('ALTER TABLE categories') &&
+      code === 'ER_DUP_FIELDNAME')
   );
 };
 

@@ -40,6 +40,7 @@ interface CategoryRow extends RowDataPacket {
   id: string;
   business_id: string;
   name: string;
+  image: string | null;
   sort_order: number;
   status: 'ACTIVE' | 'INACTIVE';
 }
@@ -599,7 +600,7 @@ router.get('/categories', async (request, response) => {
   }
 
   const [rows] = await pool.execute<CategoryRow[]>(
-    'SELECT id, business_id, name, sort_order, status FROM categories WHERE business_id = ? ORDER BY sort_order ASC, id ASC',
+    'SELECT id, business_id, name, image, sort_order, status FROM categories WHERE business_id = ? ORDER BY sort_order ASC, id ASC',
     [businessId]
   );
 
@@ -626,16 +627,25 @@ router.post('/categories', async (request, response) => {
     response.status(400).json({ error: 'Display order must be a non-negative whole number' });
     return;
   }
+  if (body.image !== undefined && (
+    typeof body.image !== 'string' ||
+    body.image.length > 2048 ||
+    !isValidBusinessImageUrl(body.image.trim())
+  )) {
+    response.status(400).json({ error: 'Use an HTTP(S) image URL or a safe root-relative image path' });
+    return;
+  }
 
   const values: Array<string | number | null> = [
     businessId,
     body.name.trim(),
+    typeof body.image === 'string' && body.image.trim() ? body.image.trim() : null,
     typeof body.sort_order === 'number' ? body.sort_order : 0,
     body.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
   ];
 
   const [result] = await pool.execute(
-    'INSERT INTO categories (business_id, name, sort_order, status) VALUES (?, ?, ?, ?)',
+    'INSERT INTO categories (business_id, name, image, sort_order, status) VALUES (?, ?, ?, ?, ?)',
     values
   );
 
@@ -672,6 +682,14 @@ router.patch('/categories/:id', async (request, response) => {
     response.status(400).json({ error: 'Display order must be a non-negative whole number' });
     return;
   }
+  if (body.image !== undefined && (
+    typeof body.image !== 'string' ||
+    body.image.length > 2048 ||
+    !isValidBusinessImageUrl(body.image.trim())
+  )) {
+    response.status(400).json({ error: 'Use an HTTP(S) image URL or a safe root-relative image path' });
+    return;
+  }
 
   const updates: Array<string> = [];
   const values: Array<string | number | null> = [];
@@ -684,6 +702,9 @@ router.patch('/categories/:id', async (request, response) => {
   }
   if (typeof body.sort_order === 'number') {
     updates.push('sort_order = ?'); values.push(body.sort_order);
+  }
+  if (typeof body.image === 'string') {
+    updates.push('image = ?'); values.push(body.image.trim() || null);
   }
 
   if (updates.length === 0) {
