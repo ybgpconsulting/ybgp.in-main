@@ -1,2 +1,0 @@
-ALTER TABLE categories
-  ADD COLUMN image VARCHAR(2048) NULL AFTER name;

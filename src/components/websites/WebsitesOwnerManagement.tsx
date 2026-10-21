@@ -41,7 +41,6 @@ interface OwnerBusiness {
 interface CategoryRecord {
   id: string;
   name: string;
-  image: string | null;
   sort_order: number;
   status: 'ACTIVE' | 'INACTIVE';
 }
@@ -395,15 +394,12 @@ export function ProductsManager({
 export function CategoriesManager({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
   const [categories, setCategories] = useState<CategoryRecord[]>([]);
   const [products, setProducts] = useState<ProductRecord[]>([]);
-  const [form, setForm] = useState({ name: '', image: '', status: 'ACTIVE', sort_order: '0' });
-  const [savedForm, setSavedForm] = useState({ name: '', image: '', status: 'ACTIVE', sort_order: '0' });
+  const [form, setForm] = useState({ name: '', status: 'ACTIVE', sort_order: '0' });
+  const [savedForm, setSavedForm] = useState({ name: '', status: 'ACTIVE', sort_order: '0' });
   const [editing, setEditing] = useState<string | null>(null);
   const { loading, setLoading, error, setError, success, setSuccess } = useLoadError();
   const [saving, setSaving] = useState(false);
   const isDirty = JSON.stringify(form) !== JSON.stringify(savedForm);
-  const imageError = form.image.trim() && !isValidBusinessImageUrl(form.image.trim())
-    ? 'Use an HTTP(S) image URL or a safe root-relative image path.'
-    : '';
   useUnsavedChanges(isDirty, onDirtyChange);
   const load = async () => {
     setLoading(true); setError('');
@@ -417,14 +413,12 @@ export function CategoriesManager({ onDirtyChange }: { onDirtyChange: (dirty: bo
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); }, []);
-  const reset = () => { const empty = { name: '', image: '', status: 'ACTIVE', sort_order: '0' }; setEditing(null); setForm(empty); setSavedForm(empty); };
+  const reset = () => { const empty = { name: '', status: 'ACTIVE', sort_order: '0' }; setEditing(null); setForm(empty); setSavedForm(empty); };
   const cancelEdit = () => { if (!isDirty || window.confirm('Discard your unsaved category changes?')) reset(); };
   const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!form.name.trim()) { setError('Enter a category name.'); return; }
     if (form.name.trim().length > 120) { setError('Category name must be 120 characters or fewer.'); return; }
-    if (form.image.length > 2048) { setError('Category image URL must be 2048 characters or fewer.'); return; }
-    if (imageError) { setError(imageError); return; }
     if (form.sort_order && (!Number.isInteger(Number(form.sort_order)) || Number(form.sort_order) < 0 || Number(form.sort_order) > 2147483647)) { setError('Display order must be a non-negative whole number.'); return; }
     setSaving(true); setError(''); setSuccess('');
     try {
@@ -448,25 +442,22 @@ export function CategoriesManager({ onDirtyChange }: { onDirtyChange: (dirty: bo
     try { await apiRequest(`/api/business/categories/${category.id}`, { method: 'DELETE' }); await load(); setSuccess('Category deleted.'); }
     catch (deleteError) { setError(deleteError instanceof Error ? deleteError.message : 'Unable to delete category'); }
   };
-  const edit = (category: CategoryRecord) => { if (isDirty && !window.confirm('Discard your unsaved category changes?')) return; const editForm = { name: category.name, image: category.image ?? '', status: category.status, sort_order: String(category.sort_order) }; setEditing(category.id); setForm(editForm); setSavedForm(editForm); setError(''); setSuccess(''); };
+  const edit = (category: CategoryRecord) => { if (isDirty && !window.confirm('Discard your unsaved category changes?')) return; const editForm = { name: category.name, status: category.status, sort_order: String(category.sort_order) }; setEditing(category.id); setForm(editForm); setSavedForm(editForm); setError(''); setSuccess(''); };
 
   return (
     <section className="rounded-2xl border border-[#e8e2d7] bg-white p-5 shadow-sm sm:p-6">
-      <PanelHeading title="Categories" description="Create clear sections and choose an image for each category on your public website." />
-      <form onSubmit={save} className="mb-6 grid gap-3 rounded-2xl bg-[#f8f7f3] p-4 sm:grid-cols-2 sm:items-end lg:grid-cols-[1.2fr_1.5fr_0.8fr_0.8fr_auto]">
+      <PanelHeading title="Categories" description="Create clear sections to help visitors browse your products and services." />
+      <form onSubmit={save} className="mb-6 grid gap-3 rounded-2xl bg-[#f8f7f3] p-4 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
         <Field label="Category name" value={form.name} onChange={(name) => setForm((current) => ({ ...current, name }))} required maxLength={120} placeholder="e.g. Cakes and pastries" />
-        <Field label="Category image URL or path (optional)" value={form.image} onChange={(image) => setForm((current) => ({ ...current, image }))} maxLength={2048} placeholder="https://example.com/category.jpg or /uploads/category.jpg" />
         <SelectField label="Visibility" value={form.status} onChange={(status) => setForm((current) => ({ ...current, status }))} options={[{ value: 'ACTIVE', label: 'Active' }, { value: 'INACTIVE', label: 'Inactive' }]} />
         <Field label="Display order" value={form.sort_order} onChange={(sort_order) => setForm((current) => ({ ...current, sort_order }))} type="number" min="0" max="2147483647" step="1" inputMode="numeric" />
         <div className="flex gap-2"><button className={buttonClassName} disabled={saving || !isDirty}>{saving ? 'Saving…' : editing ? 'Save' : 'Add'}</button>{editing ? <button className={secondaryButtonClassName} type="button" onClick={cancelEdit}>Cancel</button> : null}</div>
       </form>
-      {imageError ? <p className="-mt-3 mb-4 text-sm text-red-700" role="alert">{imageError}</p> : null}
-      {form.image && !imageError ? <div className="mb-4"><img src={resolveBusinessImageUrl(form.image)} alt="" className="h-28 w-44 rounded-lg border border-[#ded9cd] bg-white object-cover" onError={(event) => { event.currentTarget.src = '/og-image.svg'; }} /></div> : null}
       {error ? <div className="mb-4"><Notice>{error}</Notice></div> : null}{success ? <div className="mb-4"><Notice kind="success">{success}</Notice></div> : null}
       {loading ? <p className="py-4 text-sm text-[#68746c]">Loading categories…</p> : categories.length === 0 ? <EmptyState title="No categories yet" text="Add a category above to group your products or services." /> : (
         <div className="space-y-3">{categories.map((category) => (
           <article key={category.id} className="flex flex-col gap-3 rounded-xl border border-[#eee9df] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">{category.image ? <img src={resolveBusinessImageUrl(category.image)} alt="" className="h-12 w-16 rounded-lg border border-[#ded9cd] object-cover" onError={(event) => { event.currentTarget.src = '/og-image.svg'; }} /> : <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#edf2ee] font-bold text-[#214434]">{category.name.slice(0, 1).toUpperCase()}</div>}<div><h3 className="font-semibold">{category.name}</h3><p className="text-sm text-[#6d7870]">{products.filter((product) => product.category_id === category.id).length} products · Order {category.sort_order}</p></div><StatusPill active={category.status === 'ACTIVE'} /></div>
+            <div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-xl bg-[#edf2ee] font-bold text-[#214434]">{category.name.slice(0, 1).toUpperCase()}</div><div><h3 className="font-semibold">{category.name}</h3><p className="text-sm text-[#6d7870]">{products.filter((product) => product.category_id === category.id).length} products · Order {category.sort_order}</p></div><StatusPill active={category.status === 'ACTIVE'} /></div>
             <div className="flex gap-2"><button className={secondaryButtonClassName} onClick={() => edit(category)}>Edit</button><button className={secondaryButtonClassName} onClick={() => void remove(category)}>Delete</button></div>
           </article>
         ))}</div>
