@@ -622,7 +622,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
               {highlightsTitle}
             </h2>
             {business.description || categories.length === 0 ? (
-              <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>
+              <p className={`mt-4 ${clinicLayout ? 'w-full' : 'max-w-xl'} text-base leading-relaxed`} style={{ color: theme.muted }}>
                 {business.description || defaults.summary}
               </p>
             ) : null}
