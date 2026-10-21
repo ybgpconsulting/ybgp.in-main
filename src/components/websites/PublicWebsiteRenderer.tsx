@@ -176,7 +176,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     ? settings.about_points.split('\n').map((p) => p.trim()).filter(Boolean)
     : defaults.story.points;
   const storyImage = safeImageUrl(settings.about_image) || defaults.story.image;
-  const highlightsEyebrow = settings.highlights_eyebrow || (
+  const highlightsEyebrow = settings.highlights_eyebrow || (categories.length > 0
+    ? 'Categories' :
     clinicLayout ? 'Clinical care & departments' :
     astrologyLayout ? 'Jyotish & Vedic consultations' :
     travelLayout ? 'Curated tour packages & rentals' :
@@ -185,7 +186,8 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
     foodLayout ? 'From the counter' :
     'The collection'
   );
-  const highlightsTitle = settings.highlights_title || (
+  const highlightsTitle = settings.highlights_title || (categories.length > 0
+    ? 'Explore our categories' :
     clinicLayout ? 'Comprehensive medical care for you and your family.' :
     astrologyLayout ? 'Ancient Vedic wisdom interpreted for modern life.' :
     travelLayout ? 'Handcrafted holidays and reliable travel services.' :
@@ -198,14 +200,7 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
   const finalCtaDescription = settings.final_cta_description || defaults.finalCta.description;
   const finalCtaButton = settings.final_cta_button || defaults.finalCta.button;
 
-  const highlightItems = categories.length > 0
-    ? categories.slice(0, 4).map((cat, idx) => ({
-        title: cat.name,
-        subtitle: `Explore our specialized ${cat.name.toLowerCase()} offerings and solutions.`,
-        image: defaults.highlights[idx % defaults.highlights.length]?.image || heroImage,
-        alt: cat.name,
-      }))
-    : defaults.highlights;
+  const highlightItems = categories.length === 0 ? defaults.highlights : [];
 
   const navItems = clinicLayout
     ? [
@@ -617,23 +612,40 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
             <h2 className="mt-3 font-heading text-3xl font-semibold leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
               {highlightsTitle}
             </h2>
-            <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>{business.description || defaults.summary}</p>
+            {business.description || categories.length === 0 ? (
+              <p className="mt-4 max-w-xl text-base leading-relaxed" style={{ color: theme.muted }}>
+                {business.description || defaults.summary}
+              </p>
+            ) : null}
           </div>
 
-          <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-2 xl:grid-cols-4' : isService ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
-            {highlightItems.map((item, index) => (
-              <article key={item.title + index} className={`${isService ? 'group' : foodLayout ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={foodLayout ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
-                <div className={`overflow-hidden ${foodLayout ? 'h-[260px] sm:h-[300px]' : isService ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
-                  <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
-                </div>
-                <div className={`${foodLayout ? 'p-5' : isService ? 'pt-5' : 'pt-4'}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.label }}>{isService ? `0${index + 1} / ${business.category}` : item.title}</p>
-                  <h3 className="mt-2 font-heading text-xl font-semibold sm:text-2xl" style={{ color: theme.accentDark }}>{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed" style={{ color: theme.muted }}>{item.subtitle}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          {categories.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {categories.map((category) => (
+                <article key={category.id} className="flex min-h-36 items-center gap-4 rounded-2xl border p-5 sm:p-6" style={{ borderColor: theme.border, background: theme.panel }}>
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full text-lg font-semibold" style={{ background: theme.panelStrong, color: theme.accentStrong }}>
+                    {category.name.charAt(0).toUpperCase()}
+                  </span>
+                  <h3 className="font-heading text-lg font-semibold sm:text-xl" style={{ color: theme.accentDark }}>{category.name}</h3>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className={`grid gap-5 ${foodLayout ? 'sm:grid-cols-2 xl:grid-cols-4' : isService ? 'sm:grid-cols-2 lg:gap-x-8 lg:gap-y-10' : 'sm:grid-cols-2 lg:grid-cols-4 lg:gap-8'}`}>
+              {highlightItems.map((item, index) => (
+                <article key={item.title + index} className={`${isService ? 'group' : foodLayout ? 'overflow-hidden border shadow-[0_16px_36px_rgba(61,34,18,0.08)]' : 'overflow-hidden border-b pb-5'}`} style={foodLayout ? { background: theme.panel, borderColor: theme.border } : !isService ? { borderColor: theme.border } : undefined}>
+                  <div className={`overflow-hidden ${foodLayout ? 'h-[260px] sm:h-[300px]' : isService ? 'h-[300px] sm:h-[360px]' : `h-[300px] sm:h-[380px] ${index % 2 === 1 ? 'lg:mt-12' : ''}`}`}>
+                    <img src={item.image} alt={item.alt} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" loading="lazy" />
+                  </div>
+                  <div className={`${foodLayout ? 'p-5' : isService ? 'pt-5' : 'pt-4'}`}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em]" style={{ color: theme.label }}>{isService ? `0${index + 1} / ${business.category}` : item.title}</p>
+                    <h3 className="mt-2 font-heading text-xl font-semibold sm:text-2xl" style={{ color: theme.accentDark }}>{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed" style={{ color: theme.muted }}>{item.subtitle}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Story Section */}
@@ -755,16 +767,6 @@ export function PublicWebsiteRenderer({ slug, initialData }: { slug: string; ini
                 : 'Ask about a piece'} <ArrowRight className="h-4 w-4" />
             </a>
           </div>
-
-          {categories.length > 0 ? (
-            <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
-              {categories.map((category) => (
-                <a key={category.id} href={`#category-${category.id}`} className="shrink-0 rounded-full border px-4 py-2 text-sm font-semibold" style={{ borderColor: theme.border, background: theme.panel, color: theme.text }}>
-                  {category.name}
-                </a>
-              ))}
-            </div>
-          ) : null}
 
           {products.length > 0 ? (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
