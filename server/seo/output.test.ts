@@ -99,6 +99,10 @@ test('private dashboards, demos and thin location templates are excluded from in
     assert.equal(sitemap.includes(routePath), false, `Private or noindex route is in sitemap: ${routePath}`);
   }
 
+  const websitesAlias = await readPage('/websites/');
+  assert.match(websitesAlias, /<meta\s+name="robots"\s+content="noindex,\s*(?:nofollow|follow)"/i, '/websites/');
+  assert.equal(new URL(getMetaContent(websitesAlias, /<link\s+rel="canonical"\s+href="([^"]*)"/i)).pathname, '/business-website/');
+
   const dashboard = await readPage('/websites/admin/');
   assert.doesNotMatch(dashboard, /rel="canonical"/i);
   assert.doesNotMatch(dashboard, /application\/ld\+json/i);

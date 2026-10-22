@@ -14,6 +14,9 @@ RewriteCond %{HTTPS} !=on
 RewriteCond %{HTTP_HOST} ^([a-z0-9-]+\.hostingersite\.com)(?::[0-9]+)?$ [NC]
 RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L,NE]
 
+# Canonicalize the old /websites landing page to the supported business-website page.
+RewriteRule ^websites/?$ /business-website/ [R=301,L,NE]
+
 # Consolidate retired consultant-location URLs into the primary Noida page.
 RewriteRule ^(?:business-consultant-in-noida|business-consultant-delhi|business-consultant-gurugram|business-consultant-ghaziabad)/?$ /business-consultant-noida/ [R=301,L,NE]
 

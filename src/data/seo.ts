@@ -17,6 +17,7 @@ export interface SeoRoute {
 }
 
 const noindexRoutes = new Set([
+  'websites',
   'website-development-company-gurugram',
   'digital-marketing-agency-ghaziabad',
   ...PROJECTS
@@ -73,7 +74,7 @@ export const getSeoRoute = (slug: string): SeoRoute => {
   const details = getRouteDetails(slug);
   const canonicalPath = slug === 'home'
     ? '/'
-    : slug === 'websites'
+    : slug === 'websites' || slug === 'business-website'
       ? '/business-website/'
       : `/${slug}/`;
 

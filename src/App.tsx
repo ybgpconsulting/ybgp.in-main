@@ -24,6 +24,7 @@ const ProjectCaseStudy = lazy(() => import('./components/ProjectCaseStudy').then
 
 export default function App() {
   const routeSlug = window.location.pathname.replace(/^\/+|\/+$/g, '');
+  const isCanonicalWebsitesAlias = routeSlug === 'websites';
   const servicePage = getServicePage(routeSlug);
   const projectSlug = routeSlug.startsWith('work/') ? routeSlug.replace(/^work\//, '') : null;
   const project = projectSlug ? getProjectBySlug(projectSlug) : null;
@@ -37,6 +38,11 @@ export default function App() {
   const sectionPage = SECTION_ROUTES[routeSlug as keyof typeof SECTION_ROUTES];
 
   useEffect(() => {
+    if (isCanonicalWebsitesAlias) {
+      window.location.replace('/business-website/');
+      return;
+    }
+
     if (project) {
       document.title = project.seo.title;
       document.head.querySelector('meta[name="description"]')?.setAttribute('content', project.seo.description);
@@ -62,7 +68,7 @@ export default function App() {
 
     document.title = 'Page Not Found | YBGP';
     document.head.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex');
-  }, [isWebsitesAdmin, isWebsitesDashboard, isHome, sectionPage, servicePage, project, websiteRouteSlug]);
+  }, [isCanonicalWebsitesAlias, isWebsitesAdmin, isWebsitesDashboard, isHome, sectionPage, servicePage, project, websiteRouteSlug]);
 
   if (project) {
     const handleOpenConsultation = () => {

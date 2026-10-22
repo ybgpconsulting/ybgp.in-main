@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenConsultationModal }) => {
 
   const navLinks = [
     { label: 'Home', href: '/', id: 'home' },
-    { label: 'YBGP Websites', href: '/websites/', id: 'websites' },
+    { label: 'YBGP Websites', href: '/business-website/', id: 'websites' },
     { label: 'Work', href: '/work/', id: 'work' },
     { label: 'About', href: '/about/', id: 'about' },
     { label: 'Services', href: '/services/', id: 'services' },

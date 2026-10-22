@@ -193,6 +193,17 @@ const generateSeoRouteEntrypoints = (siteUrl: string) => ({
 
     const htaccessPath = path.join(outputDirectory, '.htaccess');
     const htaccessLines = (await fs.readFile(htaccessPath, 'utf8')).split(/\r?\n/);
+    const canonicalWebsitesRule = 'RewriteRule ^websites/?$ /business-website/ [R=301,L,NE]';
+    if (!htaccessLines.includes(canonicalWebsitesRule)) {
+      const aliasInsertIndex = htaccessLines.findIndex((line) =>
+        line.startsWith('# Consolidate retired consultant-location URLs into the primary Noida page.')
+      );
+      if (aliasInsertIndex === -1) {
+        htaccessLines.push(canonicalWebsitesRule);
+      } else {
+        htaccessLines.splice(aliasInsertIndex + 1, 0, canonicalWebsitesRule);
+      }
+    }
     const routePattern = ROUTE_SLUGS
       .filter((slug) => slug !== 'home')
       .map((slug) => slug.split('/').map(escapeRegex).join('/'))
